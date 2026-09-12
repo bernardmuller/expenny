@@ -29,7 +29,12 @@ const EnvSchema = z.object({
 	MAIL_ADDRESS: z.string(),
 	ENCRYPTION_KEY: z.string(),
 	TELEGRAM_BOT_TOKEN: z.string(),
-	CRON_SECRET: z.string()
+	CRON_SECRET: z.string(),
+	AUTH_MODE: z.enum(["legacy", "better-auth"]).default("legacy"),
+	BETTER_AUTH_SECRET: z.string().optional(),
+	BETTER_AUTH_URL: z.string().url().optional(),
+	GOOGLE_CLIENT_ID: z.string().optional(),
+	GOOGLE_CLIENT_SECRET: z.string().optional()
 });
 
 export type env = z.infer<typeof EnvSchema>;

@@ -1,6 +1,7 @@
 import createClient from 'openapi-fetch'
 import type { paths } from './schema'
 import { err, ok, ResultAsync } from 'neverthrow'
+import { getAuthMode } from '../auth/auth-mode'
 import {
   getAccessToken,
   getRefreshToken,
@@ -63,6 +64,12 @@ client.use({
   },
   async onResponse({ request, response }) {
     if (response.status === 401 && !request.url.includes('/auth/refresh')) {
+      if (getAuthMode() === 'better-auth') {
+        // sessions don't refresh like JWTs; drop local state and re-authenticate
+        clearTokens()
+        window.location.href = '/login'
+        return response
+      }
       if (!refreshPromise) {
         refreshPromise = refreshTokens().finally(() => {
           refreshPromise = null

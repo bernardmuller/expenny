@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { decodeJwt } from '@/lib/auth/decode-token'
 import { getAccessToken } from '@/lib/auth/token-storage'
+import { getAuthMode } from '@/lib/auth/auth-mode'
 import { requireAuth } from '@/lib/auth/route-guard'
 import { Check, Copy, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
@@ -22,9 +23,10 @@ function McpTokenPage() {
   const router = useRouter()
   const [copied, setCopied] = useState<'token' | 'config' | null>(null)
 
+  const isBetterAuth = getAuthMode() === 'better-auth'
   const tokenResult = getAccessToken()
   const token = tokenResult.isOk() ? tokenResult.value : null
-  const payload = token ? decodeJwt(token).unwrapOr(null) : null
+  const payload = !isBetterAuth && token ? decodeJwt(token).unwrapOr(null) : null
 
   const expiresAt = payload?.exp
     ? new Date(payload.exp * 1000)
@@ -81,7 +83,13 @@ function McpTokenPage() {
               it into your MCP client config as a Bearer token.
             </p>
 
-            {token ? (
+            {isBetterAuth ? (
+              <p className="text-muted-foreground text-sm">
+                MCP access tokens are provisioned via OAuth client credentials.
+                This page will show your registered client once OAuth issuance
+                is enabled.
+              </p>
+            ) : token ? (
               <>
                 <div className="space-y-2">
                   <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">

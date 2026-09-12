@@ -17,6 +17,7 @@ import { cors } from "hono/cors";
 import env from "./env";
 import { authMiddleware } from "@/lib/http/middleware/auth";
 import { cronAuth } from "@/lib/http/middleware/cronAuth";
+import { betterAuthInstance } from "@/lib/auth/better-auth";
 
 const app = createApi();
 
@@ -92,6 +93,8 @@ app.route("/", chats);
 app.route("/", notificationPreferences);
 app.route("/", streaks);
 app.route("/", cron);
+
+app.all("/auth/*", (c) => betterAuthInstance.handler(c.req.raw));
 
 export type AppType = typeof app;
 

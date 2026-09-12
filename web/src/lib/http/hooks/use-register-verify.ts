@@ -1,11 +1,12 @@
 import { useMutation } from '@tanstack/react-query'
-import { ok } from 'neverthrow'
 import type { Result } from 'neverthrow'
 import { toast } from 'sonner'
 import { client, toResult } from '../client'
 import { withToken } from '../with-token'
 import { queryKeys } from '../query-keys'
-import { setTokens } from '@/lib/auth/token-storage'
+import { setCurrentUser, setTokens } from '@/lib/auth/token-storage'
+import { getAuthMode } from '@/lib/auth/auth-mode'
+import { syncCurrentUserFromSession } from '@/lib/auth/session-sync'
 import type { paths } from '../schema'
 
 type RegisterVerifyBody =
@@ -39,10 +40,18 @@ export function useRegisterVerify() {
               body,
             }),
           )
-            .andThen((data) => {
+            .map(async (data) => {
               setTokens(data.accessToken, data.refreshToken)
+              if (getAuthMode() === 'better-auth') {
+                setCurrentUser({
+                  userId: data.user.id,
+                  email: data.user.email,
+                  name: data.user.name,
+                })
+              }
               sessionStorage.removeItem('token')
-              return ok(data)
+              await syncCurrentUserFromSession()
+              return data
             })
             .mapErr((error) => {
               toast.error(error.message || 'Failed to verify registration')

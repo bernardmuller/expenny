@@ -9,6 +9,10 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "@/lib/utils/jwt";
+import { authMode } from "@/lib/auth/better-auth";
+import { ResultAsync } from "neverthrow";
+import { createBetterAuthSession } from "@/lib/auth/session";
+import { DatabaseError } from "@/lib/errors/domain";
 import * as VerificationServices from "@/features/verifications/services";
 import { AppResult } from "@/lib/result";
 import { AuthenticationError } from "@/lib/errors/domain";
@@ -41,8 +45,17 @@ export const loginAttempt = (
         ? UserServices.getUserById(userId, ctx)
         : errAsync(new AuthenticationError("Invalid OTP")),
     )
-    .andThen((user) =>
-      generateAccessToken(user.id, user.email, user.name).andThen(
+    .andThen((user) => {
+      if (authMode === "better-auth") {
+        return ResultAsync.fromPromise(
+          createBetterAuthSession(user.id),
+          (err) => new DatabaseError(String(err)),
+        ).map(({ token }) => ({
+          accessToken: token,
+          refreshToken: token,
+        }));
+      }
+      return generateAccessToken(user.id, user.email, user.name).andThen(
         (accessToken) =>
           generateRefreshToken(user.id, user.email, user.name).map(
             (refreshToken) => ({
@@ -50,8 +63,8 @@ export const loginAttempt = (
               refreshToken,
             }),
           ),
-      ),
-    )
+      );
+    })
     .mapErr((error) => {
       logger.error(
         {

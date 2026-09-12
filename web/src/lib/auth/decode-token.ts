@@ -1,6 +1,6 @@
 import { err, ok } from 'neverthrow'
 import type { Result } from 'neverthrow'
-import { getAccessToken } from './token-storage'
+import { getAccessToken, getStoredCurrentUser } from './token-storage'
 
 interface TokenPayload {
   userId: string
@@ -55,4 +55,12 @@ const getCurrentUser = (): Result<
   )
 
 export const getUserIdFromAccessToken = (): Result<string, string> =>
-  getCurrentUser().map((user) => user.userId)
+  getCurrentUser().match(
+    (user) => ok(user.userId),
+    () => {
+      // better-auth mode: the stored token is an opaque session token that
+      // cannot be JWT-decoded; fall back to the user captured at login time
+      const stored = getStoredCurrentUser()
+      return stored ? ok(stored.userId) : err('No user id available')
+    },
+  )

@@ -1,11 +1,11 @@
 import { useMutation } from '@tanstack/react-query'
 import type { Result } from 'neverthrow'
-import { ok } from 'neverthrow'
 import { toast } from 'sonner'
 import { client, toResult } from '../client'
 import { withToken } from '../with-token'
 import { queryKeys } from '../query-keys'
 import { setTokens } from '@/lib/auth/token-storage'
+import { syncCurrentUserFromSession } from '@/lib/auth/session-sync'
 import type { paths } from '../schema'
 
 type LoginVerifyBody =
@@ -39,10 +39,11 @@ export function useLoginVerify() {
               body,
             }),
           )
-            .andThen((data) => {
+            .map(async (data) => {
               setTokens(data.accessToken, data.refreshToken)
               sessionStorage.removeItem('token')
-              return ok(data)
+              await syncCurrentUserFromSession()
+              return data
             })
             .mapErr((error) => {
               toast.error(error.message || 'Failed to verify login')

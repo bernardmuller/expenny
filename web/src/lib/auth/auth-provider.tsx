@@ -1,6 +1,7 @@
 import { createContext, useContext, useState } from 'react'
 import type { ReactNode } from 'react'
 import { hasTokens, clearTokens } from './token-storage'
+import { getAuthMode } from './auth-mode'
 
 interface AuthContextValue {
   isAuthenticated: boolean
@@ -23,6 +24,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = () => setIsAuthenticated(true)
 
   const logout = () => {
+    if (getAuthMode() === 'better-auth') {
+      void fetch(`${import.meta.env.VITE_API_URL}/auth/sign-out`, {
+        method: 'POST',
+        credentials: 'include',
+      }).catch(() => {})
+    }
     clearTokens()
     setIsAuthenticated(false)
     window.location.href = '/login'

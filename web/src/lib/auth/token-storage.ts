@@ -1,6 +1,7 @@
 import { err, ok } from 'neverthrow'
 import * as dataStore from '../storage/data-store'
 import { STORAGE_KEYS } from '../storage/storage-keys'
+import type { StoredCurrentUser } from '../storage/storage-keys'
 
 export function getAccessToken() {
 	const accessToken = dataStore.getItem(STORAGE_KEYS.ACCESS_TOKEN)
@@ -25,9 +26,18 @@ export function setTokens(accessToken: string, refreshToken: string): void {
 	setRefreshToken(refreshToken)
 }
 
+export function setCurrentUser(user: StoredCurrentUser): void {
+	dataStore.setItem(STORAGE_KEYS.CURRENT_USER, user)
+}
+
+export function getStoredCurrentUser(): StoredCurrentUser | undefined {
+	return dataStore.getItem(STORAGE_KEYS.CURRENT_USER)
+}
+
 export function clearTokens(): void {
 	dataStore.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
 	dataStore.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
+	dataStore.removeItem(STORAGE_KEYS.CURRENT_USER)
 }
 
 export const hasTokens = () =>

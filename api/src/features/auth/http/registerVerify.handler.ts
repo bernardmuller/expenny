@@ -3,6 +3,8 @@ import { createContext } from "@/lib/db/context";
 import { mapErrorToResponse } from "@/lib/http/errorMapper";
 import { registerVerify } from "../services";
 import { AuthenticationError } from "@/lib/errors/domain";
+import { authMode } from "@/lib/auth/better-auth";
+import { buildSessionCookie } from "@/lib/auth/session";
 
 export const registerVerifyHandler = async (c: Context) => {
   const body = await c.req.json<{
@@ -32,7 +34,14 @@ export const registerVerifyHandler = async (c: Context) => {
   const result = await registerVerify({ otp: body.otp, token: token }, ctx);
 
   return result.match(
-    (response) => c.json(response, 200),
+    (response) => {
+      if (authMode === "better-auth") {
+        c.header("set-cookie", buildSessionCookie(response.accessToken), {
+          append: true,
+        });
+      }
+      return c.json(response, 200);
+    },
     (error) => mapErrorToResponse(error, c),
   );
 };

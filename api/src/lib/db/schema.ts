@@ -11,6 +11,7 @@ import {
   integer,
   unique,
   uuid,
+  type PgTable,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 
@@ -64,6 +65,8 @@ export const sessions = pgTable("sessions", {
 
 export const accounts = pgTable("accounts", {
   id: uuid("id").primaryKey(),
+  accountId: text("account_id"),
+  providerId: text("provider_id"),
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
@@ -476,6 +479,45 @@ export const categoryBudgetRelations = relations(
   }),
 );
 
+// OAuth 2.1 dynamic client registration registry (MCP client credentials)
+export const oauthClients = pgTable(
+  "oauth_clients",
+  {
+    id: uuid("id").primaryKey(),
+    clientId: text("client_id").notNull().unique(),
+    clientSecret: text("client_secret").notNull(),
+    clientName: text("client_name").notNull(),
+    clientUri: text("client_uri"),
+    redirectUris: text("redirect_uris"),
+    grantTypes: text("grant_types").notNull(),
+    scopes: text("scopes").default("openid profile email").notNull(),
+    tokenEndpointAuthMethod: text("token_endpoint_auth_method")
+      .default("client_secret_basic")
+      .notNull(),
+    disabled: boolean("disabled").default(false).notNull(),
+    createdAt: timestamp("created_at")
+      .$defaultFn(() => new Date())
+      .notNull(),
+    updatedAt: timestamp("updated_at")
+      .$defaultFn(() => new Date())
+      .notNull(),
+  },
+  (table) => ({
+    clientIdIdx: uniqueIndex("oauth_clients_client_id_idx").on(table.clientId),
+  }),
+);
+
+export const betterAuthSchema = {
+  user: users,
+  session: sessions,
+  account: accounts,
+  verification: verifications,
+} as const;
+
+for (const [modelName, table] of Object.entries(betterAuthSchema)) {
+  (table as PgTable & { modelName?: string }).modelName = modelName;
+}
+
 // Types
 export type User = typeof users.$inferSelect;
 export type Budget = typeof budgets.$inferSelect;
@@ -509,3 +551,5 @@ export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;
 export type UserActivity = typeof userActivity.$inferSelect;
 export type NewUserActivity = typeof userActivity.$inferInsert;
+export type OAuthClient = typeof oauthClients.$inferSelect;
+export type NewOAuthClient = typeof oauthClients.$inferInsert;

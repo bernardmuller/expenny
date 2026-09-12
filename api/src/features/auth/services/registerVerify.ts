@@ -6,6 +6,10 @@ import { pinoInstance as logger } from "@/lib/http/middleware/logger";
 import { compareOTP } from "@/lib/utils/compareOTP";
 import { decodeVerificationToken } from "@/lib/utils/decodeVerificationToken";
 import { generateAccessToken, generateRefreshToken } from "@/lib/utils/jwt";
+import { authMode } from "@/lib/auth/better-auth";
+import { ResultAsync } from "neverthrow";
+import { createBetterAuthSession } from "@/lib/auth/session";
+import { DatabaseError } from "@/lib/errors/domain";
 import * as VerificationServices from "@/features/verifications/services";
 import { AppResult } from "@/lib/result";
 import { AuthenticationError } from "@/lib/errors/domain";
@@ -61,8 +65,22 @@ export const registerVerify = (
         verificationId,
       })),
     )
-    .andThen(({ user, verificationId }) =>
-      generateAccessToken(user.id, user.email, user.name).andThen(
+    .andThen(({ user, verificationId }) => {
+      if (authMode === "better-auth") {
+        return ResultAsync.fromPromise(
+          createBetterAuthSession(user.id),
+          (err) => new DatabaseError(String(err)),
+        ).andThen(({ token }) =>
+          VerificationServices.deleteVerification(verificationId, ctx).map(
+            () => ({
+              user,
+              accessToken: token,
+              refreshToken: token,
+            }),
+          ),
+        );
+      }
+      return generateAccessToken(user.id, user.email, user.name).andThen(
         (accessToken) =>
           generateRefreshToken(user.id, user.email, user.name).andThen(
             (refreshToken) =>
@@ -74,8 +92,8 @@ export const registerVerify = (
                 }),
               ),
           ),
-      ),
-    )
+      );
+    })
     .mapErr((error) => {
       logger.error(
         {
