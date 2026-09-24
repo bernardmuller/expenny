@@ -1,61 +1,46 @@
-import { randomUUID } from "node:crypto";
-import { and, eq, gt } from "drizzle-orm";
-import env from "@/env";
-import { db } from "@/lib/db";
-import { sessions, users } from "@/lib/db/schema";
+import type { Context } from "hono";
+import { setSignedCookie } from "hono/cookie";
+import { betterAuthInstance, betterAuthSecret } from "@/lib/auth/better-auth";
 
-const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
+// Singleton promise — resolved once at first call
+let _ctx: Awaited<typeof betterAuthInstance.$context> | null = null;
 
-export const sessionCookieName = "expenny.session_token";
-
-export const createBetterAuthSession = async (userId: string) => {
-  const now = new Date();
-  const expiresAt = new Date(now.getTime() + SESSION_DURATION_MS);
-  const token = `${randomUUID()}${randomUUID()}`;
-
-  await db.insert(sessions).values({
-    id: randomUUID(),
-    userId,
-    token,
-    expiresAt,
-    createdAt: now,
-    updatedAt: now,
-  });
-
-  return { token, expiresAt };
-};
-
-export const buildSessionCookie = (token: string) => {
-  const secure = env.NODE_ENV === "production";
-  return `${sessionCookieName}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${
-    SESSION_DURATION_MS / 1000
-  }${secure ? "; Secure" : ""}`;
-};
-
-export const readSessionCookie = (cookieHeader: string | undefined) => {
-  if (!cookieHeader) return undefined;
-  for (const part of cookieHeader.split(";")) {
-    const [name, ...rest] = part.trim().split("=");
-    if (name === sessionCookieName) {
-      return rest.join("=");
-    }
+const getBetterAuthCtx = async () => {
+  if (!_ctx) {
+    _ctx = await betterAuthInstance.$context;
   }
-  return undefined;
+  return _ctx;
 };
 
-export const findUserBySessionToken = async (token: string) => {
-  const rows = await db
-    .select({
-      userId: users.id,
-      email: users.email,
-      name: users.name,
-    })
-    .from(sessions)
-    .innerJoin(users, eq(sessions.userId, users.id))
-    .where(and(eq(sessions.token, token), gt(sessions.expiresAt, new Date())))
-    .limit(1);
+/**
+ * Create a session via better-auth's internal adapter.
+ * The token it generates is stored in the DB and later looked up by
+ * better-auth's own `getSession`, which also validates the signed cookie.
+ */
+export const createBetterAuthSession = async (
+  userId: string,
+  request?: Request,
+): Promise<{ token: string; expiresAt: Date }> => {
+  const ctx = await getBetterAuthCtx();
+  // ctx2 can carry request for IP/UA extraction; fall back to empty object
+  const ctx2 = request ? { request } : {};
+  const session = await ctx.internalAdapter.createSession(
+    userId,
+    ctx2 as Parameters<typeof ctx.internalAdapter.createSession>[1],
+  );
+  return { token: session.token, expiresAt: session.expiresAt };
+};
 
-  const row = rows[0];
-  if (!row) return null;
-  return { userId: row.userId, email: row.email, name: row.name };
+/**
+ * Set the better-auth signed session cookie on the Hono response.
+ * Cookie name is derived from authCookies config (e.g. `expenny.session_token`).
+ */
+export const setSessionCookie = async (c: Context, token: string) => {
+  const ctx = await getBetterAuthCtx();
+  const { name, options } = ctx.authCookies.sessionToken;
+  await setSignedCookie(c, name, token, betterAuthSecret, {
+    ...options,
+    // `sameSite` type mismatch between hono and better-auth — cast explicitly
+    sameSite: options.sameSite as "lax" | "strict" | "none" | undefined,
+  });
 };

@@ -1,3 +1,9 @@
 [build]
   command = "vite build"
   publish = "dist"
+
+# NOTE: do not add a /auth/* proxy rule here. @netlify/vite-plugin applies
+# netlify.toml redirects to the local dev server as well, where a forced rule
+# overrides the Vite proxy in vite.config.ts and sends local /auth traffic to
+# production. Point deployed environments at the API instead by setting
+# GOOGLE_REDIRECT_URI on the API (see api/.example.env).

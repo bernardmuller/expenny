@@ -1,11 +1,6 @@
 import type { Context, Next } from "hono";
-import { decodeAccessToken } from "@/lib/utils/jwt";
 import { AuthenticationError } from "@/lib/errors/domain";
-import { authMode } from "@/lib/auth/better-auth";
-import {
-  findUserBySessionToken,
-  readSessionCookie,
-} from "@/lib/auth/session";
+import { betterAuthInstance } from "@/lib/auth/better-auth";
 
 const unauthorized = (c: Context, error: AuthenticationError) =>
   c.json(
@@ -18,46 +13,35 @@ const unauthorized = (c: Context, error: AuthenticationError) =>
   );
 
 export const authMiddleware = async (c: Context, next: Next) => {
-  const authHeader = c.req.header("Authorization");
-  const bearerToken = authHeader?.startsWith("Bearer ")
-    ? authHeader.substring(7).trim()
-    : undefined;
+  const headers = c.req.raw.headers;
 
-  const betterAuthActive = authMode === "better-auth";
-
-  if (!bearerToken && !betterAuthActive) {
-    return unauthorized(c, new AuthenticationError("Missing authorization header"));
-  }
-
-  if (betterAuthActive) {
-    const sessionToken = bearerToken ?? readSessionCookie(c.req.header("cookie"));
-
-    if (!sessionToken) {
-      return unauthorized(c, new AuthenticationError("Missing authorization header"));
-    }
-
-    const sessionUser = await findUserBySessionToken(sessionToken);
-    if (sessionUser) {
-      c.set("user", sessionUser);
+  // 1. Try MCP-issued opaque bearer token (from /auth/mcp/* flow).
+  //    getMcpSession returns an OAuthAccessToken record, which carries the userId.
+  //    We then hydrate the full user via better-auth's internal adapter.
+  const mcpToken = await betterAuthInstance.api.getMcpSession({ headers });
+  if (mcpToken?.userId) {
+    const baCtx = await betterAuthInstance.$context;
+    const user = await baCtx.internalAdapter.findUserById(mcpToken.userId);
+    if (user) {
+      c.set("user", {
+        userId: user.id,
+        email: user.email,
+        name: user.name,
+      });
       return next();
     }
-
-    if (!bearerToken) {
-      return unauthorized(c, new AuthenticationError("Invalid session"));
-    }
   }
 
-  if (!bearerToken) {
-    return unauthorized(c, new AuthenticationError("Missing authorization header"));
+  // 2. Try web session cookie (OTP or Google sign-in).
+  const session = await betterAuthInstance.api.getSession({ headers });
+  if (session?.user) {
+    c.set("user", {
+      userId: session.user.id,
+      email: session.user.email,
+      name: session.user.name,
+    });
+    return next();
   }
 
-  const result = await decodeAccessToken(bearerToken);
-
-  return result.match(
-    (user) => {
-      c.set("user", user);
-      return next();
-    },
-    (error) => unauthorized(c, error),
-  );
+  return unauthorized(c, new AuthenticationError("Authentication required"));
 };

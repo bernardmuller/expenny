@@ -38,6 +38,12 @@ export function clearTokens(): void {
 	dataStore.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
 	dataStore.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
 	dataStore.removeItem(STORAGE_KEYS.CURRENT_USER)
+	// The persisted TanStack Query cache holds the signed-out user's categories
+	// and budgets; leaving it behind leaks them into the next session.
+	dataStore.removeItem(STORAGE_KEYS.QUERY_CACHE)
+	// A resume URL left over from an abandoned MCP authorize would hijack the
+	// next sign-in.
+	sessionStorage.removeItem(STORAGE_KEYS.PENDING_OAUTH)
 }
 
 export const hasTokens = () =>

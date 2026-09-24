@@ -5,11 +5,6 @@ import type { LoginAttemptParams, LoginResponse } from "../types";
 import { pinoInstance as logger } from "@/lib/http/middleware/logger";
 import { compareOTP } from "@/lib/utils/compareOTP";
 import { decodeVerificationToken } from "@/lib/utils/decodeVerificationToken";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-} from "@/lib/utils/jwt";
-import { authMode } from "@/lib/auth/better-auth";
 import { ResultAsync } from "neverthrow";
 import { createBetterAuthSession } from "@/lib/auth/session";
 import { DatabaseError } from "@/lib/errors/domain";
@@ -20,6 +15,7 @@ import { AuthenticationError } from "@/lib/errors/domain";
 export const loginAttempt = (
   params: LoginAttemptParams,
   ctx: AppContext,
+  request?: Request,
 ): AppResult<LoginResponse> =>
   decodeVerificationToken(params.token)
     .andThen(({ userId, verificationId }) =>
@@ -45,26 +41,15 @@ export const loginAttempt = (
         ? UserServices.getUserById(userId, ctx)
         : errAsync(new AuthenticationError("Invalid OTP")),
     )
-    .andThen((user) => {
-      if (authMode === "better-auth") {
-        return ResultAsync.fromPromise(
-          createBetterAuthSession(user.id),
-          (err) => new DatabaseError(String(err)),
-        ).map(({ token }) => ({
-          accessToken: token,
-          refreshToken: token,
-        }));
-      }
-      return generateAccessToken(user.id, user.email, user.name).andThen(
-        (accessToken) =>
-          generateRefreshToken(user.id, user.email, user.name).map(
-            (refreshToken) => ({
-              accessToken,
-              refreshToken,
-            }),
-          ),
-      );
-    })
+    .andThen((user) =>
+      ResultAsync.fromPromise(
+        createBetterAuthSession(user.id, request),
+        (err) => new DatabaseError(String(err)),
+      ).map(({ token }) => ({
+        accessToken: token,
+        refreshToken: token,
+      })),
+    )
     .mapErr((error) => {
       logger.error(
         {

@@ -3,8 +3,7 @@ import { createContext } from "@/lib/db/context";
 import { mapErrorToResponse } from "@/lib/http/errorMapper";
 import { registerVerify } from "../services";
 import { AuthenticationError } from "@/lib/errors/domain";
-import { authMode } from "@/lib/auth/better-auth";
-import { buildSessionCookie } from "@/lib/auth/session";
+import { setSessionCookie } from "@/lib/auth/session";
 
 export const registerVerifyHandler = async (c: Context) => {
   const body = await c.req.json<{
@@ -31,15 +30,11 @@ export const registerVerifyHandler = async (c: Context) => {
   }
 
   const ctx = createContext();
-  const result = await registerVerify({ otp: body.otp, token: token }, ctx);
+  const result = await registerVerify({ otp: body.otp, token: token }, ctx, c.req.raw);
 
   return result.match(
-    (response) => {
-      if (authMode === "better-auth") {
-        c.header("set-cookie", buildSessionCookie(response.accessToken), {
-          append: true,
-        });
-      }
+    async (response) => {
+      await setSessionCookie(c, response.accessToken);
       return c.json(response, 200);
     },
     (error) => mapErrorToResponse(error, c),

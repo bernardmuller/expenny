@@ -7,33 +7,15 @@ import { loginRequestRoute } from "./http/loginRequest.route";
 import { loginRequestHandler } from "./http/loginRequest.handler";
 import { loginAttemptRoute } from "./http/loginAttempt.route";
 import { loginAttemptHandler } from "./http/loginAttempt.handler";
-import { refreshRoute } from "./http/refresh.route";
-import { refreshHandler } from "./http/refresh.handler";
 import { authModeRoute } from "./http/mode.route";
 import { authModeHandler } from "./http/mode.handler";
-import {
-  oauthRegisterRoute,
-  oauthRegisterClientHandler,
-  oauthTokenRoute,
-  oauthTokenHandler,
-  oauthMetadataRoute,
-  oauthMetadataHandler,
-} from "@/features/oauth";
-import { authMode } from "@/lib/auth/better-auth";
+import { mcpUserinfoRoute } from "./http/mcpUserinfo.route";
+import { mcpUserinfoHandler } from "./http/mcpUserinfo.handler";
 
-let authRouter = createRouter()
+export const authRouter = createRouter()
   .openapi(registerRequestRoute, registerRequestHandler)
   .openapi(registerVerifyRoute, registerVerifyHandler)
   .openapi(loginRequestRoute, loginRequestHandler)
   .openapi(loginAttemptRoute, loginAttemptHandler)
-  .openapi(refreshRoute, refreshHandler)
-  .openapi(authModeRoute, authModeHandler);
-
-if (authMode === "better-auth") {
-  authRouter = authRouter
-    .openapi(oauthRegisterRoute, oauthRegisterClientHandler)
-    .openapi(oauthTokenRoute, oauthTokenHandler)
-    .openapi(oauthMetadataRoute, oauthMetadataHandler);
-}
-
-export { authRouter };
+  .openapi(authModeRoute, authModeHandler)
+  .openapi(mcpUserinfoRoute, mcpUserinfoHandler);
