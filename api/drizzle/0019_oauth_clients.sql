@@ -1,6 +1,6 @@
 CREATE TABLE "oauth_clients" (
 	"id" uuid PRIMARY KEY NOT NULL,
-	"client_id" text NOT NULL,
+	"client_id" uuid NOT NULL,
 	"client_secret" text NOT NULL,
 	"client_name" text NOT NULL,
 	"client_uri" text,

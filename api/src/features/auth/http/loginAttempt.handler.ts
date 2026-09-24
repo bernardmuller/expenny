@@ -3,8 +3,7 @@ import { createContext } from "@/lib/db/context";
 import { mapErrorToResponse } from "@/lib/http/errorMapper";
 import { loginAttempt } from "../services";
 import { AuthenticationError } from "@/lib/errors/domain";
-import { authMode } from "@/lib/auth/better-auth";
-import { buildSessionCookie } from "@/lib/auth/session";
+import { setSessionCookie } from "@/lib/auth/session";
 
 export const loginAttemptHandler = async (c: Context) => {
   const body = await c.req.json<{
@@ -31,15 +30,11 @@ export const loginAttemptHandler = async (c: Context) => {
   }
 
   const ctx = createContext();
-  const result = await loginAttempt({ otp: body.otp, token }, ctx);
+  const result = await loginAttempt({ otp: body.otp, token }, ctx, c.req.raw);
 
   return result.match(
-    (tokens) => {
-      if (authMode === "better-auth") {
-        c.header("set-cookie", buildSessionCookie(tokens.accessToken), {
-          append: true,
-        });
-      }
+    async (tokens) => {
+      await setSessionCookie(c, tokens.accessToken);
       return c.json(tokens, 200);
     },
     (error) => mapErrorToResponse(error, c),

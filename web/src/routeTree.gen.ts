@@ -21,6 +21,7 @@ import { Route as ProfilePreferencesRouteImport } from './routes/profile.prefere
 import { Route as ProfilePennyBotRouteImport } from './routes/profile.penny-bot'
 import { Route as ProfileNotificationsRouteImport } from './routes/profile.notifications'
 import { Route as ProfileMcpTokenRouteImport } from './routes/profile.mcp-token'
+import { Route as OauthConsentRouteImport } from './routes/oauth.consent'
 import { Route as CategoriesIdRouteImport } from './routes/categories/$id'
 import { Route as BudgetsNewRouteImport } from './routes/budgets/new'
 import { Route as BudgetsIdRouteImport } from './routes/budgets/$id'
@@ -88,6 +89,11 @@ const ProfileMcpTokenRoute = ProfileMcpTokenRouteImport.update({
   path: '/mcp-token',
   getParentRoute: () => ProfileRoute,
 } as any)
+const OauthConsentRoute = OauthConsentRouteImport.update({
+  id: '/oauth/consent',
+  path: '/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CategoriesIdRoute = CategoriesIdRouteImport.update({
   id: '/categories/$id',
   path: '/categories/$id',
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/budgets/$id': typeof BudgetsIdRouteWithChildren
   '/budgets/new': typeof BudgetsNewRoute
   '/categories/$id': typeof CategoriesIdRoute
+  '/oauth/consent': typeof OauthConsentRoute
   '/profile/mcp-token': typeof ProfileMcpTokenRoute
   '/profile/notifications': typeof ProfileNotificationsRoute
   '/profile/penny-bot': typeof ProfilePennyBotRoute
@@ -141,6 +148,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/budgets/new': typeof BudgetsNewRoute
   '/categories/$id': typeof CategoriesIdRoute
+  '/oauth/consent': typeof OauthConsentRoute
   '/profile/mcp-token': typeof ProfileMcpTokenRoute
   '/profile/notifications': typeof ProfileNotificationsRoute
   '/profile/penny-bot': typeof ProfilePennyBotRoute
@@ -161,6 +169,7 @@ export interface FileRoutesById {
   '/budgets/$id': typeof BudgetsIdRouteWithChildren
   '/budgets/new': typeof BudgetsNewRoute
   '/categories/$id': typeof CategoriesIdRoute
+  '/oauth/consent': typeof OauthConsentRoute
   '/profile/mcp-token': typeof ProfileMcpTokenRoute
   '/profile/notifications': typeof ProfileNotificationsRoute
   '/profile/penny-bot': typeof ProfilePennyBotRoute
@@ -182,6 +191,7 @@ export interface FileRouteTypes {
     | '/budgets/$id'
     | '/budgets/new'
     | '/categories/$id'
+    | '/oauth/consent'
     | '/profile/mcp-token'
     | '/profile/notifications'
     | '/profile/penny-bot'
@@ -199,6 +209,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/budgets/new'
     | '/categories/$id'
+    | '/oauth/consent'
     | '/profile/mcp-token'
     | '/profile/notifications'
     | '/profile/penny-bot'
@@ -218,6 +229,7 @@ export interface FileRouteTypes {
     | '/budgets/$id'
     | '/budgets/new'
     | '/categories/$id'
+    | '/oauth/consent'
     | '/profile/mcp-token'
     | '/profile/notifications'
     | '/profile/penny-bot'
@@ -238,6 +250,7 @@ export interface RootRouteChildren {
   BudgetsIdRoute: typeof BudgetsIdRouteWithChildren
   BudgetsNewRoute: typeof BudgetsNewRoute
   CategoriesIdRoute: typeof CategoriesIdRoute
+  OauthConsentRoute: typeof OauthConsentRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -326,6 +339,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileMcpTokenRouteImport
       parentRoute: typeof ProfileRoute
     }
+    '/oauth/consent': {
+      id: '/oauth/consent'
+      path: '/oauth/consent'
+      fullPath: '/oauth/consent'
+      preLoaderRoute: typeof OauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/categories/$id': {
       id: '/categories/$id'
       path: '/categories/$id'
@@ -409,6 +429,7 @@ const rootRouteChildren: RootRouteChildren = {
   BudgetsIdRoute: BudgetsIdRouteWithChildren,
   BudgetsNewRoute: BudgetsNewRoute,
   CategoriesIdRoute: CategoriesIdRoute,
+  OauthConsentRoute: OauthConsentRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

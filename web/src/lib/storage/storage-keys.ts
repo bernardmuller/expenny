@@ -6,6 +6,8 @@ export const STORAGE_KEYS = {
   THEME: 'vite-ui-theme',
   QUERY_CACHE: 'expense-tracker-query-cache',
   STREAK: 'streakLastLogged',
+  /** Stored in sessionStorage: URL to resume after MCP OAuth authorize flow */
+  PENDING_OAUTH: 'pendingOAuth',
 } as const
 
 export interface StoredCurrentUser {

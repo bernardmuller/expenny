@@ -479,39 +479,76 @@ export const categoryBudgetRelations = relations(
   }),
 );
 
-// OAuth 2.1 dynamic client registration registry (MCP client credentials)
-export const oauthClients = pgTable(
-  "oauth_clients",
-  {
-    id: uuid("id").primaryKey(),
-    clientId: text("client_id").notNull().unique(),
-    clientSecret: text("client_secret").notNull(),
-    clientName: text("client_name").notNull(),
-    clientUri: text("client_uri"),
-    redirectUris: text("redirect_uris"),
-    grantTypes: text("grant_types").notNull(),
-    scopes: text("scopes").default("openid profile email").notNull(),
-    tokenEndpointAuthMethod: text("token_endpoint_auth_method")
-      .default("client_secret_basic")
-      .notNull(),
-    disabled: boolean("disabled").default(false).notNull(),
-    createdAt: timestamp("created_at")
-      .$defaultFn(() => new Date())
-      .notNull(),
-    updatedAt: timestamp("updated_at")
-      .$defaultFn(() => new Date())
-      .notNull(),
-  },
-  (table) => ({
-    clientIdIdx: uniqueIndex("oauth_clients_client_id_idx").on(table.clientId),
-  }),
-);
+// ─── better-auth OIDC / MCP plugin tables ────────────────────────────────────
+
+// OAuth applications registered by MCP clients (via dynamic client registration)
+export const oauthApplication = pgTable("oauth_application", {
+  id: uuid("id").primaryKey(),
+  name: text("name").notNull(),
+  icon: text("icon"),
+  metadata: text("metadata"),
+  // better-auth generates client ids with generateRandomString(32, "a-z", "A-Z"),
+  // not UUIDs — this column must be text.
+  clientId: text("client_id").notNull().unique(),
+  clientSecret: text("client_secret"),
+  redirectURLs: text("redirect_u_r_ls").notNull(),
+  type: text("type").notNull(),
+  disabled: boolean("disabled").default(false),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
+});
+
+// Access + refresh tokens issued to MCP clients
+export const oauthAccessToken = pgTable("oauth_access_token", {
+  id: uuid("id").primaryKey(),
+  accessToken: text("access_token").notNull().unique(),
+  refreshToken: text("refresh_token").notNull().unique(),
+  accessTokenExpiresAt: timestamp("access_token_expires_at").notNull(),
+  refreshTokenExpiresAt: timestamp("refresh_token_expires_at").notNull(),
+  clientId: text("client_id")
+    .notNull()
+    .references(() => oauthApplication.clientId, { onDelete: "cascade" }),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+  scopes: text("scopes").notNull(),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
+});
+
+// User consent records per application
+export const oauthConsent = pgTable("oauth_consent", {
+  id: uuid("id").primaryKey(),
+  clientId: text("client_id")
+    .notNull()
+    .references(() => oauthApplication.clientId, { onDelete: "cascade" }),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  scopes: text("scopes").notNull(),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
+  consentGiven: boolean("consent_given").notNull(),
+});
+
+// JWKS keys used by the JWT plugin for signing
+export const jwks = pgTable("jwks", {
+  id: uuid("id").primaryKey(),
+  publicKey: text("public_key").notNull(),
+  privateKey: text("private_key").notNull(),
+  createdAt: timestamp("created_at").notNull(),
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 export const betterAuthSchema = {
   user: users,
   session: sessions,
   account: accounts,
   verification: verifications,
+  oauthApplication,
+  oauthAccessToken,
+  oauthConsent,
+  jwks,
 } as const;
 
 for (const [modelName, table] of Object.entries(betterAuthSchema)) {
@@ -551,5 +588,5 @@ export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;
 export type UserActivity = typeof userActivity.$inferSelect;
 export type NewUserActivity = typeof userActivity.$inferInsert;
-export type OAuthClient = typeof oauthClients.$inferSelect;
-export type NewOAuthClient = typeof oauthClients.$inferInsert;
+export type OAuthApplication = typeof oauthApplication.$inferSelect;
+export type OAuthConsent = typeof oauthConsent.$inferSelect;

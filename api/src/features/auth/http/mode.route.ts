@@ -12,7 +12,7 @@ export const authModeRoute = createRoute({
   responses: {
     [HttpStatusCodes.OK]: jsonContent(
       authModeSchema,
-      "Current auth mode (feature flag)",
+      "Auth config (google social login availability)",
     ),
   },
 });

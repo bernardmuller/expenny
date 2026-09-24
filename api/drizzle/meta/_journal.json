@@ -131,15 +131,29 @@
     {
       "idx": 19,
       "version": "7",
-      "when": 1789197267954,
-      "tag": "0019_moaning_susan_delgado",
+      "when": 1789199668926,
+      "tag": "0019_oauth_clients",
       "breakpoints": true
     },
     {
       "idx": 20,
       "version": "7",
-      "when": 1789199668926,
-      "tag": "0020_oauth_clients",
+      "when": 1790000000000,
+      "tag": "0020_better_auth_mcp_oidc",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1790000000001,
+      "tag": "0021_oauth_client_id_text",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1790247151284,
+      "tag": "0022_oauth_fk_names",
       "breakpoints": true
     }
   ]

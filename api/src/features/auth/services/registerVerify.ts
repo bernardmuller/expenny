@@ -5,8 +5,6 @@ import type { RegisterVerifyParams, RegisterVerifyResponse } from "../types";
 import { pinoInstance as logger } from "@/lib/http/middleware/logger";
 import { compareOTP } from "@/lib/utils/compareOTP";
 import { decodeVerificationToken } from "@/lib/utils/decodeVerificationToken";
-import { generateAccessToken, generateRefreshToken } from "@/lib/utils/jwt";
-import { authMode } from "@/lib/auth/better-auth";
 import { ResultAsync } from "neverthrow";
 import { createBetterAuthSession } from "@/lib/auth/session";
 import { DatabaseError } from "@/lib/errors/domain";
@@ -19,6 +17,7 @@ import * as UserDomain from "@/features/users/actions";
 export const registerVerify = (
   params: RegisterVerifyParams & { token: string },
   ctx: AppContext,
+  request?: Request,
 ): AppResult<RegisterVerifyResponse> =>
   decodeVerificationToken(params.token)
     .andThen(({ verificationId }) =>
@@ -65,35 +64,20 @@ export const registerVerify = (
         verificationId,
       })),
     )
-    .andThen(({ user, verificationId }) => {
-      if (authMode === "better-auth") {
-        return ResultAsync.fromPromise(
-          createBetterAuthSession(user.id),
-          (err) => new DatabaseError(String(err)),
-        ).andThen(({ token }) =>
-          VerificationServices.deleteVerification(verificationId, ctx).map(
-            () => ({
-              user,
-              accessToken: token,
-              refreshToken: token,
-            }),
-          ),
-        );
-      }
-      return generateAccessToken(user.id, user.email, user.name).andThen(
-        (accessToken) =>
-          generateRefreshToken(user.id, user.email, user.name).andThen(
-            (refreshToken) =>
-              VerificationServices.deleteVerification(verificationId, ctx).map(
-                () => ({
-                  user,
-                  accessToken,
-                  refreshToken,
-                }),
-              ),
-          ),
-      );
-    })
+    .andThen(({ user, verificationId }) =>
+      ResultAsync.fromPromise(
+        createBetterAuthSession(user.id, request),
+        (err) => new DatabaseError(String(err)),
+      ).andThen(({ token }) =>
+        VerificationServices.deleteVerification(verificationId, ctx).map(
+          () => ({
+            user,
+            accessToken: token,
+            refreshToken: token,
+          }),
+        ),
+      ),
+    )
     .mapErr((error) => {
       logger.error(
         {

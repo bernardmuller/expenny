@@ -8,3 +8,4 @@ export * from "./loginAttempt.schema";
 export * from "./loginResponse.schema";
 export * from "./loginRequestResponse.schema";
 export * from "./authMode.schema";
+export * from "./mcpUserinfo.schema";

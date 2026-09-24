@@ -5,7 +5,6 @@ import { client, toResult } from '../client'
 import { withToken } from '../with-token'
 import { queryKeys } from '../query-keys'
 import { setCurrentUser, setTokens } from '@/lib/auth/token-storage'
-import { getAuthMode } from '@/lib/auth/auth-mode'
 import { syncCurrentUserFromSession } from '@/lib/auth/session-sync'
 import type { paths } from '../schema'
 
@@ -42,13 +41,11 @@ export function useRegisterVerify() {
           )
             .map(async (data) => {
               setTokens(data.accessToken, data.refreshToken)
-              if (getAuthMode() === 'better-auth') {
-                setCurrentUser({
-                  userId: data.user.id,
-                  email: data.user.email,
-                  name: data.user.name,
-                })
-              }
+              setCurrentUser({
+                userId: data.user.id,
+                email: data.user.email,
+                name: data.user.name,
+              })
               sessionStorage.removeItem('token')
               await syncCurrentUserFromSession()
               return data

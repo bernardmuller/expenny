@@ -1,12 +1,11 @@
 import { createContext, useContext, useState } from 'react'
 import type { ReactNode } from 'react'
 import { hasTokens, clearTokens } from './token-storage'
-import { getAuthMode } from './auth-mode'
 
 interface AuthContextValue {
   isAuthenticated: boolean
   login: () => void
-  logout: () => void
+  logout: () => Promise<void>
   checkAuth: () => boolean
 }
 
@@ -23,12 +22,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = () => setIsAuthenticated(true)
 
-  const logout = () => {
-    if (getAuthMode() === 'better-auth') {
-      void fetch(`${import.meta.env.VITE_API_URL}/auth/sign-out`, {
+  const logout = async () => {
+    try {
+      // Awaited, not fire-and-forget: navigating away cancels the request before
+      // the browser applies the Set-Cookie that clears the session, leaving a
+      // live cookie that bootstrapSessionFromCookie turns straight back into
+      // tokens on /login — signing the user back in.
+      await fetch(`${import.meta.env.VITE_API_URL ?? ''}/auth/sign-out`, {
         method: 'POST',
         credentials: 'include',
-      }).catch(() => {})
+        signal: AbortSignal.timeout(5000),
+      })
+    } catch {
+      // API down or offline — still drop local state so sign-out is honoured here.
     }
     clearTokens()
     setIsAuthenticated(false)

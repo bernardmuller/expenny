@@ -164,7 +164,11 @@ function ProfilePage() {
               </Button>
             </div>
             <Separator />
-            <Button variant="destructive" onClick={logout} className="w-full">
+            <Button
+              variant="destructive"
+              onClick={() => void logout()}
+              className="w-full"
+            >
               Sign out
             </Button>
           </CardContent>

@@ -17,7 +17,13 @@ import { cors } from "hono/cors";
 import env from "./env";
 import { authMiddleware } from "@/lib/http/middleware/auth";
 import { cronAuth } from "@/lib/http/middleware/cronAuth";
-import { betterAuthInstance } from "@/lib/auth/better-auth";
+import {
+  betterAuthInstance,
+} from "@/lib/auth/better-auth";
+import {
+  oAuthDiscoveryMetadata,
+  oAuthProtectedResourceMetadata,
+} from "better-auth/plugins";
 
 const app = createApi();
 
@@ -47,19 +53,37 @@ app.use(
         ? (origin) => origin
         : [
             env.AUTH_URL,
-            "http://localhost:4173",
+            "http://localhost:3000",
             "http://10.233.1.2:3000",
             "http://10.233.1.1",
             "http://100.96.157.69:3000",
             "https://41.193.48.126",
             "https://100.64.210.48",
           ],
-    allowHeaders: ["Content-Type", "Authorization"],
+    allowHeaders: [
+      "Content-Type",
+      "Authorization",
+      "Access-Control-Allow-Origin",
+    ],
     allowMethods: ["POST", "GET", "PATCH", "DELETE", "OPTIONS"],
     exposeHeaders: ["Content-Length"],
     maxAge: 600,
     credentials: true,
   }),
+);
+
+// OAuth 2.0 discovery documents — must be public, mounted at root
+app.get("/.well-known/oauth-authorization-server", (c) =>
+  oAuthDiscoveryMetadata(betterAuthInstance)(c.req.raw),
+);
+// RFC 8414 §3.1: for an issuer with a path component (ours is <origin>/auth),
+// the well-known path is inserted before it. Clients differ on which form they
+// try, so serve both.
+app.get("/.well-known/oauth-authorization-server/*", (c) =>
+  oAuthDiscoveryMetadata(betterAuthInstance)(c.req.raw),
+);
+app.get("/.well-known/oauth-protected-resource", (c) =>
+  oAuthProtectedResourceMetadata(betterAuthInstance)(c.req.raw),
 );
 
 app.use("*", async (c, next) => {
@@ -71,7 +95,8 @@ app.use("*", async (c, next) => {
     path === "/doc" ||
     path.startsWith("/auth") ||
     path.startsWith("/health") ||
-    path.startsWith("/cron")
+    path.startsWith("/cron") ||
+    path.startsWith("/.well-known")
   ) {
     return next();
   }

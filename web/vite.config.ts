@@ -33,5 +33,10 @@ export default defineConfig({
   },
   server: {
     allowedHosts: true,
+    // /oauth is deliberately NOT proxied — /oauth/consent is a SPA route.
+    proxy: {
+      '/auth': 'http://localhost:8080',
+      '/.well-known': 'http://localhost:8080',
+    },
   },
 })
