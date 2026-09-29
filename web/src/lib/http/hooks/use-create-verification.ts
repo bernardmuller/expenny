@@ -6,70 +6,67 @@ import { client, toResult } from '../client'
 import { queryKeys } from '../query-keys'
 import type { paths } from '../schema'
 import { getUserIdFromAccessToken } from '@/lib/auth/decode-token'
-import { withAccessToken } from '../with-token'
+import { withSession } from '../with-token'
 
 type CreateVerificationSuccess =
-	paths['/verifications']['post']['responses']['201']['content']['application/json']
+  paths['/verifications']['post']['responses']['201']['content']['application/json']
 
 type CreateVerificationError = {
-	error: string
-	message: string
-	code: string
+  error: string
+  message: string
+  code: string
 }
 
 export function useCreateVerification() {
-	const queryClient = useQueryClient()
+  const queryClient = useQueryClient()
 
-	return useMutation({
-		mutationKey: queryKeys.verifications.create(),
-		mutationFn: async (): Promise<
-			Result<CreateVerificationSuccess, CreateVerificationError>
-		> =>
-			withAccessToken(
-				(ctx) => {
-					const userIdResult = getUserIdFromAccessToken()
+  return useMutation({
+    mutationKey: queryKeys.verifications.create(),
+    mutationFn: async (): Promise<
+      Result<CreateVerificationSuccess, CreateVerificationError>
+    > =>
+      withSession(
+        () => {
+          const userIdResult = getUserIdFromAccessToken()
 
-					if (userIdResult.isErr()) {
-						toast.error('Unable to get user information')
-						console.log("error")
-						return errAsync({
-							error: 'Unauthorized',
-							message: 'Unable to get user information',
-							code: 'MISSING_USER_ID',
-						})
-					}
-					const userId = userIdResult.value
+          if (userIdResult.isErr()) {
+            toast.error('Unable to get user information')
+            console.log('error')
+            return errAsync({
+              error: 'Unauthorized',
+              message: 'Unable to get user information',
+              code: 'MISSING_USER_ID',
+            })
+          }
+          const userId = userIdResult.value
 
-					return toResult(
-						client.POST('/verifications', {
-							headers: {
-								authorization: `Bearer ${ctx.token}`,
-							},
-							body: {
-								value: userId,
-							},
-						}),
-					)
-						.andThen((data) => {
-							toast.success('Penny Bot link ready — open Telegram to finish.')
-							queryClient.invalidateQueries({
-								queryKey: queryKeys.verifications.byValue(userId),
-							})
-							return ok(data)
-						})
-						.mapErr((error) => {
-							toast.error(error.message || 'Failed to create verification')
-							return error
-						})
-				},
-				(): CreateVerificationError => ({
-					error: 'Unauthorized',
-					message: 'No access token found',
-					code: 'MISSING_ACCESS_TOKEN',
-				}),
-			)().match(
-				(data) => ok(data),
-				(error) => err(error),
-			),
-	})
+          return toResult(
+            client.POST('/verifications', {
+              body: {
+                value: userId,
+              },
+            }),
+          )
+            .andThen((data) => {
+              toast.success('Penny Bot link ready — open Telegram to finish.')
+              queryClient.invalidateQueries({
+                queryKey: queryKeys.verifications.byValue(userId),
+              })
+              return ok(data)
+            })
+            .mapErr((error) => {
+              toast.error(error.message || 'Failed to create verification')
+              return error
+            })
+        },
+        (): CreateVerificationError => ({
+          error: 'Unauthorized',
+          message: 'You are not signed in',
+          code: 'NOT_AUTHENTICATED',
+        }),
+      )().match(
+        (data) => ok(data),
+        (error) => err(error),
+      ),
+  })
 }

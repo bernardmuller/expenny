@@ -32,6 +32,16 @@ export const removeItem = (key: StorageKey): void => {
   localStorage.setItem(STORE_KEY, JSON.stringify(storage))
 }
 
+/**
+ * Drop keys that are no longer part of the schema. Takes raw strings because
+ * retired keys are deliberately absent from `StorageKey`.
+ */
+export const removeLegacyItems = (keys: ReadonlyArray<string>): void => {
+  const storage = parseStorage(localStorage.getItem(STORE_KEY))
+  for (const key of keys) delete storage[key]
+  localStorage.setItem(STORE_KEY, JSON.stringify(storage))
+}
+
 const clearAll = (): void => {
   localStorage.removeItem(STORE_KEY)
 }

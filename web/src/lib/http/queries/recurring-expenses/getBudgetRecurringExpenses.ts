@@ -1,7 +1,7 @@
 import { toast } from 'sonner'
 import { client, toResult } from '../../client'
 import { queryKeys } from '../../query-keys'
-import { withAccessToken } from '../../with-token'
+import { withSession } from '../../with-token'
 import type { paths } from '../../schema'
 
 export type BudgetRecurringExpensesSuccess =
@@ -19,18 +19,17 @@ type BudgetRecurringExpensesError = {
 async function fetchBudgetRecurringExpenses(
   budgetId: string,
 ): Promise<BudgetRecurringExpensesSuccess> {
-  const result = await withAccessToken(
-    (ctx) =>
+  const result = await withSession(
+    () =>
       toResult(
         client.GET('/budgets/{budgetId}/recurring-expenses', {
           params: { path: { budgetId } },
-          headers: { authorization: `Bearer ${ctx.token}` },
         }),
       ),
     (): BudgetRecurringExpensesError => ({
       error: 'Unauthorized',
-      message: 'No access token found',
-      code: 'MISSING_ACCESS_TOKEN',
+      message: 'You are not signed in',
+      code: 'NOT_AUTHENTICATED',
     }),
   )()
 

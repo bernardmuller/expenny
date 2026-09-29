@@ -1,5 +1,5 @@
 import { toast } from 'sonner'
-import { withAccessToken } from '../with-token'
+import { withSession } from '../with-token'
 import { client, toResult } from '../client'
 import { queryKeys } from '../query-keys'
 import type { paths } from '../schema'
@@ -12,9 +12,7 @@ type BudgetDetailError =
   | paths['/budgets/{id}/with-relatives']['get']['responses']['404']['content']['application/json']
   | paths['/budgets/{id}/with-relatives']['get']['responses']['403']['content']['application/json']
 
-async function fetchBudgetById(
-  budgetId: string,
-): Promise<BudgetDetailSuccess> {
+async function fetchBudgetById(budgetId: string): Promise<BudgetDetailSuccess> {
   const userIdResult = getUserIdFromAccessToken()
 
   if (userIdResult.isErr()) {
@@ -22,23 +20,20 @@ async function fetchBudgetById(
     throw new Error('Unable to get user information')
   }
 
-  const result = await withAccessToken(
-    (ctx) => {
+  const result = await withSession(
+    () => {
       return toResult(
         client.GET('/budgets/{id}/with-relatives', {
           params: {
             path: { id: budgetId },
-          },
-          headers: {
-            authorization: `Bearer ${ctx.token}`,
           },
         }),
       )
     },
     (): BudgetDetailError => ({
       error: 'Unauthorized',
-      message: 'No access token found',
-      code: 'MISSING_ACCESS_TOKEN',
+      message: 'You are not signed in',
+      code: 'NOT_AUTHENTICATED',
     }),
   )()
 

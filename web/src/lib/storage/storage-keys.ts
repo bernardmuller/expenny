@@ -1,6 +1,6 @@
 export const STORAGE_KEYS = {
-  ACCESS_TOKEN: 'accessToken',
-  REFRESH_TOKEN: 'refreshToken',
+  /** better-auth session token, mirrored from the session cookie */
+  SESSION_TOKEN: 'sessionToken',
   CURRENT_USER: 'currentUser',
   BUDGET_PRIVACY: 'budgetPrivacy',
   THEME: 'vite-ui-theme',
@@ -10,6 +10,12 @@ export const STORAGE_KEYS = {
   PENDING_OAUTH: 'pendingOAuth',
 } as const
 
+/**
+ * Keys written by older builds that nothing reads any more. Pruned on sign-out
+ * so an existing install stops carrying them around.
+ */
+export const LEGACY_STORAGE_KEYS = ['accessToken', 'refreshToken'] as const
+
 export interface StoredCurrentUser {
   userId: string
   email: string
@@ -17,8 +23,7 @@ export interface StoredCurrentUser {
 }
 
 type StorageSchema = {
-  [STORAGE_KEYS.ACCESS_TOKEN]: string
-  [STORAGE_KEYS.REFRESH_TOKEN]: string
+  [STORAGE_KEYS.SESSION_TOKEN]: string
   [STORAGE_KEYS.CURRENT_USER]: StoredCurrentUser
   [STORAGE_KEYS.BUDGET_PRIVACY]: string // stored as 'true' | 'false'
   [STORAGE_KEYS.THEME]: 'light' | 'dark' | 'system'

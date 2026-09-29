@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { client, toResult } from '../client'
 import { queryKeys } from '../query-keys'
 import type { paths } from '../schema'
-import { withAccessToken } from '../with-token'
+import { withSession } from '../with-token'
 import type { NotificationPreferenceWithEntity } from '../queries/notification-preferences/getNotificationPreferences'
 
 type UpdateNotificationPreferenceBody =
@@ -44,14 +44,11 @@ export function useUpdateNotificationPreference() {
         UpdateNotificationPreferenceError
       >
     > =>
-      withAccessToken(
-        (ctx) => {
+      withSession(
+        () => {
           return toResult(
             client.PATCH('/notification-preferences/{id}', {
               params: { path: { id } },
-              headers: {
-                authorization: `Bearer ${ctx.token}`,
-              },
               body,
             }),
           )
@@ -68,8 +65,8 @@ export function useUpdateNotificationPreference() {
         },
         (): UpdateNotificationPreferenceError => ({
           error: 'Unauthorized',
-          message: 'No access token found',
-          code: 'MISSING_ACCESS_TOKEN',
+          message: 'You are not signed in',
+          code: 'NOT_AUTHENTICATED',
         }),
       )().match(
         (data) => ok(data),
@@ -81,8 +78,9 @@ export function useUpdateNotificationPreference() {
       await queryClient.cancelQueries({ queryKey })
       const previous =
         queryClient.getQueryData<NotificationPreferenceWithEntity[]>(queryKey)
-      queryClient.setQueryData<NotificationPreferenceWithEntity[]>(queryKey, (old) =>
-        old?.map((p) => (p.id === id ? { ...p, ...body } : p)),
+      queryClient.setQueryData<NotificationPreferenceWithEntity[]>(
+        queryKey,
+        (old) => old?.map((p) => (p.id === id ? { ...p, ...body } : p)),
       )
       return { previous, queryKey }
     },

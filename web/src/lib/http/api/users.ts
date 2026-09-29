@@ -1,16 +1,13 @@
 import { client, toResult } from '../client'
-import { withAccessToken } from '../with-token'
+import { withSession } from '../with-token'
 
 export const getUserById = (userId: string) =>
-  withAccessToken(
-    (ctx) =>
+  withSession(
+    () =>
       toResult(
         client.GET('/users/{id}', {
           params: {
             path: { id: userId },
-          },
-          headers: {
-            authorization: `Bearer ${ctx.token}`,
           },
         }),
       ),

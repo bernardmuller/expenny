@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { client, toResult } from '../client'
 import { withToken } from '../with-token'
 import { queryKeys } from '../query-keys'
-import { setCurrentUser, setTokens } from '@/lib/auth/token-storage'
+import { setCurrentUser, setSession } from '@/lib/auth/token-storage'
 import { syncCurrentUserFromSession } from '@/lib/auth/session-sync'
 import type { paths } from '../schema'
 
@@ -40,7 +40,7 @@ export function useRegisterVerify() {
             }),
           )
             .map(async (data) => {
-              setTokens(data.accessToken, data.refreshToken)
+              setSession(data.accessToken)
               setCurrentUser({
                 userId: data.user.id,
                 email: data.user.email,

@@ -386,7 +386,7 @@ function BudgetDetail() {
                 </div>
               )}
               {categories.length > 0 && (
-                <div className="grid gap-4">
+                <div className="grid gap-3">
                   {categories
                     .sort((a, b) => {
                       switch (sortOption) {

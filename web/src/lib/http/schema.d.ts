@@ -4,4335 +4,4471 @@
  */
 
 export interface paths {
-    "/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Budget API Index */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/register/request": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Request registration with email and name */
-            requestBody: {
-                content: {
-                    "application/json": {
-                        name: string;
-                        email: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description OTP sent successfully, returns verification token */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            token: string;
-                            otp?: string;
-                        };
-                    };
-                };
-                /** @description Email already in use */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/register/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header: {
-                    /** @description Verification token in format: Bearer <token> */
-                    authorization: string;
-                };
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Verify OTP and complete registration */
-            requestBody: {
-                content: {
-                    "application/json": {
-                        otp: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Registration completed successfully, user logged in */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            user: {
-                                /** Format: uuid */
-                                id: string;
-                                name: string;
-                                email: string;
-                                emailVerified: boolean;
-                                image: string | null;
-                                onboarded: boolean;
-                                /** Format: date */
-                                createdAt: string;
-                                /** Format: date */
-                                updatedAt: string;
-                            };
-                            accessToken: string;
-                            refreshToken: string;
-                        };
-                    };
-                };
-                /** @description Missing/invalid authorization header, invalid or expired OTP */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Verification not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/login/request": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Request magic link login with email */
-            requestBody: {
-                content: {
-                    "application/json": {
-                        email: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description OTP sent successfully, returns verification token */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            token: string;
-                            otp?: string;
-                        };
-                    };
-                };
-                /** @description User not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/login/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header: {
-                    /** @description Verification token in format: Bearer <token> */
-                    authorization: string;
-                };
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Verify OTP and get access tokens */
-            requestBody: {
-                content: {
-                    "application/json": {
-                        otp: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description OTP verified successfully, user logged in */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            accessToken: string;
-                            refreshToken: string;
-                        };
-                    };
-                };
-                /** @description Missing/invalid authorization header, invalid or expired OTP */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Verification not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header: {
-                    /** @description Refresh token in format: Bearer <token> */
-                    authorization: string;
-                };
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Tokens refreshed successfully, returns new access and refresh tokens */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            accessToken: string;
-                            refreshToken: string;
-                        };
-                    };
-                };
-                /** @description Missing/invalid authorization header, expired or invalid refresh token */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description User not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Returns a list of users */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** Format: uuid */
-                            id: string;
-                            name: string;
-                            email: string;
-                            emailVerified: boolean;
-                            image: string | null;
-                            onboarded: boolean;
-                            /** Format: date */
-                            createdAt: string;
-                            /** Format: date */
-                            updatedAt: string;
-                        }[];
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description User creation data */
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        name: string;
-                        email: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description User created successfully */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** Format: uuid */
-                            id: string;
-                            name: string;
-                            email: string;
-                            emailVerified: boolean;
-                            image: string | null;
-                            onboarded: boolean;
-                            /** Format: date */
-                            createdAt: string;
-                            /** Format: date */
-                            updatedAt: string;
-                        };
-                    };
-                };
-                /** @description Validation error - email already in use */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Return a user */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** Format: uuid */
-                            id: string;
-                            name: string;
-                            email: string;
-                            emailVerified: boolean;
-                            image: string | null;
-                            onboarded: boolean;
-                            /** Format: date */
-                            createdAt: string;
-                            /** Format: date */
-                            updatedAt: string;
-                        };
-                    };
-                };
-                /** @description User not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            /** @description User update data */
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        /** Format: uuid */
-                        id?: string;
-                        name?: string;
-                        email?: string;
-                        emailVerified?: boolean;
-                        image?: string | null;
-                        onboarded?: boolean;
-                        /** Format: date */
-                        createdAt?: string;
-                        /** Format: date */
-                        updatedAt?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description User updated successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** Format: uuid */
-                            id: string;
-                            name: string;
-                            email: string;
-                            emailVerified: boolean;
-                            image: string | null;
-                            onboarded: boolean;
-                            /** Format: date */
-                            createdAt: string;
-                            /** Format: date */
-                            updatedAt: string;
-                        };
-                    };
-                };
-                /** @description User not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        trace?: never;
-    };
-    "/users/{id}/onboard": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            /** @description Onboarding data */
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        name: string;
-                        startAmount: number;
-                        /** Format: date */
-                        startDate: string | null;
-                        /** Format: date */
-                        endDate: string | null;
-                        /** @enum {string} */
-                        budgetFrequency: "weekly" | "bi-weekly" | "monthly" | "custom";
-                        budgetStartDay: number;
-                        customDuration?: number;
-                        categories: {
-                            /** Format: uuid */
-                            id: string;
-                            icon: string;
-                            label: string;
-                            amount: number;
-                        }[];
-                    };
-                };
-            };
-            responses: {
-                /** @description User onboarded successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** Format: uuid */
-                            id: string;
-                            name: string;
-                            email: string;
-                            emailVerified: boolean;
-                            image: string | null;
-                            onboarded: boolean;
-                            /** Format: date */
-                            createdAt: string;
-                            /** Format: date */
-                            updatedAt: string;
-                        };
-                    };
-                };
-                /** @description User already onboarded */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description User marked as onboarded successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** Format: uuid */
-                            id: string;
-                            name: string;
-                            email: string;
-                            emailVerified: boolean;
-                            image: string | null;
-                            onboarded: boolean;
-                            /** Format: date */
-                            createdAt: string;
-                            /** Format: date */
-                            updatedAt: string;
-                        };
-                    };
-                };
-                /** @description User already onboarded */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        trace?: never;
-    };
-    "/users/{id}/budgets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            /** @description Budget creation data */
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        name: string;
-                        startAmount: number;
-                        startDate?: string;
-                        endDate?: string;
-                        categories: {
-                            /** Format: uuid */
-                            id: string;
-                            icon: string;
-                            label: string;
-                            amount: number;
-                        }[];
-                        recurringExpenseTemplateIds?: string[];
-                    };
-                };
-            };
-            responses: {
-                /** @description Budget created successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** Format: uuid */
-                            id: string;
-                            /** Format: uuid */
-                            userId: string;
-                            name: string;
-                            startAmount: string;
-                            currentAmount: string;
-                            isActive: boolean;
-                            createdAt: string;
-                            updatedAt: string;
-                            deletedAt: string | null;
-                        };
-                    };
-                };
-                /** @description User not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/{id}/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description User marked as verified successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** Format: uuid */
-                            id: string;
-                            name: string;
-                            email: string;
-                            emailVerified: boolean;
-                            image: string | null;
-                            onboarded: boolean;
-                            /** Format: date */
-                            createdAt: string;
-                            /** Format: date */
-                            updatedAt: string;
-                        };
-                    };
-                };
-                /** @description User already verified */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        trace?: never;
-    };
-    "/users/{id}/setup-status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description User setup status */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            isFullySetup: boolean;
-                        };
-                    };
-                };
-                /** @description User not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/{id}/preferences": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description User preferences */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            budgetStartDate: number | null;
-                            /** @enum {string|null} */
-                            frequency: "weekly" | "bi-weekly" | "monthly" | "custom" | null;
-                            customDuration: number | null;
-                        };
-                    };
-                };
-                /** @description User not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            /** @description User preferences update data */
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        budgetStartDate?: number;
-                        /** @enum {string} */
-                        frequency?: "weekly" | "bi-weekly" | "monthly" | "custom";
-                        customDuration?: number;
-                    };
-                };
-            };
-            responses: {
-                /** @description User preferences updated successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            budgetStartDate: number | null;
-                            /** @enum {string|null} */
-                            frequency: "weekly" | "bi-weekly" | "monthly" | "custom" | null;
-                            customDuration: number | null;
-                        };
-                    };
-                };
-                /** @description User not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        trace?: never;
-    };
-    "/users/{id}/categories": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description User categories */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** Format: uuid */
-                            id: string;
-                            key: string;
-                            label: string;
-                            icon: string;
-                        }[];
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/budgets/{id}/expenses": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Budget with all expenses */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            id: string;
-                            userId: string;
-                            name: string;
-                            startAmount: string;
-                            currentAmount: string;
-                            sa_iv: string | null;
-                            sa_tag: string | null;
-                            ca_iv: string | null;
-                            ca_tag: string | null;
-                            isActive: boolean;
-                            /** Format: date */
-                            createdAt: string;
-                            /** Format: date */
-                            updatedAt: string;
-                            /** Format: date */
-                            deletedAt: string | null;
-                            /** Format: date */
-                            startDate: string | null;
-                            /** Format: date */
-                            endDate: string | null;
-                            expenses: {
-                                id: string;
-                                budgetId: string;
-                                description: string;
-                                amount: string;
-                                categoryId: string;
-                                /** Format: date */
-                                createdAt: string;
-                                /** Format: date */
-                                updatedAt: string;
-                                /** Format: date */
-                                deletedAt: string | null;
-                                category: {
-                                    id: string;
-                                    key: string;
-                                    label: string;
-                                    icon: string;
-                                };
-                            }[];
-                            categoryBudgets: {
-                                id: string;
-                                budgetId: string;
-                                categoryId: string;
-                                allocatedAmount: string;
-                                /** Format: date */
-                                createdAt: string;
-                                /** Format: date */
-                                updatedAt: string;
-                                /** Format: date */
-                                deletedAt: string | null;
-                                category: {
-                                    id: string;
-                                    key: string;
-                                    label: string;
-                                    icon: string;
-                                };
-                            }[];
-                            categoryBreakdown: {
-                                id: string;
-                                key: string;
-                                label: string;
-                                icon: string;
-                                spent: string;
-                                allocated: string | null;
-                            }[];
-                        };
-                    };
-                };
-                /** @description Access denied */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Budget not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/budgets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Active budget with expenses */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            budgets: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                userId: string;
-                                name: string;
-                                startAmount: string;
-                                currentAmount: string;
-                                sa_iv: string | null;
-                                sa_tag: string | null;
-                                ca_iv: string | null;
-                                ca_tag: string | null;
-                                isActive: boolean;
-                                /** Format: date */
-                                startDate: string | null;
-                                /** Format: date */
-                                endDate: string | null;
-                                /** Format: date */
-                                createdAt: string;
-                                /** Format: date */
-                                updatedAt: string;
-                                /** Format: date */
-                                deletedAt: string | null;
-                            }[];
-                            count: number;
-                        };
-                    };
-                };
-                /** @description Active budget not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/{id}/budgets/active": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Active budget with expenses */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** Format: uuid */
-                            id: string;
-                            /** Format: uuid */
-                            userId: string;
-                            name: string;
-                            startAmount: string;
-                            currentAmount: string;
-                            isActive: boolean;
-                            /** Format: date */
-                            createdAt: string;
-                            /** Format: date */
-                            updatedAt: string;
-                            /** Format: date */
-                            deletedAt: string | null;
-                            /** Format: date */
-                            startDate: string | null;
-                            /** Format: date */
-                            endDate: string | null;
-                            expenses: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                budgetId: string;
-                                description: string;
-                                amount: string;
-                                /** Format: uuid */
-                                categoryId: string;
-                                /** Format: date */
-                                createdAt: string;
-                                /** Format: date */
-                                updatedAt: string;
-                                /** Format: date */
-                                deletedAt: string | null;
-                                category: {
-                                    /** Format: uuid */
-                                    id: string;
-                                    key: string;
-                                    label: string;
-                                    icon: string;
-                                };
-                            }[];
-                        };
-                    };
-                };
-                /** @description Active budget not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/budgets/{id}/with-relatives": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Budget with previous and next budget IDs */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            budget: {
-                                id: string;
-                                userId: string;
-                                name: string;
-                                startAmount: string;
-                                currentAmount: string;
-                                sa_iv: string | null;
-                                sa_tag: string | null;
-                                ca_iv: string | null;
-                                ca_tag: string | null;
-                                isActive: boolean;
-                                /** Format: date */
-                                createdAt: string;
-                                /** Format: date */
-                                updatedAt: string;
-                                /** Format: date */
-                                deletedAt: string | null;
-                                /** Format: date */
-                                startDate: string | null;
-                                /** Format: date */
-                                endDate: string | null;
-                                expenses: {
-                                    id: string;
-                                    budgetId: string;
-                                    description: string;
-                                    amount: string;
-                                    categoryId: string;
-                                    /** Format: date */
-                                    createdAt: string;
-                                    /** Format: date */
-                                    updatedAt: string;
-                                    /** Format: date */
-                                    deletedAt: string | null;
-                                    category: {
-                                        id: string;
-                                        key: string;
-                                        label: string;
-                                        icon: string;
-                                    };
-                                }[];
-                                categoryBudgets: {
-                                    id: string;
-                                    budgetId: string;
-                                    categoryId: string;
-                                    allocatedAmount: string;
-                                    /** Format: date */
-                                    createdAt: string;
-                                    /** Format: date */
-                                    updatedAt: string;
-                                    /** Format: date */
-                                    deletedAt: string | null;
-                                    category: {
-                                        id: string;
-                                        key: string;
-                                        label: string;
-                                        icon: string;
-                                    };
-                                }[];
-                                categoryBreakdown: {
-                                    id: string;
-                                    key: string;
-                                    label: string;
-                                    icon: string;
-                                    spent: string;
-                                    allocated: string | null;
-                                }[];
-                            };
-                            previous: string | null;
-                            next: string | null;
-                        };
-                    };
-                };
-                /** @description Access denied */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Budget not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/categories": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of categories */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            categories: {
-                                /** Format: uuid */
-                                id: string;
-                                key: string;
-                                label: string;
-                                icon: string;
-                            }[];
-                            count: number;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/categories/{categoryId}/expenses/timeseries": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    months?: number;
-                    /** @description Aggregation level: 'month' groups across all budgets by month, 'budget' groups by individual budgets */
-                    granularity?: "month" | "budget";
-                };
-                header?: never;
-                path: {
-                    categoryId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Monthly expense totals for the category */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** Format: uuid */
-                            categoryId: string;
-                            /** @enum {string} */
-                            granularity: "month" | "budget";
-                            timeseries: {
-                                /** @description ISO date representing the start of the month (only present when granularity is 'month') */
-                                period?: string;
-                                /** @description Number of expenses */
-                                expenseCount: number;
-                                /** @description Total expense amount */
-                                totalAmount: number;
-                                /**
-                                 * Format: uuid
-                                 * @description Budget ID (only present when granularity is 'budget')
-                                 */
-                                budgetId?: string;
-                                /** @description Budget name (only present when granularity is 'budget') */
-                                budgetName?: string;
-                                /** @description Allocated budget amount for this category (only present when granularity is 'budget') */
-                                budgetAmount?: number;
-                            }[];
-                        };
-                    };
-                };
-                /** @description Invalid categoryId or months parameter */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Missing or invalid authentication */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Category not found or does not belong to user */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/categories/{categoryId}/expenses": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    limit?: number;
-                    offset?: number | null;
-                    sort?: "createdAt" | "-createdAt";
-                };
-                header?: never;
-                path: {
-                    categoryId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of expenses for the category */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            expenses: {
-                                id: string;
-                                budgetId: string;
-                                description: string;
-                                amount: string;
-                                note: string | null;
-                                categoryId: string;
-                                /** Format: date */
-                                createdAt: string;
-                                /** Format: date */
-                                updatedAt: string;
-                                /** Format: date */
-                                deletedAt: string | null;
-                                category: {
-                                    id: string;
-                                    key: string;
-                                    label: string;
-                                    icon: string;
-                                };
-                            }[];
-                            count: number;
-                        };
-                    };
-                };
-                /** @description Invalid categoryId format or query parameters */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Missing or invalid authentication */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Category not found or does not belong to user */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/budgets/{id}/transactions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            /** @description Transaction creation data */
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        description: string;
-                        amount: number;
-                        /** Format: uuid */
-                        categoryId: string;
-                        note?: string;
-                        createdAt?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Transaction created successfully */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** Format: uuid */
-                            id: string;
-                            /** Format: uuid */
-                            budgetId: string;
-                            description: string;
-                            amount: string;
-                            /** Format: uuid */
-                            categoryId: string;
-                            /** Format: uuid */
-                            templateId: string | null;
-                            note: string | null;
-                            /** Format: date */
-                            createdAt: string;
-                            /** Format: date */
-                            updatedAt: string;
-                            /** Format: date */
-                            deletedAt: string | null;
-                        };
-                    };
-                };
-                /** @description Budget or category not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Validation error */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/transactions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of transactions */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            transactions: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                budgetId: string;
-                                description: string;
-                                amount: string;
-                                /** Format: uuid */
-                                categoryId: string;
-                                /** Format: uuid */
-                                templateId: string | null;
-                                note: string | null;
-                                /** Format: date */
-                                createdAt: string;
-                                /** Format: date */
-                                updatedAt: string;
-                                /** Format: date */
-                                deletedAt: string | null;
-                            }[];
-                            count: number;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/{userId}/budgets/{budgetId}/expenses/{expenseId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    userId: string;
-                    budgetId: string;
-                    expenseId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Expense deleted successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** Format: uuid */
-                            id: string;
-                            /** Format: uuid */
-                            budgetId: string;
-                            description: string;
-                            amount: string;
-                            /** Format: uuid */
-                            categoryId: string;
-                            /** Format: uuid */
-                            templateId: string | null;
-                            note: string | null;
-                            /** Format: date */
-                            createdAt: string;
-                            /** Format: date */
-                            updatedAt: string;
-                            /** Format: date */
-                            deletedAt: string | null;
-                        };
-                    };
-                };
-                /** @description Missing required parameters */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                        };
-                    };
-                };
-                /** @description Expense or budget not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/{userId}/recurring-expenses": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    includeDeleted?: "true" | "false";
-                };
-                header?: never;
-                path: {
-                    userId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of recurring expense templates */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            templates: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                userId: string;
-                                description: string;
-                                amount: string;
-                                /** Format: uuid */
-                                categoryId: string | null;
-                                scheduledAt: string;
-                                /** Format: date */
-                                createdAt: string;
-                                /** Format: date */
-                                updatedAt: string;
-                                /** Format: date */
-                                deletedAt: string | null;
-                            }[];
-                        };
-                    };
-                };
-                /** @description Forbidden — userId does not match authenticated user */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    userId: string;
-                };
-                cookie?: never;
-            };
-            /** @description Recurring expense template payload */
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        description: string;
-                        amount: number;
-                        /** Format: uuid */
-                        categoryId: string;
-                        scheduledAt: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Template created successfully */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** Format: uuid */
-                            id: string;
-                            /** Format: uuid */
-                            userId: string;
-                            description: string;
-                            amount: string;
-                            /** Format: uuid */
-                            categoryId: string | null;
-                            scheduledAt: string;
-                            /** Format: date */
-                            createdAt: string;
-                            /** Format: date */
-                            updatedAt: string;
-                            /** Format: date */
-                            deletedAt: string | null;
-                        };
-                    };
-                };
-                /** @description Forbidden — userId does not match authenticated user */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description User or category not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Validation error */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/recurring-expenses/{templateId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    templateId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Template soft-deleted */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Template not found or access denied */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    templateId: string;
-                };
-                cookie?: never;
-            };
-            /** @description Template update payload */
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        description?: string;
-                        amount?: number;
-                        /** Format: uuid */
-                        categoryId?: string;
-                        scheduledAt?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Template updated successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** Format: uuid */
-                            id: string;
-                            /** Format: uuid */
-                            userId: string;
-                            description: string;
-                            amount: string;
-                            /** Format: uuid */
-                            categoryId: string | null;
-                            scheduledAt: string;
-                            /** Format: date */
-                            createdAt: string;
-                            /** Format: date */
-                            updatedAt: string;
-                            /** Format: date */
-                            deletedAt: string | null;
-                        };
-                    };
-                };
-                /** @description Template not found or access denied */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Validation error */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        trace?: never;
-    };
-    "/budgets/{budgetId}/recurring-expenses": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    budgetId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Budget recurring expense instances */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            recurringExpenses: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                budgetId: string;
-                                description: string;
-                                amount: string;
-                                /** Format: uuid */
-                                categoryId: string | null;
-                                isPaid: boolean;
-                                /** Format: uuid */
-                                expenseId: string | null;
-                                /** Format: uuid */
-                                templateId: string | null;
-                                scheduledAt: string | null;
-                                /** Format: date */
-                                createdAt: string;
-                                /** Format: date */
-                                updatedAt: string;
-                                /** Format: date */
-                                deletedAt: string | null;
-                                category: {
-                                    id: string;
-                                    key: string;
-                                    label: string;
-                                    icon: string;
-                                } | null;
-                                expense: {
-                                    id: string;
-                                    description: string;
-                                    amount: string;
-                                    categoryId: string;
-                                    note: string | null;
-                                    createdAt: string;
-                                    updatedAt: string;
-                                    deletedAt: string | null;
-                                } | null;
-                            }[];
-                        };
-                    };
-                };
-                /** @description Budget not found or access denied */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/budgets/{budgetId}/recurring-expenses/{instanceId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    budgetId: string;
-                    instanceId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Instance soft-deleted */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Cannot delete a paid instance */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Budget or instance not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    budgetId: string;
-                    instanceId: string;
-                };
-                cookie?: never;
-            };
-            /** @description Mark recurring expense paid or unpaid */
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        /** @enum {boolean} */
-                        isPaid: true;
-                        expenseData: {
-                            description: string;
-                            amount: number;
-                            /** Format: uuid */
-                            categoryId: string;
-                            note?: string;
-                            createdAt?: string;
-                        };
-                    } | {
-                        /** @enum {boolean} */
-                        isPaid: false;
-                    };
-                };
-            };
-            responses: {
-                /** @description Created expense when marking as paid */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** Format: uuid */
-                            id: string;
-                            /** Format: uuid */
-                            budgetId: string;
-                            description: string;
-                            amount: string;
-                            /** Format: uuid */
-                            categoryId: string;
-                            /** Format: uuid */
-                            templateId: string | null;
-                            note: string | null;
-                            /** Format: date */
-                            createdAt: string;
-                            /** Format: date */
-                            updatedAt: string;
-                            /** Format: date */
-                            deletedAt: string | null;
-                        };
-                    };
-                };
-                /** @description Instance unmarked as paid */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Validation error */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Budget or instance not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Instance state conflict (already paid / not paid) */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Validation error */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        trace?: never;
-    };
-    "/verifications": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    identifier?: string;
-                    value?: string;
-                    limit?: number;
-                    offset?: number | null;
-                    sort?: "createdAt";
-                    order?: "asc" | "desc";
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of verifications */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            verifications: {
-                                /** Format: uuid */
-                                id: string;
-                                identifier: string;
-                                value: string;
-                                /** Format: date */
-                                expiresAt: string;
-                                /** Format: date */
-                                createdAt: string | null;
-                                /** Format: date */
-                                updatedAt: string | null;
-                            }[];
-                            count: number;
-                        };
-                    };
-                };
-                /** @description Invalid query parameters */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Verification to create */
-            requestBody: {
-                content: {
-                    "application/json": {
-                        value: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Created verification */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            verification: {
-                                /** Format: uuid */
-                                id: string;
-                                identifier: string;
-                                value: string;
-                                /** Format: date */
-                                expiresAt: string;
-                                /** Format: date */
-                                createdAt: string | null;
-                                /** Format: date */
-                                updatedAt: string | null;
-                            };
-                        };
-                    };
-                };
-                /** @description Validation error */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/verifications/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Verification */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            verification: {
-                                /** Format: uuid */
-                                id: string;
-                                identifier: string;
-                                value: string;
-                                /** Format: date */
-                                expiresAt: string;
-                                /** Format: date */
-                                createdAt: string | null;
-                                /** Format: date */
-                                updatedAt: string | null;
-                            };
-                        };
-                    };
-                };
-                /** @description Verification not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Deleted verification */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            verification: {
-                                /** Format: uuid */
-                                id: string;
-                                identifier: string;
-                                value: string;
-                                /** Format: date */
-                                expiresAt: string;
-                                /** Format: date */
-                                createdAt: string | null;
-                                /** Format: date */
-                                updatedAt: string | null;
-                            };
-                        };
-                    };
-                };
-                /** @description Verification not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            /** @description Fields to update */
-            requestBody: {
-                content: {
-                    "application/json": {
-                        identifier?: string;
-                        value?: string;
-                        /** Format: date */
-                        expiresAt?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Updated verification */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            verification: {
-                                /** Format: uuid */
-                                id: string;
-                                identifier: string;
-                                value: string;
-                                /** Format: date */
-                                expiresAt: string;
-                                /** Format: date */
-                                createdAt: string | null;
-                                /** Format: date */
-                                updatedAt: string | null;
-                            };
-                        };
-                    };
-                };
-                /** @description Verification not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Validation error */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        trace?: never;
-    };
-    "/chats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    userId?: string;
-                    chatId?: string;
-                    type?: string;
-                    limit?: number;
-                    offset?: number | null;
-                    sort?: "createdAt";
-                    order?: "asc" | "desc";
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of chats */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            chats: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                userId: string;
-                                chatId: string | null;
-                                type: string | null;
-                                /** Format: date */
-                                createdAt: string;
-                                /** Format: date */
-                                updatedAt: string;
-                            }[];
-                            count: number;
-                        };
-                    };
-                };
-                /** @description Invalid query parameters */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Chat to create */
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /** Format: uuid */
-                        userId: string;
-                        chatId: string | null;
-                        type: string | null;
-                    };
-                };
-            };
-            responses: {
-                /** @description Created chat */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            chat: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                userId: string;
-                                chatId: string | null;
-                                type: string | null;
-                                /** Format: date */
-                                createdAt: string;
-                                /** Format: date */
-                                updatedAt: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Validation error */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/chats/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Chat */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            chat: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                userId: string;
-                                chatId: string | null;
-                                type: string | null;
-                                /** Format: date */
-                                createdAt: string;
-                                /** Format: date */
-                                updatedAt: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Chat not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Deleted chat */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            chat: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                userId: string;
-                                chatId: string | null;
-                                type: string | null;
-                                /** Format: date */
-                                createdAt: string;
-                                /** Format: date */
-                                updatedAt: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Chat not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            /** @description Fields to update */
-            requestBody: {
-                content: {
-                    "application/json": {
-                        chatId?: string | null;
-                        type?: string | null;
-                    };
-                };
-            };
-            responses: {
-                /** @description Updated chat */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            chat: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                userId: string;
-                                chatId: string | null;
-                                type: string | null;
-                                /** Format: date */
-                                createdAt: string;
-                                /** Format: date */
-                                updatedAt: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Chat not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Validation error */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        trace?: never;
-    };
-    "/notification-preferences": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    type?: string;
-                    channel?: string;
-                    enabled?: boolean | null;
-                    limit?: number;
-                    offset?: number | null;
-                    sort?: "createdAt";
-                    order?: "asc" | "desc";
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of notification preferences for the authenticated user */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            notificationPreferences: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                userId: string;
-                                /** Format: uuid */
-                                entityId: string | null;
-                                type: string;
-                                enabled: boolean;
-                                channel: string;
-                                /** Format: date */
-                                scheduledAt: string | null;
-                                /** Format: date */
-                                createdAt: string;
-                                /** Format: date */
-                                updatedAt: string;
-                            }[];
-                            count: number;
-                        };
-                    };
-                };
-                /** @description Invalid query parameters */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Notification preference to create */
-            requestBody: {
-                content: {
-                    "application/json": {
-                        type: string;
-                        channel: string;
-                        enabled: boolean;
-                        /** Format: uuid */
-                        entityId: string | null;
-                        /** Format: date */
-                        scheduledAt: string | null;
-                    };
-                };
-            };
-            responses: {
-                /** @description Created notification preference */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            notificationPreference: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                userId: string;
-                                /** Format: uuid */
-                                entityId: string | null;
-                                type: string;
-                                enabled: boolean;
-                                channel: string;
-                                /** Format: date */
-                                scheduledAt: string | null;
-                                /** Format: date */
-                                createdAt: string;
-                                /** Format: date */
-                                updatedAt: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Validation error */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/notification-preferences/with-entity": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    type?: string;
-                    channel?: string;
-                    enabled?: boolean | null;
-                    limit?: number;
-                    offset?: number | null;
-                    sort?: "createdAt";
-                    order?: "asc" | "desc";
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of notification preferences for the authenticated user, joined with the related entity (currently only recurring-expense-reminder templates). */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            notificationPreferences: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                userId: string;
-                                /** Format: uuid */
-                                entityId: string | null;
-                                type: string;
-                                enabled: boolean;
-                                channel: string;
-                                /** Format: date */
-                                scheduledAt: string | null;
-                                /** Format: date */
-                                createdAt: string;
-                                /** Format: date */
-                                updatedAt: string;
-                                template: {
-                                    /** Format: uuid */
-                                    id: string;
-                                    description: string;
-                                    amount: string;
-                                    scheduledAt: string;
-                                    /** Format: uuid */
-                                    categoryId: string | null;
-                                } | null;
-                            }[];
-                            count: number;
-                        };
-                    };
-                };
-                /** @description Invalid query parameters */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/notification-preferences/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Notification preference */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            notificationPreference: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                userId: string;
-                                /** Format: uuid */
-                                entityId: string | null;
-                                type: string;
-                                enabled: boolean;
-                                channel: string;
-                                /** Format: date */
-                                scheduledAt: string | null;
-                                /** Format: date */
-                                createdAt: string;
-                                /** Format: date */
-                                updatedAt: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Deleted notification preference */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            notificationPreference: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                userId: string;
-                                /** Format: uuid */
-                                entityId: string | null;
-                                type: string;
-                                enabled: boolean;
-                                channel: string;
-                                /** Format: date */
-                                scheduledAt: string | null;
-                                /** Format: date */
-                                createdAt: string;
-                                /** Format: date */
-                                updatedAt: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            /** @description Fields to update */
-            requestBody: {
-                content: {
-                    "application/json": {
-                        type?: string;
-                        channel?: string;
-                        enabled?: boolean;
-                        /** Format: date */
-                        scheduledAt?: string | null;
-                    };
-                };
-            };
-            responses: {
-                /** @description Updated notification preference */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            notificationPreference: {
-                                /** Format: uuid */
-                                id: string;
-                                /** Format: uuid */
-                                userId: string;
-                                /** Format: uuid */
-                                entityId: string | null;
-                                type: string;
-                                enabled: boolean;
-                                channel: string;
-                                /** Format: date */
-                                scheduledAt: string | null;
-                                /** Format: date */
-                                createdAt: string;
-                                /** Format: date */
-                                updatedAt: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Validation error */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        trace?: never;
-    };
-    "/streaks": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    days?: number;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description User streak data */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            days: {
-                                date: string;
-                                count: number;
-                            }[];
-                            currentStreak: number;
-                            longestStreak: number;
-                            totalActiveDays: number;
-                            checkedInToday: boolean;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/streaks/check-in": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Updated streak after recording today's activity */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            days: {
-                                date: string;
-                                count: number;
-                            }[];
-                            currentStreak: number;
-                            longestStreak: number;
-                            totalActiveDays: number;
-                            checkedInToday: boolean;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            message: string;
-                            code: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
+  '/': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Budget API Index */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              message: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/auth/register/request': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      /** @description Request registration with email and name */
+      requestBody: {
+        content: {
+          'application/json': {
+            name: string
+            email: string
+          }
+        }
+      }
+      responses: {
+        /** @description OTP sent successfully, returns verification token */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              token: string
+              otp?: string
+            }
+          }
+        }
+        /** @description Email already in use */
+        409: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/auth/register/verify': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header: {
+          /** @description Verification token in format: Bearer <token> */
+          authorization: string
+        }
+        path?: never
+        cookie?: never
+      }
+      /** @description Verify OTP and complete registration */
+      requestBody: {
+        content: {
+          'application/json': {
+            otp: string
+          }
+        }
+      }
+      responses: {
+        /** @description Registration completed successfully, user logged in */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              user: {
+                /** Format: uuid */
+                id: string
+                name: string
+                email: string
+                emailVerified: boolean
+                image: string | null
+                onboarded: boolean
+                /** Format: date */
+                createdAt: string
+                /** Format: date */
+                updatedAt: string
+              }
+              accessToken: string
+              refreshToken: string
+            }
+          }
+        }
+        /** @description Missing/invalid authorization header, invalid or expired OTP */
+        401: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Verification not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/auth/login/request': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      /** @description Request magic link login with email */
+      requestBody: {
+        content: {
+          'application/json': {
+            email: string
+          }
+        }
+      }
+      responses: {
+        /** @description OTP sent successfully, returns verification token */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              token: string
+              otp?: string
+            }
+          }
+        }
+        /** @description User not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/auth/login/verify': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header: {
+          /** @description Verification token in format: Bearer <token> */
+          authorization: string
+        }
+        path?: never
+        cookie?: never
+      }
+      /** @description Verify OTP and get access tokens */
+      requestBody: {
+        content: {
+          'application/json': {
+            otp: string
+          }
+        }
+      }
+      responses: {
+        /** @description OTP verified successfully, user logged in */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              accessToken: string
+              refreshToken: string
+            }
+          }
+        }
+        /** @description Missing/invalid authorization header, invalid or expired OTP */
+        401: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Verification not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/auth/mode': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Auth config (google social login availability) */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              google: boolean
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/auth/mcp/userinfo': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Claims for the bearer's MCP access token */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              sub: string
+              email: string
+              email_verified: boolean
+              name: string
+            }
+          }
+        }
+        /** @description Missing, invalid or expired access token */
+        401: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/users': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Returns a list of users */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string
+              name: string
+              email: string
+              emailVerified: boolean
+              image: string | null
+              onboarded: boolean
+              /** Format: date */
+              createdAt: string
+              /** Format: date */
+              updatedAt: string
+            }[]
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      /** @description User creation data */
+      requestBody?: {
+        content: {
+          'application/json': {
+            name: string
+            email: string
+          }
+        }
+      }
+      responses: {
+        /** @description User created successfully */
+        201: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string
+              name: string
+              email: string
+              emailVerified: boolean
+              image: string | null
+              onboarded: boolean
+              /** Format: date */
+              createdAt: string
+              /** Format: date */
+              updatedAt: string
+            }
+          }
+        }
+        /** @description Validation error - email already in use */
+        422: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/users/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Return a user */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string
+              name: string
+              email: string
+              emailVerified: boolean
+              image: string | null
+              onboarded: boolean
+              /** Format: date */
+              createdAt: string
+              /** Format: date */
+              updatedAt: string
+            }
+          }
+        }
+        /** @description User not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      /** @description User update data */
+      requestBody?: {
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id?: string
+            name?: string
+            email?: string
+            emailVerified?: boolean
+            image?: string | null
+            onboarded?: boolean
+            /** Format: date */
+            createdAt?: string
+            /** Format: date */
+            updatedAt?: string
+          }
+        }
+      }
+      responses: {
+        /** @description User updated successfully */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string
+              name: string
+              email: string
+              emailVerified: boolean
+              image: string | null
+              onboarded: boolean
+              /** Format: date */
+              createdAt: string
+              /** Format: date */
+              updatedAt: string
+            }
+          }
+        }
+        /** @description User not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    trace?: never
+  }
+  '/users/{id}/onboard': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      /** @description Onboarding data */
+      requestBody?: {
+        content: {
+          'application/json': {
+            name: string
+            startAmount: number
+            /** Format: date */
+            startDate: string | null
+            /** Format: date */
+            endDate: string | null
+            /** @enum {string} */
+            budgetFrequency: 'weekly' | 'bi-weekly' | 'monthly' | 'custom'
+            budgetStartDay: number
+            customDuration?: number
+            categories: {
+              /** Format: uuid */
+              id: string
+              icon: string
+              label: string
+              amount: number
+            }[]
+          }
+        }
+      }
+      responses: {
+        /** @description User onboarded successfully */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string
+              name: string
+              email: string
+              emailVerified: boolean
+              image: string | null
+              onboarded: boolean
+              /** Format: date */
+              createdAt: string
+              /** Format: date */
+              updatedAt: string
+            }
+          }
+        }
+        /** @description User already onboarded */
+        409: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description User marked as onboarded successfully */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string
+              name: string
+              email: string
+              emailVerified: boolean
+              image: string | null
+              onboarded: boolean
+              /** Format: date */
+              createdAt: string
+              /** Format: date */
+              updatedAt: string
+            }
+          }
+        }
+        /** @description User already onboarded */
+        409: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    trace?: never
+  }
+  '/users/{id}/budgets': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      /** @description Budget creation data */
+      requestBody?: {
+        content: {
+          'application/json': {
+            name: string
+            startAmount: number
+            startDate?: string
+            endDate?: string
+            categories: {
+              /** Format: uuid */
+              id: string
+              icon: string
+              label: string
+              amount: number
+            }[]
+            recurringExpenseTemplateIds?: string[]
+          }
+        }
+      }
+      responses: {
+        /** @description Budget created successfully */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string
+              /** Format: uuid */
+              userId: string
+              name: string
+              startAmount: string
+              currentAmount: string
+              isActive: boolean
+              createdAt: string
+              updatedAt: string
+              deletedAt: string | null
+            }
+          }
+        }
+        /** @description User not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/users/{id}/verify': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description User marked as verified successfully */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string
+              name: string
+              email: string
+              emailVerified: boolean
+              image: string | null
+              onboarded: boolean
+              /** Format: date */
+              createdAt: string
+              /** Format: date */
+              updatedAt: string
+            }
+          }
+        }
+        /** @description User already verified */
+        409: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    trace?: never
+  }
+  '/users/{id}/setup-status': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description User setup status */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              isFullySetup: boolean
+            }
+          }
+        }
+        /** @description User not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/users/{id}/preferences': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description User preferences */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              budgetStartDate: number | null
+              /** @enum {string|null} */
+              frequency: 'weekly' | 'bi-weekly' | 'monthly' | 'custom' | null
+              customDuration: number | null
+            }
+          }
+        }
+        /** @description User not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      /** @description User preferences update data */
+      requestBody?: {
+        content: {
+          'application/json': {
+            budgetStartDate?: number
+            /** @enum {string} */
+            frequency?: 'weekly' | 'bi-weekly' | 'monthly' | 'custom'
+            customDuration?: number
+          }
+        }
+      }
+      responses: {
+        /** @description User preferences updated successfully */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              budgetStartDate: number | null
+              /** @enum {string|null} */
+              frequency: 'weekly' | 'bi-weekly' | 'monthly' | 'custom' | null
+              customDuration: number | null
+            }
+          }
+        }
+        /** @description User not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    trace?: never
+  }
+  '/users/{id}/categories': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description User categories */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string
+              key: string
+              label: string
+              icon: string
+            }[]
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/budgets/{id}/expenses': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Budget with all expenses */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              id: string
+              userId: string
+              name: string
+              startAmount: string
+              currentAmount: string
+              sa_iv: string | null
+              sa_tag: string | null
+              ca_iv: string | null
+              ca_tag: string | null
+              isActive: boolean
+              /** Format: date */
+              createdAt: string
+              /** Format: date */
+              updatedAt: string
+              /** Format: date */
+              deletedAt: string | null
+              /** Format: date */
+              startDate: string | null
+              /** Format: date */
+              endDate: string | null
+              expenses: {
+                id: string
+                budgetId: string
+                description: string
+                amount: string
+                categoryId: string
+                /** Format: date */
+                createdAt: string
+                /** Format: date */
+                updatedAt: string
+                /** Format: date */
+                deletedAt: string | null
+                category: {
+                  id: string
+                  key: string
+                  label: string
+                  icon: string
+                }
+              }[]
+              categoryBudgets: {
+                id: string
+                budgetId: string
+                categoryId: string
+                allocatedAmount: string
+                /** Format: date */
+                createdAt: string
+                /** Format: date */
+                updatedAt: string
+                /** Format: date */
+                deletedAt: string | null
+                category: {
+                  id: string
+                  key: string
+                  label: string
+                  icon: string
+                }
+              }[]
+              categoryBreakdown: {
+                id: string
+                key: string
+                label: string
+                icon: string
+                spent: string
+                allocated: string | null
+              }[]
+            }
+          }
+        }
+        /** @description Access denied */
+        403: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Budget not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/budgets': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Active budget with expenses */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              budgets: {
+                /** Format: uuid */
+                id: string
+                /** Format: uuid */
+                userId: string
+                name: string
+                startAmount: string
+                currentAmount: string
+                sa_iv: string | null
+                sa_tag: string | null
+                ca_iv: string | null
+                ca_tag: string | null
+                isActive: boolean
+                /** Format: date */
+                startDate: string | null
+                /** Format: date */
+                endDate: string | null
+                /** Format: date */
+                createdAt: string
+                /** Format: date */
+                updatedAt: string
+                /** Format: date */
+                deletedAt: string | null
+              }[]
+              count: number
+            }
+          }
+        }
+        /** @description Active budget not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/users/{id}/budgets/active': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Active budget with expenses */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string
+              /** Format: uuid */
+              userId: string
+              name: string
+              startAmount: string
+              currentAmount: string
+              isActive: boolean
+              /** Format: date */
+              createdAt: string
+              /** Format: date */
+              updatedAt: string
+              /** Format: date */
+              deletedAt: string | null
+              /** Format: date */
+              startDate: string | null
+              /** Format: date */
+              endDate: string | null
+              expenses: {
+                /** Format: uuid */
+                id: string
+                /** Format: uuid */
+                budgetId: string
+                description: string
+                amount: string
+                /** Format: uuid */
+                categoryId: string
+                /** Format: date */
+                createdAt: string
+                /** Format: date */
+                updatedAt: string
+                /** Format: date */
+                deletedAt: string | null
+                category: {
+                  /** Format: uuid */
+                  id: string
+                  key: string
+                  label: string
+                  icon: string
+                }
+              }[]
+            }
+          }
+        }
+        /** @description Active budget not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/budgets/{id}/with-relatives': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Budget with previous and next budget IDs */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              budget: {
+                id: string
+                userId: string
+                name: string
+                startAmount: string
+                currentAmount: string
+                sa_iv: string | null
+                sa_tag: string | null
+                ca_iv: string | null
+                ca_tag: string | null
+                isActive: boolean
+                /** Format: date */
+                createdAt: string
+                /** Format: date */
+                updatedAt: string
+                /** Format: date */
+                deletedAt: string | null
+                /** Format: date */
+                startDate: string | null
+                /** Format: date */
+                endDate: string | null
+                expenses: {
+                  id: string
+                  budgetId: string
+                  description: string
+                  amount: string
+                  categoryId: string
+                  /** Format: date */
+                  createdAt: string
+                  /** Format: date */
+                  updatedAt: string
+                  /** Format: date */
+                  deletedAt: string | null
+                  category: {
+                    id: string
+                    key: string
+                    label: string
+                    icon: string
+                  }
+                }[]
+                categoryBudgets: {
+                  id: string
+                  budgetId: string
+                  categoryId: string
+                  allocatedAmount: string
+                  /** Format: date */
+                  createdAt: string
+                  /** Format: date */
+                  updatedAt: string
+                  /** Format: date */
+                  deletedAt: string | null
+                  category: {
+                    id: string
+                    key: string
+                    label: string
+                    icon: string
+                  }
+                }[]
+                categoryBreakdown: {
+                  id: string
+                  key: string
+                  label: string
+                  icon: string
+                  spent: string
+                  allocated: string | null
+                }[]
+              }
+              previous: string | null
+              next: string | null
+            }
+          }
+        }
+        /** @description Access denied */
+        403: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Budget not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/categories': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description List of categories */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              categories: {
+                /** Format: uuid */
+                id: string
+                key: string
+                label: string
+                icon: string
+              }[]
+              count: number
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/categories/{categoryId}/expenses/timeseries': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: {
+          months?: number
+          /** @description Aggregation level: 'month' groups across all budgets by month, 'budget' groups by individual budgets */
+          granularity?: 'month' | 'budget'
+        }
+        header?: never
+        path: {
+          categoryId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Monthly expense totals for the category */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              categoryId: string
+              /** @enum {string} */
+              granularity: 'month' | 'budget'
+              timeseries: {
+                /** @description ISO date representing the start of the month (only present when granularity is 'month') */
+                period?: string
+                /** @description Number of expenses */
+                expenseCount: number
+                /** @description Total expense amount */
+                totalAmount: number
+                /**
+                 * Format: uuid
+                 * @description Budget ID (only present when granularity is 'budget')
+                 */
+                budgetId?: string
+                /** @description Budget name (only present when granularity is 'budget') */
+                budgetName?: string
+                /** @description Allocated budget amount for this category (only present when granularity is 'budget') */
+                budgetAmount?: number
+              }[]
+            }
+          }
+        }
+        /** @description Invalid categoryId or months parameter */
+        400: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Missing or invalid authentication */
+        401: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Category not found or does not belong to user */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/categories/{categoryId}/expenses': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: {
+          limit?: number
+          offset?: number | null
+          sort?: 'createdAt' | '-createdAt'
+        }
+        header?: never
+        path: {
+          categoryId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description List of expenses for the category */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              expenses: {
+                id: string
+                budgetId: string
+                description: string
+                amount: string
+                note: string | null
+                categoryId: string
+                /** Format: date */
+                createdAt: string
+                /** Format: date */
+                updatedAt: string
+                /** Format: date */
+                deletedAt: string | null
+                category: {
+                  id: string
+                  key: string
+                  label: string
+                  icon: string
+                }
+              }[]
+              count: number
+            }
+          }
+        }
+        /** @description Invalid categoryId format or query parameters */
+        400: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Missing or invalid authentication */
+        401: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Category not found or does not belong to user */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/budgets/{id}/transactions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      /** @description Transaction creation data */
+      requestBody?: {
+        content: {
+          'application/json': {
+            description: string
+            amount: number
+            /** Format: uuid */
+            categoryId: string
+            note?: string
+            createdAt?: string
+          }
+        }
+      }
+      responses: {
+        /** @description Transaction created successfully */
+        201: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string
+              /** Format: uuid */
+              budgetId: string
+              description: string
+              amount: string
+              /** Format: uuid */
+              categoryId: string
+              /** Format: uuid */
+              templateId: string | null
+              note: string | null
+              /** Format: date */
+              createdAt: string
+              /** Format: date */
+              updatedAt: string
+              /** Format: date */
+              deletedAt: string | null
+            }
+          }
+        }
+        /** @description Budget or category not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Validation error */
+        422: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/transactions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description List of transactions */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              transactions: {
+                /** Format: uuid */
+                id: string
+                /** Format: uuid */
+                budgetId: string
+                description: string
+                amount: string
+                /** Format: uuid */
+                categoryId: string
+                /** Format: uuid */
+                templateId: string | null
+                note: string | null
+                /** Format: date */
+                createdAt: string
+                /** Format: date */
+                updatedAt: string
+                /** Format: date */
+                deletedAt: string | null
+              }[]
+              count: number
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/users/{userId}/budgets/{budgetId}/expenses/{expenseId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          userId: string
+          budgetId: string
+          expenseId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Expense deleted successfully */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string
+              /** Format: uuid */
+              budgetId: string
+              description: string
+              amount: string
+              /** Format: uuid */
+              categoryId: string
+              /** Format: uuid */
+              templateId: string | null
+              note: string | null
+              /** Format: date */
+              createdAt: string
+              /** Format: date */
+              updatedAt: string
+              /** Format: date */
+              deletedAt: string | null
+            }
+          }
+        }
+        /** @description Missing required parameters */
+        400: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+            }
+          }
+        }
+        /** @description Expense or budget not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/users/{userId}/recurring-expenses': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: {
+          includeDeleted?: 'true' | 'false'
+        }
+        header?: never
+        path: {
+          userId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description List of recurring expense templates */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              templates: {
+                /** Format: uuid */
+                id: string
+                /** Format: uuid */
+                userId: string
+                description: string
+                amount: string
+                /** Format: uuid */
+                categoryId: string | null
+                scheduledAt: string
+                /** Format: date */
+                createdAt: string
+                /** Format: date */
+                updatedAt: string
+                /** Format: date */
+                deletedAt: string | null
+              }[]
+            }
+          }
+        }
+        /** @description Forbidden — userId does not match authenticated user */
+        403: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          userId: string
+        }
+        cookie?: never
+      }
+      /** @description Recurring expense template payload */
+      requestBody?: {
+        content: {
+          'application/json': {
+            description: string
+            amount: number
+            /** Format: uuid */
+            categoryId: string
+            scheduledAt: string
+          }
+        }
+      }
+      responses: {
+        /** @description Template created successfully */
+        201: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string
+              /** Format: uuid */
+              userId: string
+              description: string
+              amount: string
+              /** Format: uuid */
+              categoryId: string | null
+              scheduledAt: string
+              /** Format: date */
+              createdAt: string
+              /** Format: date */
+              updatedAt: string
+              /** Format: date */
+              deletedAt: string | null
+            }
+          }
+        }
+        /** @description Forbidden — userId does not match authenticated user */
+        403: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description User or category not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Validation error */
+        422: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/recurring-expenses/{templateId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          templateId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Template soft-deleted */
+        204: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+        /** @description Template not found or access denied */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          templateId: string
+        }
+        cookie?: never
+      }
+      /** @description Template update payload */
+      requestBody?: {
+        content: {
+          'application/json': {
+            description?: string
+            amount?: number
+            /** Format: uuid */
+            categoryId?: string
+            scheduledAt?: string
+          }
+        }
+      }
+      responses: {
+        /** @description Template updated successfully */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string
+              /** Format: uuid */
+              userId: string
+              description: string
+              amount: string
+              /** Format: uuid */
+              categoryId: string | null
+              scheduledAt: string
+              /** Format: date */
+              createdAt: string
+              /** Format: date */
+              updatedAt: string
+              /** Format: date */
+              deletedAt: string | null
+            }
+          }
+        }
+        /** @description Template not found or access denied */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Validation error */
+        422: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    trace?: never
+  }
+  '/budgets/{budgetId}/recurring-expenses': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          budgetId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Budget recurring expense instances */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              recurringExpenses: {
+                /** Format: uuid */
+                id: string
+                /** Format: uuid */
+                budgetId: string
+                description: string
+                amount: string
+                /** Format: uuid */
+                categoryId: string | null
+                isPaid: boolean
+                /** Format: uuid */
+                expenseId: string | null
+                /** Format: uuid */
+                templateId: string | null
+                scheduledAt: string | null
+                /** Format: date */
+                createdAt: string
+                /** Format: date */
+                updatedAt: string
+                /** Format: date */
+                deletedAt: string | null
+                category: {
+                  id: string
+                  key: string
+                  label: string
+                  icon: string
+                } | null
+                expense: {
+                  id: string
+                  description: string
+                  amount: string
+                  categoryId: string
+                  note: string | null
+                  createdAt: string
+                  updatedAt: string
+                  deletedAt: string | null
+                } | null
+              }[]
+            }
+          }
+        }
+        /** @description Budget not found or access denied */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/budgets/{budgetId}/recurring-expenses/{instanceId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          budgetId: string
+          instanceId: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Instance soft-deleted */
+        204: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+        /** @description Cannot delete a paid instance */
+        400: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Budget or instance not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          budgetId: string
+          instanceId: string
+        }
+        cookie?: never
+      }
+      /** @description Mark recurring expense paid or unpaid */
+      requestBody?: {
+        content: {
+          'application/json':
+            | {
+                /** @enum {boolean} */
+                isPaid: true
+                expenseData: {
+                  description: string
+                  amount: number
+                  /** Format: uuid */
+                  categoryId: string
+                  note?: string
+                  createdAt?: string
+                }
+              }
+            | {
+                /** @enum {boolean} */
+                isPaid: false
+              }
+        }
+      }
+      responses: {
+        /** @description Created expense when marking as paid */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              /** Format: uuid */
+              id: string
+              /** Format: uuid */
+              budgetId: string
+              description: string
+              amount: string
+              /** Format: uuid */
+              categoryId: string
+              /** Format: uuid */
+              templateId: string | null
+              note: string | null
+              /** Format: date */
+              createdAt: string
+              /** Format: date */
+              updatedAt: string
+              /** Format: date */
+              deletedAt: string | null
+            }
+          }
+        }
+        /** @description Instance unmarked as paid */
+        204: {
+          headers: {
+            [name: string]: unknown
+          }
+          content?: never
+        }
+        /** @description Validation error */
+        400: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Budget or instance not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Instance state conflict (already paid / not paid) */
+        409: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Validation error */
+        422: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    trace?: never
+  }
+  '/verifications': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: {
+          identifier?: string
+          value?: string
+          limit?: number
+          offset?: number | null
+          sort?: 'createdAt'
+          order?: 'asc' | 'desc'
+        }
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description List of verifications */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              verifications: {
+                /** Format: uuid */
+                id: string
+                identifier: string
+                value: string
+                /** Format: date */
+                expiresAt: string
+                /** Format: date */
+                createdAt: string | null
+                /** Format: date */
+                updatedAt: string | null
+              }[]
+              count: number
+            }
+          }
+        }
+        /** @description Invalid query parameters */
+        400: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      /** @description Verification to create */
+      requestBody: {
+        content: {
+          'application/json': {
+            value: string
+          }
+        }
+      }
+      responses: {
+        /** @description Created verification */
+        201: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              verification: {
+                /** Format: uuid */
+                id: string
+                identifier: string
+                value: string
+                /** Format: date */
+                expiresAt: string
+                /** Format: date */
+                createdAt: string | null
+                /** Format: date */
+                updatedAt: string | null
+              }
+            }
+          }
+        }
+        /** @description Validation error */
+        422: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/verifications/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Verification */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              verification: {
+                /** Format: uuid */
+                id: string
+                identifier: string
+                value: string
+                /** Format: date */
+                expiresAt: string
+                /** Format: date */
+                createdAt: string | null
+                /** Format: date */
+                updatedAt: string | null
+              }
+            }
+          }
+        }
+        /** @description Verification not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Deleted verification */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              verification: {
+                /** Format: uuid */
+                id: string
+                identifier: string
+                value: string
+                /** Format: date */
+                expiresAt: string
+                /** Format: date */
+                createdAt: string | null
+                /** Format: date */
+                updatedAt: string | null
+              }
+            }
+          }
+        }
+        /** @description Verification not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      /** @description Fields to update */
+      requestBody: {
+        content: {
+          'application/json': {
+            identifier?: string
+            value?: string
+            /** Format: date */
+            expiresAt?: string
+          }
+        }
+      }
+      responses: {
+        /** @description Updated verification */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              verification: {
+                /** Format: uuid */
+                id: string
+                identifier: string
+                value: string
+                /** Format: date */
+                expiresAt: string
+                /** Format: date */
+                createdAt: string | null
+                /** Format: date */
+                updatedAt: string | null
+              }
+            }
+          }
+        }
+        /** @description Verification not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Validation error */
+        422: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    trace?: never
+  }
+  '/chats': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: {
+          userId?: string
+          chatId?: string
+          type?: string
+          limit?: number
+          offset?: number | null
+          sort?: 'createdAt'
+          order?: 'asc' | 'desc'
+        }
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description List of chats */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              chats: {
+                /** Format: uuid */
+                id: string
+                /** Format: uuid */
+                userId: string
+                chatId: string | null
+                type: string | null
+                /** Format: date */
+                createdAt: string
+                /** Format: date */
+                updatedAt: string
+              }[]
+              count: number
+            }
+          }
+        }
+        /** @description Invalid query parameters */
+        400: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      /** @description Chat to create */
+      requestBody: {
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            userId: string
+            chatId: string | null
+            type: string | null
+          }
+        }
+      }
+      responses: {
+        /** @description Created chat */
+        201: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              chat: {
+                /** Format: uuid */
+                id: string
+                /** Format: uuid */
+                userId: string
+                chatId: string | null
+                type: string | null
+                /** Format: date */
+                createdAt: string
+                /** Format: date */
+                updatedAt: string
+              }
+            }
+          }
+        }
+        /** @description Validation error */
+        422: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/chats/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Chat */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              chat: {
+                /** Format: uuid */
+                id: string
+                /** Format: uuid */
+                userId: string
+                chatId: string | null
+                type: string | null
+                /** Format: date */
+                createdAt: string
+                /** Format: date */
+                updatedAt: string
+              }
+            }
+          }
+        }
+        /** @description Chat not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Deleted chat */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              chat: {
+                /** Format: uuid */
+                id: string
+                /** Format: uuid */
+                userId: string
+                chatId: string | null
+                type: string | null
+                /** Format: date */
+                createdAt: string
+                /** Format: date */
+                updatedAt: string
+              }
+            }
+          }
+        }
+        /** @description Chat not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      /** @description Fields to update */
+      requestBody: {
+        content: {
+          'application/json': {
+            chatId?: string | null
+            type?: string | null
+          }
+        }
+      }
+      responses: {
+        /** @description Updated chat */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              chat: {
+                /** Format: uuid */
+                id: string
+                /** Format: uuid */
+                userId: string
+                chatId: string | null
+                type: string | null
+                /** Format: date */
+                createdAt: string
+                /** Format: date */
+                updatedAt: string
+              }
+            }
+          }
+        }
+        /** @description Chat not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Validation error */
+        422: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    trace?: never
+  }
+  '/notification-preferences': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: {
+          type?: string
+          channel?: string
+          enabled?: boolean | null
+          limit?: number
+          offset?: number | null
+          sort?: 'createdAt'
+          order?: 'asc' | 'desc'
+        }
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description List of notification preferences for the authenticated user */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              notificationPreferences: {
+                /** Format: uuid */
+                id: string
+                /** Format: uuid */
+                userId: string
+                /** Format: uuid */
+                entityId: string | null
+                type: string
+                enabled: boolean
+                channel: string
+                /** Format: date */
+                scheduledAt: string | null
+                /** Format: date */
+                createdAt: string
+                /** Format: date */
+                updatedAt: string
+              }[]
+              count: number
+            }
+          }
+        }
+        /** @description Invalid query parameters */
+        400: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      /** @description Notification preference to create */
+      requestBody: {
+        content: {
+          'application/json': {
+            type: string
+            channel: string
+            enabled: boolean
+            /** Format: uuid */
+            entityId: string | null
+            /** Format: date */
+            scheduledAt: string | null
+          }
+        }
+      }
+      responses: {
+        /** @description Created notification preference */
+        201: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              notificationPreference: {
+                /** Format: uuid */
+                id: string
+                /** Format: uuid */
+                userId: string
+                /** Format: uuid */
+                entityId: string | null
+                type: string
+                enabled: boolean
+                channel: string
+                /** Format: date */
+                scheduledAt: string | null
+                /** Format: date */
+                createdAt: string
+                /** Format: date */
+                updatedAt: string
+              }
+            }
+          }
+        }
+        /** @description Validation error */
+        422: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/notification-preferences/with-entity': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: {
+          type?: string
+          channel?: string
+          enabled?: boolean | null
+          limit?: number
+          offset?: number | null
+          sort?: 'createdAt'
+          order?: 'asc' | 'desc'
+        }
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description List of notification preferences for the authenticated user, joined with the related entity (currently only recurring-expense-reminder templates). */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              notificationPreferences: {
+                /** Format: uuid */
+                id: string
+                /** Format: uuid */
+                userId: string
+                /** Format: uuid */
+                entityId: string | null
+                type: string
+                enabled: boolean
+                channel: string
+                /** Format: date */
+                scheduledAt: string | null
+                /** Format: date */
+                createdAt: string
+                /** Format: date */
+                updatedAt: string
+                template: {
+                  /** Format: uuid */
+                  id: string
+                  description: string
+                  amount: string
+                  scheduledAt: string
+                  /** Format: uuid */
+                  categoryId: string | null
+                } | null
+              }[]
+              count: number
+            }
+          }
+        }
+        /** @description Invalid query parameters */
+        400: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/notification-preferences/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Notification preference */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              notificationPreference: {
+                /** Format: uuid */
+                id: string
+                /** Format: uuid */
+                userId: string
+                /** Format: uuid */
+                entityId: string | null
+                type: string
+                enabled: boolean
+                channel: string
+                /** Format: date */
+                scheduledAt: string | null
+                /** Format: date */
+                createdAt: string
+                /** Format: date */
+                updatedAt: string
+              }
+            }
+          }
+        }
+        /** @description Not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Deleted notification preference */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              notificationPreference: {
+                /** Format: uuid */
+                id: string
+                /** Format: uuid */
+                userId: string
+                /** Format: uuid */
+                entityId: string | null
+                type: string
+                enabled: boolean
+                channel: string
+                /** Format: date */
+                scheduledAt: string | null
+                /** Format: date */
+                createdAt: string
+                /** Format: date */
+                updatedAt: string
+              }
+            }
+          }
+        }
+        /** @description Not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    options?: never
+    head?: never
+    patch: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          id: string
+        }
+        cookie?: never
+      }
+      /** @description Fields to update */
+      requestBody: {
+        content: {
+          'application/json': {
+            type?: string
+            channel?: string
+            enabled?: boolean
+            /** Format: date */
+            scheduledAt?: string | null
+          }
+        }
+      }
+      responses: {
+        /** @description Updated notification preference */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              notificationPreference: {
+                /** Format: uuid */
+                id: string
+                /** Format: uuid */
+                userId: string
+                /** Format: uuid */
+                entityId: string | null
+                type: string
+                enabled: boolean
+                channel: string
+                /** Format: date */
+                scheduledAt: string | null
+                /** Format: date */
+                createdAt: string
+                /** Format: date */
+                updatedAt: string
+              }
+            }
+          }
+        }
+        /** @description Not found */
+        404: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Validation error */
+        422: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    trace?: never
+  }
+  '/streaks': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: {
+      parameters: {
+        query?: {
+          days?: number
+        }
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description User streak data */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              days: {
+                date: string
+                count: number
+              }[]
+              currentStreak: number
+              longestStreak: number
+              totalActiveDays: number
+              checkedInToday: boolean
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/streaks/check-in': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Updated streak after recording today's activity */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              days: {
+                date: string
+                count: number
+              }[]
+              currentStreak: number
+              longestStreak: number
+              totalActiveDays: number
+              checkedInToday: boolean
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/cron/notifications/create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Notifications created successfully */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              message: string
+            }
+          }
+        }
+        /** @description Unauthorized - missing or invalid x-auth header */
+        401: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/cron/notifications/send': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path?: never
+        cookie?: never
+      }
+      requestBody?: never
+      responses: {
+        /** @description Notifications sent successfully */
+        200: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              message: string
+            }
+          }
+        }
+        /** @description Unauthorized - missing or invalid x-auth header */
+        401: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': {
+              error: string
+              message: string
+              code: string
+            }
+          }
+        }
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
-export type webhooks = Record<string, never>;
+export type webhooks = Record<string, never>
 export interface components {
-    schemas: never;
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+  schemas: never
+  responses: never
+  parameters: never
+  requestBodies: never
+  headers: never
+  pathItems: never
 }
-export type $defs = Record<string, never>;
-export type operations = Record<string, never>;
+export type $defs = Record<string, never>
+export type operations = Record<string, never>

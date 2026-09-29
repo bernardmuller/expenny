@@ -1,8 +1,8 @@
 import { redirect } from '@tanstack/react-router'
-import { hasTokens } from './token-storage'
+import { hasSession } from './token-storage'
 
 export function requireAuth() {
-  if (!hasTokens()) {
+  if (!hasSession()) {
     throw redirect({
       to: '/login',
     })

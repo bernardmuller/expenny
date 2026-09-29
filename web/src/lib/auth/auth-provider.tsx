@@ -1,6 +1,6 @@
 import { createContext, useContext, useState } from 'react'
 import type { ReactNode } from 'react'
-import { hasTokens, clearTokens } from './token-storage'
+import { hasSession, clearSession } from './token-storage'
 
 interface AuthContextValue {
   isAuthenticated: boolean
@@ -12,10 +12,10 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => hasTokens())
+  const [isAuthenticated, setIsAuthenticated] = useState(() => hasSession())
 
   const checkAuth = () => {
-    const authenticated = hasTokens()
+    const authenticated = hasSession()
     setIsAuthenticated(authenticated)
     return authenticated
   }
@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // API down or offline — still drop local state so sign-out is honoured here.
     }
-    clearTokens()
+    clearSession()
     setIsAuthenticated(false)
     window.location.href = '/login'
   }

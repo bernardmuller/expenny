@@ -12,7 +12,6 @@ export const queryKeys = {
       request: () => ['auth', 'login', 'request'] as const,
       verify: (token: string) => ['auth', 'login', 'verify', token] as const,
     },
-    refresh: () => ['auth', 'refresh'] as const,
   },
   users: {
     all: ['users'] as const,
@@ -23,8 +22,11 @@ export const queryKeys = {
   },
   categories: {
     all: ['categories'] as const,
-    timeseries: (categoryId: string, months?: number, granularity?: 'month' | 'budget') =>
-      ['categories', categoryId, 'timeseries', months, granularity] as const,
+    timeseries: (
+      categoryId: string,
+      months?: number,
+      granularity?: 'month' | 'budget',
+    ) => ['categories', categoryId, 'timeseries', months, granularity] as const,
     expenses: (categoryId: string, options?: Record<string, unknown>) =>
       ['categories', categoryId, 'expenses', options] as const,
   },
@@ -43,8 +45,7 @@ export const queryKeys = {
   },
   recurringExpenses: {
     all: ['recurring-expenses'] as const,
-    byUser: (userId: string) =>
-      ['recurring-expenses', 'user', userId] as const,
+    byUser: (userId: string) => ['recurring-expenses', 'user', userId] as const,
     byBudget: (budgetId: string) =>
       ['recurring-expenses', 'budget', budgetId] as const,
     create: () => ['recurring-expenses', 'create'] as const,

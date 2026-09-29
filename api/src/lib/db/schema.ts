@@ -93,6 +93,22 @@ export const verifications = pgTable("verifications", {
   ),
 });
 
+// better-auth's own verification store (social sign-in state, email OTPs it
+// issues). Kept out of `verifications`, which the app's OTP login flow owns —
+// sharing one table let better-auth's expiry sweeper delete live app codes.
+export const authVerifications = pgTable("auth_verifications", {
+  id: text("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").$defaultFn(
+    () => /* @__PURE__ */ new Date(),
+  ),
+  updatedAt: timestamp("updated_at").$defaultFn(
+    () => /* @__PURE__ */ new Date(),
+  ),
+});
+
 // Budgets table
 export const budgets = pgTable("budgets", {
   id: uuid("id").primaryKey(),
@@ -544,7 +560,7 @@ export const betterAuthSchema = {
   user: users,
   session: sessions,
   account: accounts,
-  verification: verifications,
+  verification: authVerifications,
   oauthApplication,
   oauthAccessToken,
   oauthConsent,

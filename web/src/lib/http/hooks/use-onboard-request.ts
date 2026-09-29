@@ -6,7 +6,7 @@ import { client, toResult } from '../client'
 import { queryKeys } from '../query-keys'
 import type { paths } from '../schema'
 import { getUserIdFromAccessToken } from '@/lib/auth/decode-token'
-import { withAccessToken } from '../with-token'
+import { withSession } from '../with-token'
 
 type OnboardRequestBody =
   // @ts-ignore: content does exist
@@ -25,8 +25,8 @@ export function useOnboardRequest() {
     mutationFn: async (
       body: OnboardRequestBody,
     ): Promise<Result<OnboardRequestSuccess, OnboardRequestError>> =>
-      withAccessToken(
-        (ctx) => {
+      withSession(
+        () => {
           const userIdResult = getUserIdFromAccessToken()
 
           if (userIdResult.isErr()) {
@@ -45,9 +45,6 @@ export function useOnboardRequest() {
               params: {
                 path: { id: userId },
               },
-              headers: {
-                authorization: `Bearer ${ctx.token}`,
-              },
               body,
             }),
           )
@@ -62,8 +59,8 @@ export function useOnboardRequest() {
         },
         (): OnboardRequestError => ({
           error: 'Unauthorized',
-          message: 'No access token found',
-          code: 'MISSING_ACCESS_TOKEN',
+          message: 'You are not signed in',
+          code: 'NOT_AUTHENTICATED',
         }),
       )().match(
         (data) => ok(data),

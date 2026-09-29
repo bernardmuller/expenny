@@ -6,13 +6,9 @@ import { client } from '../client'
 import { queryKeys } from '../query-keys'
 import type { paths } from '../schema'
 import { getUserIdFromAccessToken } from '@/lib/auth/decode-token'
-import { withAccessToken } from '../with-token'
-import type {
-  BudgetDetailSuccess,
-} from '../queries/budget-detail'
-import type {
-  BudgetRecurringExpensesSuccess,
-} from '../queries/recurring-expenses/getBudgetRecurringExpenses'
+import { withSession } from '../with-token'
+import type { BudgetDetailSuccess } from '../queries/budget-detail'
+import type { BudgetRecurringExpensesSuccess } from '../queries/recurring-expenses/getBudgetRecurringExpenses'
 import type { ActiveBudgetSuccess } from '../queries/budget'
 
 type UpdateInstanceStatusBody = NonNullable<
@@ -55,14 +51,13 @@ export function useUpdateRecurringExpenseStatus() {
     }: Variables): Promise<
       Result<MarkPaidSuccess | null, UpdateInstanceStatusError>
     > =>
-      withAccessToken(
-        (ctx) =>
+      withSession(
+        () =>
           ResultAsync.fromPromise(
             client.PATCH(
               '/budgets/{budgetId}/recurring-expenses/{instanceId}',
               {
                 params: { path: { budgetId, instanceId } },
-                headers: { authorization: `Bearer ${ctx.token}` },
                 body,
               },
             ),
@@ -82,25 +77,26 @@ export function useUpdateRecurringExpenseStatus() {
                   message: response.statusText,
                   code: String(response.status),
                 }
-            toast.error(
-              errObj.message || 'Failed to update recurring expense',
-            )
+            toast.error(errObj.message || 'Failed to update recurring expense')
             return err(errObj)
           }),
         (): UpdateInstanceStatusError => ({
           error: 'Unauthorized',
-          message: 'No access token found',
-          code: 'MISSING_ACCESS_TOKEN',
+          message: 'You are not signed in',
+          code: 'NOT_AUTHENTICATED',
         }),
       )().match(
         (data) => ok(data),
         (error) => err(error),
       ),
 
-    onMutate: async ({ budgetId, instanceId, body }): Promise<MutationContext> => {
+    onMutate: async ({
+      budgetId,
+      instanceId,
+      body,
+    }): Promise<MutationContext> => {
       const userIdResult = getUserIdFromAccessToken()
-      const instancesQueryKey =
-        queryKeys.recurringExpenses.byBudget(budgetId)
+      const instancesQueryKey = queryKeys.recurringExpenses.byBudget(budgetId)
       const detailQueryKey = queryKeys.budgets.detail(budgetId)
       const activeQueryKey = userIdResult.isOk()
         ? queryKeys.budgets.active(userIdResult.value)
@@ -160,20 +156,17 @@ export function useUpdateRecurringExpenseStatus() {
           },
         )
 
-        queryClient.setQueryData<BudgetDetailSuccess>(
-          detailQueryKey,
-          (old) => {
-            if (!old) return old
-            const currentAmount = parseFloat(old.budget.currentAmount)
-            return {
-              ...old,
-              budget: {
-                ...old.budget,
-                currentAmount: (currentAmount - amount).toString(),
-              },
-            }
-          },
-        )
+        queryClient.setQueryData<BudgetDetailSuccess>(detailQueryKey, (old) => {
+          if (!old) return old
+          const currentAmount = parseFloat(old.budget.currentAmount)
+          return {
+            ...old,
+            budget: {
+              ...old.budget,
+              currentAmount: (currentAmount - amount).toString(),
+            },
+          }
+        })
 
         if (activeQueryKey) {
           queryClient.setQueryData<ActiveBudgetSuccess>(
@@ -206,20 +199,17 @@ export function useUpdateRecurringExpenseStatus() {
           },
         )
 
-        queryClient.setQueryData<BudgetDetailSuccess>(
-          detailQueryKey,
-          (old) => {
-            if (!old) return old
-            const currentAmount = parseFloat(old.budget.currentAmount)
-            return {
-              ...old,
-              budget: {
-                ...old.budget,
-                currentAmount: (currentAmount + restoredAmount).toString(),
-              },
-            }
-          },
-        )
+        queryClient.setQueryData<BudgetDetailSuccess>(detailQueryKey, (old) => {
+          if (!old) return old
+          const currentAmount = parseFloat(old.budget.currentAmount)
+          return {
+            ...old,
+            budget: {
+              ...old.budget,
+              currentAmount: (currentAmount + restoredAmount).toString(),
+            },
+          }
+        })
 
         if (activeQueryKey) {
           queryClient.setQueryData<ActiveBudgetSuccess>(

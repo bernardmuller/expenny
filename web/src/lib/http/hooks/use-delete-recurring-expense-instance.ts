@@ -4,7 +4,7 @@ import { ok, err, ResultAsync } from 'neverthrow'
 import { toast } from 'sonner'
 import { client } from '../client'
 import { queryKeys } from '../query-keys'
-import { withAccessToken } from '../with-token'
+import { withSession } from '../with-token'
 import type { BudgetRecurringExpensesSuccess } from '../queries/recurring-expenses/getBudgetRecurringExpenses'
 
 type DeleteInstanceError = {
@@ -32,14 +32,13 @@ export function useDeleteRecurringExpenseInstance() {
       budgetId,
       instanceId,
     }: Variables): Promise<Result<{ id: string }, DeleteInstanceError>> =>
-      withAccessToken(
-        (ctx) =>
+      withSession(
+        () =>
           ResultAsync.fromPromise(
             client.DELETE(
               '/budgets/{budgetId}/recurring-expenses/{instanceId}',
               {
                 params: { path: { budgetId, instanceId } },
-                headers: { authorization: `Bearer ${ctx.token}` },
               },
             ),
             (e): DeleteInstanceError => ({
@@ -59,27 +58,21 @@ export function useDeleteRecurringExpenseInstance() {
                   message: response.statusText,
                   code: String(response.status),
                 }
-            toast.error(
-              errObj.message || 'Failed to remove recurring expense',
-            )
+            toast.error(errObj.message || 'Failed to remove recurring expense')
             return err(errObj)
           }),
         (): DeleteInstanceError => ({
           error: 'Unauthorized',
-          message: 'No access token found',
-          code: 'MISSING_ACCESS_TOKEN',
+          message: 'You are not signed in',
+          code: 'NOT_AUTHENTICATED',
         }),
       )().match(
         (data) => ok(data),
         (error) => err(error),
       ),
 
-    onMutate: async ({
-      budgetId,
-      instanceId,
-    }): Promise<MutationContext> => {
-      const instancesQueryKey =
-        queryKeys.recurringExpenses.byBudget(budgetId)
+    onMutate: async ({ budgetId, instanceId }): Promise<MutationContext> => {
+      const instancesQueryKey = queryKeys.recurringExpenses.byBudget(budgetId)
       await queryClient.cancelQueries({ queryKey: instancesQueryKey })
       const previousInstances =
         queryClient.getQueryData<BudgetRecurringExpensesSuccess>(
