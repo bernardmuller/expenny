@@ -1,6 +1,7 @@
 import type { Context, Next } from "hono";
 import { AuthenticationError } from "@/lib/errors/domain";
 import { betterAuthInstance } from "@/lib/auth/better-auth";
+import { getValidMcpToken } from "@/lib/auth/mcp-token";
 
 const unauthorized = (c: Context, error: AuthenticationError) =>
   c.json(
@@ -16,9 +17,10 @@ export const authMiddleware = async (c: Context, next: Next) => {
   const headers = c.req.raw.headers;
 
   // 1. Try MCP-issued opaque bearer token (from /auth/mcp/* flow).
-  //    getMcpSession returns an OAuthAccessToken record, which carries the userId.
-  //    We then hydrate the full user via better-auth's internal adapter.
-  const mcpToken = await betterAuthInstance.api.getMcpSession({ headers });
+  //    getValidMcpToken returns an unexpired OAuthAccessToken record, which
+  //    carries the userId. We then hydrate the full user via better-auth's
+  //    internal adapter.
+  const mcpToken = await getValidMcpToken(headers);
   if (mcpToken?.userId) {
     const baCtx = await betterAuthInstance.$context;
     const user = await baCtx.internalAdapter.findUserById(mcpToken.userId);
