@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { client, toResult } from '../client'
 import { queryKeys } from '../query-keys'
-import { withAccessToken } from '../with-token'
+import { withSession } from '../with-token'
 import type { Result } from 'neverthrow'
 import type { paths } from '../schema'
 import type { ActiveBudgetSuccess } from '../queries/budget'
@@ -31,15 +31,12 @@ export function useCreateTransaction(budgetId: string) {
     mutationFn: async (
       body: CreateTransactionBody,
     ): Promise<Result<CreateTransactionSuccess, CreateTransactionError>> => {
-      return withAccessToken(
-        (ctx) => {
+      return withSession(
+        () => {
           return toResult(
             client.POST('/budgets/{id}/transactions', {
               params: {
                 path: { id: budgetId },
-              },
-              headers: {
-                authorization: `Bearer ${ctx.token}`,
               },
               body,
             }),
@@ -55,8 +52,8 @@ export function useCreateTransaction(budgetId: string) {
         },
         (): CreateTransactionError => ({
           error: 'Unauthorized',
-          message: 'No access token found',
-          code: 'MISSING_ACCESS_TOKEN',
+          message: 'You are not signed in',
+          code: 'NOT_AUTHENTICATED',
         }),
       )().match(
         (data) => ok(data),

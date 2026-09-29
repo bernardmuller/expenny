@@ -1,55 +1,49 @@
-import { setCurrentUser, setTokens, hasTokens } from './token-storage'
+import { setCurrentUser, setSession, hasSession } from './token-storage'
 
-export async function syncCurrentUserFromSession(): Promise<void> {
+type SessionResponse = {
+  session?: { token?: string }
+  user?: { id?: string; email?: string; name?: string | null }
+}
+
+async function fetchSession(): Promise<SessionResponse | null> {
   const baseUrl = import.meta.env.VITE_API_URL ?? ''
   try {
     const res = await fetch(`${baseUrl}/auth/get-session`, {
       credentials: 'include',
     })
-    if (!res.ok) return
-    const data = (await res.json()) as {
-      session?: { token?: string }
-      user?: { id?: string; email?: string; name?: string | null }
-    }
-    const user = data.user
-    if (user?.id) {
-      setCurrentUser({
-        userId: user.id,
-        email: user.email ?? '',
-        name: user.name ?? '',
-      })
-    }
+    if (!res.ok) return null
+    return (await res.json()) as SessionResponse
   } catch {
-    // session sync is best-effort
+    return null
+  }
+}
+
+export async function syncCurrentUserFromSession(): Promise<void> {
+  const user = (await fetchSession())?.user
+  if (user?.id) {
+    setCurrentUser({
+      userId: user.id,
+      email: user.email ?? '',
+      name: user.name ?? '',
+    })
   }
 }
 
 export async function bootstrapSessionFromCookie(): Promise<void> {
-  if (hasTokens()) return
+  if (hasSession()) return
 
-  const baseUrl = import.meta.env.VITE_API_URL ?? ''
-  try {
-    const res = await fetch(`${baseUrl}/auth/get-session`, {
-      credentials: 'include',
+  // best-effort; anonymous visitors simply stay on /login
+  const data = await fetchSession()
+  const token = data?.session?.token
+  const user = data?.user
+  if (token && user?.id) {
+    // Social sign-in only yields a session cookie; mirror it into local
+    // storage so the route guards behave like they do on the OTP path.
+    setSession(token)
+    setCurrentUser({
+      userId: user.id,
+      email: user.email ?? '',
+      name: user.name ?? '',
     })
-    if (!res.ok) return
-    const data = (await res.json()) as {
-      session?: { token?: string }
-      user?: { id?: string; email?: string; name?: string | null }
-    }
-    const token = data.session?.token
-    const user = data.user
-    if (token && user?.id) {
-      // Social sign-in only yields a session cookie; surface it to the
-      // token-based auth state so route guards behave like the OTP path.
-      setTokens(token, token)
-      setCurrentUser({
-        userId: user.id,
-        email: user.email ?? '',
-        name: user.name ?? '',
-      })
-    }
-  } catch {
-    // best-effort; anonymous visitors simply stay on /login
   }
 }

@@ -1,5 +1,5 @@
 import { toast } from 'sonner'
-import { withAccessToken } from '../with-token'
+import { withSession } from '../with-token'
 import { client, toResult } from '../client'
 import { queryKeys } from '../query-keys'
 import type { paths } from '../schema'
@@ -21,23 +21,20 @@ async function fetchActiveBudget(): Promise<ActiveBudgetSuccess> {
 
   const userId = userIdResult.value
 
-  const result = await withAccessToken(
-    (ctx) => {
+  const result = await withSession(
+    () => {
       return toResult(
         client.GET('/users/{id}/budgets/active', {
           params: {
             path: { id: userId },
-          },
-          headers: {
-            authorization: `Bearer ${ctx.token}`,
           },
         }),
       )
     },
     (): ActiveBudgetError => ({
       error: 'Unauthorized',
-      message: 'No access token found',
-      code: 'MISSING_ACCESS_TOKEN',
+      message: 'You are not signed in',
+      code: 'NOT_AUTHENTICATED',
     }),
   )()
 

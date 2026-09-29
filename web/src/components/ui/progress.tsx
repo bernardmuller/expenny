@@ -6,16 +6,16 @@ import type { VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils/cn'
 
 const progressVariants = cva(
-  'relative w-full overflow-hidden rounded-full h-2.5',
+  'relative w-full overflow-hidden rounded-full h-4',
   {
     variants: {
       variant: {
         default:
-          'bg-primary/20 [box-shadow:inset_0_2px_0_color-mix(in_srgb,var(--color-primary)_20%,transparent)]',
+          'bg-primary/20 [box-shadow:inset_0_3px_0_color-mix(in_srgb,var(--color-primary)_20%,transparent)]',
         destructive:
-          'bg-destructive/25 [box-shadow:inset_0_2px_0_color-mix(in_srgb,var(--color-destructive)_25%,black)]',
+          'bg-destructive/25 [box-shadow:inset_0_3px_0_color-mix(in_srgb,var(--color-destructive)_25%,black)]',
         disabled:
-          'bg-foreground/10 [box-shadow:inset_0_2px_0_color-mix(in_srgb,var(--color-foreground)_12%,transparent)]',
+          'bg-foreground/10 [box-shadow:inset_0_3px_0_color-mix(in_srgb,var(--color-foreground)_12%,transparent)]',
       },
     },
     defaultVariants: {
@@ -28,11 +28,11 @@ const progressIndicatorVariants = cva('h-full w-full flex-1 rounded-2xl', {
   variants: {
     variant: {
       default:
-        'bg-primary [box-shadow:inset_0_2px_0_var(--progress-shine),0_2px_3px_color-mix(in_srgb,var(--color-primary)_50%,black)]',
+        'bg-primary [box-shadow:inset_0_3px_0_var(--progress-shine),0_2px_3px_color-mix(in_srgb,var(--color-primary)_50%,black)]',
       destructive:
-        'bg-destructive [box-shadow:0_2px_3px_color-mix(in_srgb,var(--color-destructive)_50%,black)]',
+        'bg-destructive [box-shadow:0_3px_3px_color-mix(in_srgb,var(--color-destructive)_50%,black)]',
       disabled:
-        'bg-foreground/20 [box-shadow:inset_0_2px_0_var(--progress-shine-dim)]',
+        'bg-foreground/20 [box-shadow:inset_0_3px_0_var(--progress-shine-dim)]',
     },
   },
   defaultVariants: {

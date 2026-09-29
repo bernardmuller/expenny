@@ -10,9 +10,9 @@ export function Root({
 }) {
   return (
     <div
-      className="bg-muted flex cursor-pointer flex-col gap-1 rounded-2xl p-3
-        hover:bg-muted/80
-        [box-shadow:var(--input-groove),inset_0_1px_0_rgba(255,255,255,0.25)]"
+      className="bg-input/70 flex cursor-pointer flex-col gap-2 rounded-2xl p-5
+        hover:bg-input/60
+        [box-shadow:var(--card-shadow-sm)]"
       onClick={onClick}
     >
       {children}
@@ -69,15 +69,15 @@ export function UnplannedBadge() {
 }
 
 export function ProgressBar({ percentage }: { percentage: number }) {
-  return <Progress variant="default" value={percentage} className="h-1" />
+  return <Progress variant="default" value={percentage} className="h-2" />
 }
 
 export function DisabledProgressBar() {
-  return <Progress variant="disabled" className="h-1" />
+  return <Progress variant="disabled" className="h-2" />
 }
 
 export function OverBudgetProgressBar() {
-  return <Progress variant="destructive" className="h-1" />
+  return <Progress variant="destructive" className="h-2" />
 }
 
 export function Stats({ children }: { children: React.ReactNode }) {
@@ -86,7 +86,7 @@ export function Stats({ children }: { children: React.ReactNode }) {
 
 export function Planned({ amount }: { amount: string }) {
   return (
-    <div className="text-muted-foreground flex items-end gap-1">
+    <div className="text-muted-foreground flex items-end gap-2">
       <span>Planned:</span>
       <span className="-mb-1 text-lg">{amount}</span>
     </div>
@@ -95,7 +95,7 @@ export function Planned({ amount }: { amount: string }) {
 
 export function Spent({ amount }: { amount: string }) {
   return (
-    <div className="text-muted-foreground flex items-end gap-1 text-sm">
+    <div className="text-muted-foreground flex items-end gap-2 text-sm">
       <span>Spent:</span>
       <span className="text-primary font-grotesk -mb-1 text-lg tracking-wider">
         {amount}

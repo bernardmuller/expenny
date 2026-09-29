@@ -1,6 +1,6 @@
 import { toast } from 'sonner'
 import { format } from 'date-fns'
-import { withAccessToken } from '../../with-token'
+import { withSession } from '../../with-token'
 import { client, toResult } from '../../client'
 import { queryKeys } from '../../query-keys'
 import type { paths } from '../../schema'
@@ -18,27 +18,21 @@ async function fetchCategoryExpensesTimeseries(
   months?: number,
   granularity?: 'month' | 'budget',
 ): Promise<CategoryExpensesTimeseriesSuccess> {
-  const result = await withAccessToken(
-    (ctx) => {
+  const result = await withSession(
+    () => {
       return toResult(
         client.GET('/categories/{categoryId}/expenses/timeseries', {
           params: {
             path: { categoryId },
-            query:
-              months || granularity
-                ? { months, granularity }
-                : undefined,
-          },
-          headers: {
-            authorization: `Bearer ${ctx.token}`,
+            query: months || granularity ? { months, granularity } : undefined,
           },
         }),
       )
     },
     (): CategoryExpensesTimeseriesError => ({
       error: 'Unauthorized',
-      message: 'No access token found',
-      code: 'MISSING_ACCESS_TOKEN',
+      message: 'You are not signed in',
+      code: 'NOT_AUTHENTICATED',
     }),
   )()
 
@@ -105,6 +99,7 @@ export function getCategoryExpensesBudgetTimeseriesQueryOptions(
 ) {
   return {
     queryKey: queryKeys.categories.timeseries(categoryId, months, 'budget'),
-    queryFn: () => fetchCategoryExpensesTimeseries(categoryId, months, 'budget'),
+    queryFn: () =>
+      fetchCategoryExpensesTimeseries(categoryId, months, 'budget'),
   }
 }

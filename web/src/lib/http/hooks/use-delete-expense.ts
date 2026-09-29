@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { client, toResult } from '../client'
 import { queryKeys } from '../query-keys'
-import { withAccessToken } from '../with-token'
+import { withSession } from '../with-token'
 import type { Result } from 'neverthrow'
 import type { paths } from '../schema'
 import type { ActiveBudgetSuccess } from '../queries/budget'
@@ -38,8 +38,8 @@ export function useDeleteExpense() {
     mutationFn: async (
       params: DeleteExpenseParams,
     ): Promise<Result<DeleteExpenseSuccess, DeleteExpenseError>> => {
-      return withAccessToken(
-        (ctx) => {
+      return withSession(
+        () => {
           return toResult(
             client.DELETE(
               '/users/{userId}/budgets/{budgetId}/expenses/{expenseId}',
@@ -50,9 +50,6 @@ export function useDeleteExpense() {
                     budgetId: params.budgetId,
                     expenseId: params.expenseId,
                   },
-                },
-                headers: {
-                  authorization: `Bearer ${ctx.token}`,
                 },
               },
             ),
@@ -68,8 +65,8 @@ export function useDeleteExpense() {
         },
         (): DeleteExpenseError => ({
           error: 'Unauthorized',
-          message: 'No access token found',
-          code: 'MISSING_ACCESS_TOKEN',
+          message: 'You are not signed in',
+          code: 'NOT_AUTHENTICATED',
         }),
       )().match(
         (data) => ok(data),
@@ -87,8 +84,10 @@ export function useDeleteExpense() {
       await queryClient.cancelQueries({ queryKey: activeQueryKey })
       await queryClient.cancelQueries({ queryKey: expensesQueryKey })
 
-      const previousActiveBudget = queryClient.getQueryData<ActiveBudgetSuccess>(activeQueryKey)
-      const previousExpenses = queryClient.getQueryData<BudgetExpensesSuccess>(expensesQueryKey)
+      const previousActiveBudget =
+        queryClient.getQueryData<ActiveBudgetSuccess>(activeQueryKey)
+      const previousExpenses =
+        queryClient.getQueryData<BudgetExpensesSuccess>(expensesQueryKey)
 
       queryClient.setQueryData(
         activeQueryKey,

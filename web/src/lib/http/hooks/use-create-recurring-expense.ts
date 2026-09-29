@@ -7,7 +7,7 @@ import { queryKeys } from '../query-keys'
 import type { paths } from '../schema'
 import type { UserRecurringExpensesSuccess } from '../queries/recurring-expenses/getUserRecurringExpenses'
 import { getUserIdFromAccessToken } from '@/lib/auth/decode-token'
-import { withAccessToken } from '../with-token'
+import { withSession } from '../with-token'
 
 type CreateRecurringExpenseBody = NonNullable<
   paths['/users/{userId}/recurring-expenses']['post']['requestBody']
@@ -39,8 +39,8 @@ export function useCreateRecurringExpense() {
     ): Promise<
       Result<CreateRecurringExpenseSuccess, CreateRecurringExpenseError>
     > =>
-      withAccessToken(
-        (ctx) => {
+      withSession(
+        () => {
           const userIdResult = getUserIdFromAccessToken()
 
           if (userIdResult.isErr()) {
@@ -57,9 +57,6 @@ export function useCreateRecurringExpense() {
           return toResult(
             client.POST('/users/{userId}/recurring-expenses', {
               params: { path: { userId } },
-              headers: {
-                authorization: `Bearer ${ctx.token}`,
-              },
               body,
             }),
           )
@@ -74,8 +71,8 @@ export function useCreateRecurringExpense() {
         },
         (): CreateRecurringExpenseError => ({
           error: 'Unauthorized',
-          message: 'No access token found',
-          code: 'MISSING_ACCESS_TOKEN',
+          message: 'You are not signed in',
+          code: 'NOT_AUTHENTICATED',
         }),
       )().match(
         (data) => ok(data),

@@ -22,11 +22,14 @@ export const createBetterAuthSession = async (
   request?: Request,
 ): Promise<{ token: string; expiresAt: Date }> => {
   const ctx = await getBetterAuthCtx();
-  // ctx2 can carry request for IP/UA extraction; fall back to empty object
-  const ctx2 = request ? { request } : {};
+  // internalAdapter.createSession expects a hook context, not a bare request:
+  // it reads `ctx2.context.options` when resolving the client IP and throws
+  // `Cannot read properties of undefined (reading 'options')` without it.
   const session = await ctx.internalAdapter.createSession(
     userId,
-    ctx2 as Parameters<typeof ctx.internalAdapter.createSession>[1],
+    { context: ctx, ...(request ? { request } : {}) } as Parameters<
+      typeof ctx.internalAdapter.createSession
+    >[1],
   );
   return { token: session.token, expiresAt: session.expiresAt };
 };

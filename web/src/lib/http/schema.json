@@ -238,10 +238,26 @@
                       ]
                     },
                     "accessToken": {
-                      "type": "string"
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      ]
                     },
                     "refreshToken": {
-                      "type": "string"
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -486,10 +502,26 @@
                   "type": "object",
                   "properties": {
                     "accessToken": {
-                      "type": "string"
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      ]
                     },
                     "refreshToken": {
-                      "type": "string"
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -581,54 +613,71 @@
         }
       }
     },
-    "/auth/refresh": {
-      "post": {
+    "/auth/mode": {
+      "get": {
         "tags": [
           "Auth"
         ],
-        "security": [
-          {
-            "Bearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "pattern": "^Bearer .+$",
-              "description": "Refresh token in format: Bearer <token>"
-            },
-            "required": true,
-            "description": "Refresh token in format: Bearer <token>",
-            "name": "authorization",
-            "in": "header"
-          }
-        ],
         "responses": {
           "200": {
-            "description": "Tokens refreshed successfully, returns new access and refresh tokens",
+            "description": "Auth config (google social login availability)",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "accessToken": {
+                    "google": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "google"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/mcp/userinfo": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "Claims for the bearer's MCP access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sub": {
                       "type": "string"
                     },
-                    "refreshToken": {
+                    "email": {
+                      "type": "string"
+                    },
+                    "email_verified": {
+                      "type": "boolean"
+                    },
+                    "name": {
                       "type": "string"
                     }
                   },
                   "required": [
-                    "accessToken",
-                    "refreshToken"
+                    "sub",
+                    "email",
+                    "email_verified",
+                    "name"
                   ]
                 }
               }
             }
           },
           "401": {
-            "description": "Missing/invalid authorization header, expired or invalid refresh token",
+            "description": "Missing, invalid or expired access token",
             "content": {
               "application/json": {
                 "schema": {
@@ -636,70 +685,10 @@
                   "properties": {
                     "error": {
                       "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "code": {
-                      "type": "string"
                     }
                   },
                   "required": [
-                    "error",
-                    "message",
-                    "code"
-                  ]
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "User not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "code": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "error",
-                    "message",
-                    "code"
-                  ]
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "code": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "error",
-                    "message",
-                    "code"
+                    "error"
                   ]
                 }
               }
@@ -8397,6 +8386,164 @@
                     "longestStreak",
                     "totalActiveDays",
                     "checkedInToday"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message",
+                    "code"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cron/notifications/create": {
+      "post": {
+        "tags": [
+          "Cron"
+        ],
+        "responses": {
+          "200": {
+            "description": "Notifications created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid x-auth header",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message",
+                    "code"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cron/notifications/send": {
+      "post": {
+        "tags": [
+          "Cron"
+        ],
+        "responses": {
+          "200": {
+            "description": "Notifications sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid x-auth header",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message",
+                    "code"
                   ]
                 }
               }

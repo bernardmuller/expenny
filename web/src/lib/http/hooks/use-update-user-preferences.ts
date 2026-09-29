@@ -6,10 +6,11 @@ import { client, toResult } from '../client'
 import { queryKeys } from '../query-keys'
 import type { paths } from '../schema'
 import { getUserIdFromAccessToken } from '@/lib/auth/decode-token'
-import { withAccessToken } from '../with-token'
+import { withSession } from '../with-token'
 
-type UpdateUserPreferencesBody =
-  paths['/users/{id}/preferences']['patch']['requestBody']['content']['application/json']
+type UpdateUserPreferencesBody = NonNullable<
+  paths['/users/{id}/preferences']['patch']['requestBody']
+>['content']['application/json']
 
 type UpdateUserPreferencesSuccess =
   paths['/users/{id}/preferences']['patch']['responses']['200']['content']['application/json']
@@ -30,8 +31,8 @@ export function useUpdateUserPreferences() {
     ): Promise<
       Result<UpdateUserPreferencesSuccess, UpdateUserPreferencesError>
     > =>
-      withAccessToken(
-        (ctx) => {
+      withSession(
+        () => {
           const userIdResult = getUserIdFromAccessToken()
 
           if (userIdResult.isErr()) {
@@ -49,9 +50,6 @@ export function useUpdateUserPreferences() {
             client.PATCH('/users/{id}/preferences', {
               params: {
                 path: { id: userId },
-              },
-              headers: {
-                authorization: `Bearer ${ctx.token}`,
               },
               body,
             }),
@@ -72,8 +70,8 @@ export function useUpdateUserPreferences() {
         },
         (): UpdateUserPreferencesError => ({
           error: 'Unauthorized',
-          message: 'No access token found',
-          code: 'MISSING_ACCESS_TOKEN',
+          message: 'You are not signed in',
+          code: 'NOT_AUTHENTICATED',
         }),
       )().match(
         (data) => ok(data),

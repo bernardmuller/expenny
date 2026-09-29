@@ -1,30 +1,23 @@
 import createClient from 'openapi-fetch'
 import type { paths } from './schema'
 import { err, ok, ResultAsync } from 'neverthrow'
-import {
-  getAccessToken,
-  clearTokens,
-} from '../auth/token-storage'
+import { clearSession } from '../auth/token-storage'
 
 const baseUrl = import.meta.env.VITE_API_URL ?? ''
 
+// The session cookie is the credential — the API authenticates browser
+// requests with `getSession()`, which reads it. Endpoints that take a token in
+// a header (the OTP verify pair) pass it explicitly.
 export const client = createClient<paths>({
   baseUrl,
-  credentials: 'include', // Include session cookie
+  credentials: 'include',
 })
 
 client.use({
-  onRequest({ request }) {
-    const token = getAccessToken()
-    if (!request.headers.get('authorization') && token.isOk()) {
-      request.headers.set('authorization', `Bearer ${token.value}`)
-    }
-    return request
-  },
   onResponse({ response }) {
     if (response.status === 401) {
       // Session expired or invalid — clear any stale local state and re-authenticate
-      clearTokens()
+      clearSession()
       window.location.href = '/login'
     }
     return response

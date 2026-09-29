@@ -1,7 +1,7 @@
 import { toast } from 'sonner'
 import { client, toResult } from '../client'
 import { queryKeys } from '../query-keys'
-import { withAccessToken } from '../with-token'
+import { withSession } from '../with-token'
 import type { paths } from '../schema'
 
 type CategoriesSuccess =
@@ -14,21 +14,18 @@ type CategoriesError = {
 }
 
 async function fetchCategories(): Promise<CategoriesSuccess> {
-  const result = await withAccessToken(
-    (ctx) => {
+  const result = await withSession(
+    () => {
       return toResult(
         client.GET('/categories', {
           params: {},
-          headers: {
-            authorization: `Bearer ${ctx.token}`,
-          },
         }),
       )
     },
     (): CategoriesError => ({
       error: 'Unauthorized',
-      message: 'No access token found',
-      code: 'MISSING_ACCESS_TOKEN',
+      message: 'You are not signed in',
+      code: 'NOT_AUTHENTICATED',
     }),
   )()
 

@@ -32,7 +32,7 @@
   --secondary: rgb(15, 20, 25);
   --secondary-foreground: rgb(255, 255, 255);
   --muted: rgb(240, 236, 230);
-  --muted-foreground: rgb(103, 111, 126);
+  --muted-foreground: rgb(131, 131, 131);
   --accent: rgb(231, 244, 240);
   /*--accent-foreground: rgb(30, 157, 241);*/
   --accent-foreground: rgb(63, 166, 129);
@@ -83,10 +83,15 @@
   --tracking-normal: 0em;
   --spacing: 0.25rem;
   --input-groove:
-    inset 0 2px 0 color-mix(in srgb, var(--color-border) 80%, black),
+    inset 0 3px 0 color-mix(in srgb, var(--color-border) 10%, var(--color-border)),
     inset 0 -1px 0 color-mix(in srgb, var(--color-border) 30%, transparent);
   --card-shadow:
-    0 8px 0 color-mix(in srgb, var(--color-card) 85%, black),
+    0 8px 0 color-mix(in srgb, var(--color-border) 10%, var(--color-border)),
+    0 8px 0 1px var(--color-border),
+    inset 0 1px 0 color-mix(in srgb, var(--color-card) 80%, white);
+  --card-shadow-sm:
+    0 4px 0 color-mix(in srgb, var(--color-border) 10%, var(--color-border)),
+    0 4px 0 1px var(--color-border),
     inset 0 1px 0 color-mix(in srgb, var(--color-card) 80%, white);
   --progress-shine: color-mix(in srgb, white 34%, transparent);
   --progress-shine-dim: color-mix(in srgb, white 30%, transparent);
@@ -154,10 +159,15 @@
     0px 8px 10px -1px hsl(202.8169 89.1213% 53.1373% / 0);
   --shadow-2xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0);
   --input-groove:
-    inset 0 2px 0 color-mix(in srgb, var(--color-border) 45%, black),
+    inset 0 4px 0 color-mix(in srgb, var(--color-border) 45%, black),
     inset 0 -1px 0 color-mix(in srgb, var(--color-border) 30%, transparent);
   --card-shadow:
-    0 8px 0 color-mix(in srgb, var(--color-card) 85%, black),
+    0 8px 0 color-mix(in srgb, var(--color-border) 10%, var(--color-border)),
+    0 8px 0 1px var(--color-border),
+    inset 0 1px 0 color-mix(in srgb, var(--color-card) 80%, white);
+  --card-shadow-sm:
+    0 4px 0 color-mix(in srgb, var(--color-border) 95%, var(--color-border)),
+    0 4px 0 1px var(--color-border),
     inset 0 1px 0 color-mix(in srgb, var(--color-card) 80%, white);
   --progress-shine: color-mix(in srgb, white 45%, transparent);
   --progress-shine-dim: color-mix(in srgb, white 40%, transparent);

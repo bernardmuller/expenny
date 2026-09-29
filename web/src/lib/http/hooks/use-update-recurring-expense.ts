@@ -7,7 +7,7 @@ import { queryKeys } from '../query-keys'
 import type { paths } from '../schema'
 import type { UserRecurringExpensesSuccess } from '../queries/recurring-expenses/getUserRecurringExpenses'
 import { getUserIdFromAccessToken } from '@/lib/auth/decode-token'
-import { withAccessToken } from '../with-token'
+import { withSession } from '../with-token'
 
 type UpdateRecurringExpenseBody = NonNullable<
   paths['/recurring-expenses/{templateId}']['patch']['requestBody']
@@ -22,10 +22,12 @@ type UpdateRecurringExpenseError = {
   code: string
 }
 
-type MutationContext = {
-  queryKey: readonly unknown[]
-  previous: UserRecurringExpensesSuccess | undefined
-} | undefined
+type MutationContext =
+  | {
+      queryKey: readonly unknown[]
+      previous: UserRecurringExpensesSuccess | undefined
+    }
+  | undefined
 
 export function useUpdateRecurringExpense() {
   const queryClient = useQueryClient()
@@ -38,14 +40,11 @@ export function useUpdateRecurringExpense() {
     }): Promise<
       Result<UpdateRecurringExpenseSuccess, UpdateRecurringExpenseError>
     > =>
-      withAccessToken(
-        (ctx) =>
+      withSession(
+        () =>
           toResult(
             client.PATCH('/recurring-expenses/{templateId}', {
               params: { path: { templateId: input.templateId } },
-              headers: {
-                authorization: `Bearer ${ctx.token}`,
-              },
               body: input.body,
             }),
           )
@@ -54,15 +53,13 @@ export function useUpdateRecurringExpense() {
               return ok(data)
             })
             .mapErr((error) => {
-              toast.error(
-                error.message || 'Failed to update recurring expense',
-              )
+              toast.error(error.message || 'Failed to update recurring expense')
               return error
             }),
         (): UpdateRecurringExpenseError => ({
           error: 'Unauthorized',
-          message: 'No access token found',
-          code: 'MISSING_ACCESS_TOKEN',
+          message: 'You are not signed in',
+          code: 'NOT_AUTHENTICATED',
         }),
       )().match(
         (data) => ok(data),
@@ -78,32 +75,35 @@ export function useUpdateRecurringExpense() {
       const previous =
         queryClient.getQueryData<UserRecurringExpensesSuccess>(queryKey)
 
-      queryClient.setQueryData<UserRecurringExpensesSuccess>(queryKey, (old) => {
-        if (!old) return old
-        return {
-          ...old,
-          templates: old.templates.map((t) =>
-            t.id === templateId
-              ? {
-                  ...t,
-                  ...(body.description !== undefined && {
-                    description: body.description,
-                  }),
-                  ...(body.amount !== undefined && {
-                    amount: body.amount.toString(),
-                  }),
-                  ...(body.categoryId !== undefined && {
-                    categoryId: body.categoryId,
-                  }),
-                  ...(body.scheduledAt !== undefined && {
-                    scheduledAt: body.scheduledAt,
-                  }),
-                  updatedAt: new Date().toISOString(),
-                }
-              : t,
-          ),
-        }
-      })
+      queryClient.setQueryData<UserRecurringExpensesSuccess>(
+        queryKey,
+        (old) => {
+          if (!old) return old
+          return {
+            ...old,
+            templates: old.templates.map((t) =>
+              t.id === templateId
+                ? {
+                    ...t,
+                    ...(body.description !== undefined && {
+                      description: body.description,
+                    }),
+                    ...(body.amount !== undefined && {
+                      amount: body.amount.toString(),
+                    }),
+                    ...(body.categoryId !== undefined && {
+                      categoryId: body.categoryId,
+                    }),
+                    ...(body.scheduledAt !== undefined && {
+                      scheduledAt: body.scheduledAt,
+                    }),
+                    updatedAt: new Date().toISOString(),
+                  }
+                : t,
+            ),
+          }
+        },
+      )
 
       return { queryKey, previous }
     },

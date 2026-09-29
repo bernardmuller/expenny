@@ -6,7 +6,7 @@ import { client } from '../client'
 import { queryKeys } from '../query-keys'
 import type { UserRecurringExpensesSuccess } from '../queries/recurring-expenses/getUserRecurringExpenses'
 import { getUserIdFromAccessToken } from '@/lib/auth/decode-token'
-import { withAccessToken } from '../with-token'
+import { withSession } from '../with-token'
 
 type DeleteRecurringExpenseError = {
   error: string
@@ -29,14 +29,11 @@ export function useDeleteRecurringExpense() {
     mutationFn: async (input: {
       templateId: string
     }): Promise<Result<{ id: string }, DeleteRecurringExpenseError>> =>
-      withAccessToken(
-        (ctx) =>
+      withSession(
+        () =>
           ResultAsync.fromPromise(
             client.DELETE('/recurring-expenses/{templateId}', {
               params: { path: { templateId: input.templateId } },
-              headers: {
-                authorization: `Bearer ${ctx.token}`,
-              },
             }),
             (e): DeleteRecurringExpenseError => ({
               error: 'NetworkError',
@@ -60,8 +57,8 @@ export function useDeleteRecurringExpense() {
           }),
         (): DeleteRecurringExpenseError => ({
           error: 'Unauthorized',
-          message: 'No access token found',
-          code: 'MISSING_ACCESS_TOKEN',
+          message: 'You are not signed in',
+          code: 'NOT_AUTHENTICATED',
         }),
       )().match(
         (data) => ok(data),

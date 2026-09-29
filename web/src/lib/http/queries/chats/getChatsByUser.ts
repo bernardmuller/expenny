@@ -1,7 +1,7 @@
 import { toast } from 'sonner'
 import { client, toResult } from '../../client'
 import { queryKeys } from '../../query-keys'
-import { withAccessToken } from '../../with-token'
+import { withSession } from '../../with-token'
 import type { paths } from '../../schema'
 import { getUserIdFromAccessToken } from '@/lib/auth/decode-token'
 
@@ -17,21 +17,18 @@ type ChatsError = {
 }
 
 async function fetchChatsByUser(userId: string): Promise<Chat | null> {
-  const result = await withAccessToken(
-    (ctx) => {
+  const result = await withSession(
+    () => {
       return toResult(
         client.GET('/chats', {
           params: { query: { userId } },
-          headers: {
-            authorization: `Bearer ${ctx.token}`,
-          },
         }),
       )
     },
     (): ChatsError => ({
       error: 'Unauthorized',
-      message: 'No access token found',
-      code: 'MISSING_ACCESS_TOKEN',
+      message: 'You are not signed in',
+      code: 'NOT_AUTHENTICATED',
     }),
   )()
 

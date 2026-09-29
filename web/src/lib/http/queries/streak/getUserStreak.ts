@@ -1,5 +1,5 @@
 import { toast } from 'sonner'
-import { withAccessToken } from '../../with-token'
+import { withSession } from '../../with-token'
 import { client, toResult } from '../../client'
 import { queryKeys } from '../../query-keys'
 import type { paths } from '../../schema'
@@ -21,18 +21,17 @@ type StreakError = {
 }
 
 async function fetchUserStreak(days?: number): Promise<StreakSuccess> {
-  const result = await withAccessToken(
-    (ctx) =>
+  const result = await withSession(
+    () =>
       toResult(
         client.GET('/streaks', {
           params: { query: days ? { days } : undefined },
-          headers: { authorization: `Bearer ${ctx.token}` },
         }),
       ),
     (): StreakError => ({
       error: 'Unauthorized',
-      message: 'No access token found',
-      code: 'MISSING_ACCESS_TOKEN',
+      message: 'You are not signed in',
+      code: 'NOT_AUTHENTICATED',
     }),
   )()
 

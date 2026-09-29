@@ -155,6 +155,13 @@
       "when": 1790247151284,
       "tag": "0022_oauth_fk_names",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1790347699537,
+      "tag": "0023_better_auth_verifications",
+      "breakpoints": true
     }
   ]
 }
