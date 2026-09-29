@@ -1,19 +1,13 @@
 export const STORAGE_KEYS = {
-  /** better-auth session token, mirrored from the session cookie */
   SESSION_TOKEN: 'sessionToken',
   CURRENT_USER: 'currentUser',
   BUDGET_PRIVACY: 'budgetPrivacy',
   THEME: 'vite-ui-theme',
   QUERY_CACHE: 'expense-tracker-query-cache',
   STREAK: 'streakLastLogged',
-  /** Stored in sessionStorage: URL to resume after MCP OAuth authorize flow */
   PENDING_OAUTH: 'pendingOAuth',
 } as const
 
-/**
- * Keys written by older builds that nothing reads any more. Pruned on sign-out
- * so an existing install stops carrying them around.
- */
 export const LEGACY_STORAGE_KEYS = ['accessToken', 'refreshToken'] as const
 
 export interface StoredCurrentUser {

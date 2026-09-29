@@ -5,12 +5,6 @@ import { AppResult, fromDB } from "@/lib/result";
 import { DatabaseError } from "@/lib/errors/domain";
 import type { ConnectedClient } from "../types";
 
-/**
- * The OAuth applications this user has actively consented to, newest first.
- *
- * Joined to `oauth_application` for the registered name — the consent row
- * carries only the generated client id, which means nothing to a user.
- */
 export const getConsentsByUserId = (
   userId: string,
   ctx: AppContext,

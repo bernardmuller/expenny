@@ -74,13 +74,9 @@ app.use(
   }),
 );
 
-// OAuth 2.0 discovery documents — must be public, mounted at root
 app.get("/.well-known/oauth-authorization-server", (c) =>
   oAuthDiscoveryMetadata(betterAuthInstance)(c.req.raw),
 );
-// RFC 8414 §3.1: for an issuer with a path component (ours is <origin>/auth),
-// the well-known path is inserted before it. Clients differ on which form they
-// try, so serve both.
 app.get("/.well-known/oauth-authorization-server/*", (c) =>
   oAuthDiscoveryMetadata(betterAuthInstance)(c.req.raw),
 );
@@ -120,8 +116,6 @@ app.route("/", chats);
 app.route("/", notificationPreferences);
 app.route("/", streaks);
 app.route("/", cron);
-// Deliberately not under /auth — that prefix skips authMiddleware and falls
-// through to better-auth. Managing your own grants needs a web session.
 app.route("/", oauthClients);
 
 app.all("/auth/*", (c) => betterAuthInstance.handler(c.req.raw));

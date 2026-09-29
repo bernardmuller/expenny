@@ -3,13 +3,6 @@ import { AppResult, success, failure } from "@/lib/result";
 import { NotFoundError } from "@/lib/errors/domain";
 import { revokeClientAccess } from "../queries";
 
-/**
- * Revoke one application's access to this user's account.
- *
- * Scoped to `userId` in the query itself, so a client id belonging to someone
- * else's consent simply matches nothing and reads as "not connected" — there is
- * no path here to revoke another user's grant.
- */
 export const revokeClient = (
   userId: string,
   clientId: string,

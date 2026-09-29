@@ -5,9 +5,6 @@ import { clearSession } from '../auth/token-storage'
 
 const baseUrl = import.meta.env.VITE_API_URL ?? ''
 
-// The session cookie is the credential — the API authenticates browser
-// requests with `getSession()`, which reads it. Endpoints that take a token in
-// a header (the OTP verify pair) pass it explicitly.
 export const client = createClient<paths>({
   baseUrl,
   credentials: 'include',
@@ -16,7 +13,6 @@ export const client = createClient<paths>({
 client.use({
   onResponse({ response }) {
     if (response.status === 401) {
-      // Session expired or invalid — clear any stale local state and re-authenticate
       clearSession()
       window.location.href = '/login'
     }

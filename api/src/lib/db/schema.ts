@@ -93,9 +93,6 @@ export const verifications = pgTable("verifications", {
   ),
 });
 
-// better-auth's own verification store (social sign-in state, email OTPs it
-// issues). Kept out of `verifications`, which the app's OTP login flow owns —
-// sharing one table let better-auth's expiry sweeper delete live app codes.
 export const authVerifications = pgTable("auth_verifications", {
   id: text("id").primaryKey(),
   identifier: text("identifier").notNull(),
@@ -495,16 +492,11 @@ export const categoryBudgetRelations = relations(
   }),
 );
 
-// ─── better-auth OIDC / MCP plugin tables ────────────────────────────────────
-
-// OAuth applications registered by MCP clients (via dynamic client registration)
 export const oauthApplication = pgTable("oauth_application", {
   id: uuid("id").primaryKey(),
   name: text("name").notNull(),
   icon: text("icon"),
   metadata: text("metadata"),
-  // better-auth generates client ids with generateRandomString(32, "a-z", "A-Z"),
-  // not UUIDs — this column must be text.
   clientId: text("client_id").notNull().unique(),
   clientSecret: text("client_secret"),
   redirectURLs: text("redirect_u_r_ls").notNull(),
@@ -515,7 +507,6 @@ export const oauthApplication = pgTable("oauth_application", {
   updatedAt: timestamp("updated_at").notNull(),
 });
 
-// Access + refresh tokens issued to MCP clients
 export const oauthAccessToken = pgTable("oauth_access_token", {
   id: uuid("id").primaryKey(),
   accessToken: text("access_token").notNull().unique(),
@@ -531,7 +522,6 @@ export const oauthAccessToken = pgTable("oauth_access_token", {
   updatedAt: timestamp("updated_at").notNull(),
 });
 
-// User consent records per application
 export const oauthConsent = pgTable("oauth_consent", {
   id: uuid("id").primaryKey(),
   clientId: text("client_id")
@@ -546,15 +536,12 @@ export const oauthConsent = pgTable("oauth_consent", {
   consentGiven: boolean("consent_given").notNull(),
 });
 
-// JWKS keys used by the JWT plugin for signing
 export const jwks = pgTable("jwks", {
   id: uuid("id").primaryKey(),
   publicKey: text("public_key").notNull(),
   privateKey: text("private_key").notNull(),
   createdAt: timestamp("created_at").notNull(),
 });
-
-// ─────────────────────────────────────────────────────────────────────────────
 
 export const betterAuthSchema = {
   user: users,

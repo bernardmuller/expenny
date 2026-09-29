@@ -10,10 +10,6 @@ import netlify from '@netlify/vite-plugin'
 
 const API_TARGET = 'http://localhost:8080'
 
-// /budgets and /categories are both API prefixes and SPA routes. Browser
-// navigations (refresh, deep link) arrive with Accept: text/html and must
-// fall through to index.html; openapi-fetch sends no Accept header (*/*)
-// and gets proxied to the API.
 const spaFallback = (req: IncomingMessage, _res: ServerResponse | undefined) =>
   req.headers.accept?.includes('text/html') ? '/index.html' : undefined
 
@@ -43,13 +39,6 @@ export default defineConfig({
   },
   server: {
     allowedHosts: true,
-    // Every API prefix the web app calls, so VITE_API_URL stays empty and
-    // all traffic — including better-auth's session/state cookies — shares
-    // the page origin. Keep this list in sync with the paths in
-    // src/lib/http. /oauth is deliberately NOT proxied: /oauth/consent is a
-    // SPA route. /auth is NOT given the SPA fallback either — the MCP
-    // resume does a full-page navigation to /auth/mcp/authorize with
-    // Accept: text/html and must reach the API.
     proxy: {
       '/auth': API_TARGET,
       '/.well-known': API_TARGET,

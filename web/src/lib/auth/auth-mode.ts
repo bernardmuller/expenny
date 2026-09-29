@@ -13,6 +13,5 @@ export async function initAuthMode(): Promise<void> {
       googleConfigured = Boolean(data.google)
     }
   } catch {
-    // fall through — Google button stays hidden
   }
 }

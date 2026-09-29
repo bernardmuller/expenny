@@ -18,7 +18,6 @@ export const revokeClientRoute = createRoute({
     [HttpStatusCodes.OK]: jsonContent(
       z.object({
         revoked: z.boolean(),
-        /** Access tokens that were live at revocation time. */
         tokensRemoved: z.number(),
       }),
       "Access revoked",

@@ -19,10 +19,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// apiURL is the Expenny API origin, resolved once at startup. It must be
-// absolute: it is handed to MCP clients in the WWW-Authenticate challenge as
-// the resource_metadata URL, and a relative value silently breaks OAuth
-// discovery.
 var apiURL string
 
 func resolveAPIURL() string {
@@ -32,20 +28,15 @@ func resolveAPIURL() string {
 	return "http://localhost:8080"
 }
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 type contextKey string
 
 const userKey contextKey = "auth-user"
 
-// Principal holds the authenticated user info from the API's /auth/mcp/userinfo.
 type Principal struct {
 	Sub   string `json:"sub"`
 	Email string `json:"email"`
 	Name  string `json:"name"`
 }
-
-// ─── Token introspection cache ────────────────────────────────────────────────
 
 type cacheEntry struct {
 	principal *Principal
@@ -59,7 +50,6 @@ type tokenCache struct {
 
 var cache = &tokenCache{items: make(map[string]cacheEntry)}
 
-// Introspection sits in the request path — never let a stalled API hang a tool call.
 var introspectClient = &http.Client{Timeout: 10 * time.Second}
 
 func (c *tokenCache) get(token string) (*Principal, bool) {
@@ -85,14 +75,11 @@ func hashToken(token string) string {
 	return fmt.Sprintf("%x", h)
 }
 
-// ─── Userinfo introspection ───────────────────────────────────────────────────
-
 func introspect(token string) (*Principal, error) {
 	if p, ok := cache.get(token); ok {
 		return p, nil
 	}
 
-	// Matches userinfo_endpoint in the API's authorization-server metadata.
 	uiReq, err := http.NewRequest(http.MethodGet, apiURL+"/auth/mcp/userinfo", nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build userinfo request: %w", err)
@@ -125,15 +112,12 @@ func introspect(token string) (*Principal, error) {
 	return &p, nil
 }
 
-// ─── HTTP auth middleware ─────────────────────────────────────────────────────
-
 func authHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		auth := r.Header.Get("Authorization")
 		token := strings.TrimPrefix(auth, "Bearer ")
 
 		if auth == "" || token == auth {
-			// No bearer token — emit 401 with WWW-Authenticate per RFC 9728 §3
 			resourceMetaURL := apiURL + "/.well-known/oauth-protected-resource"
 			w.Header().Set(
 				"WWW-Authenticate",
@@ -159,10 +143,7 @@ func authHandler(next http.Handler) http.Handler {
 	})
 }
 
-// ─── Server ───────────────────────────────────────────────────────────────────
-
 func main() {
-	// Best-effort: the repo-root .env is how EXPENNY_API_URL is supplied locally.
 	_ = godotenv.Load()
 	apiURL = resolveAPIURL()
 
@@ -194,7 +175,6 @@ func main() {
 		server.WithDisableLocalhostProtection(true),
 	)
 
-	// Wrap the MCP HTTP handler with our auth middleware
 	wrappedHandler := authHandler(mcpHTTP)
 
 	addr := ":" + port

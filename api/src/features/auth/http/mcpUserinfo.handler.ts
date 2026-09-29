@@ -5,7 +5,6 @@ import { getValidMcpToken } from "@/lib/auth/mcp-token";
 export const mcpUserinfoHandler = async (c: Context) => {
   const headers = c.req.raw.headers;
 
-  // Same introspection the API's own auth middleware performs for MCP callers.
   const token = await getValidMcpToken(headers);
   if (!token?.userId) {
     return c.json({ error: "invalid_token" }, 401);
