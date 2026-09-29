@@ -13,6 +13,7 @@ import { chatRouter as chats } from "./features/chats";
 import { notificationPreferencesRouter as notificationPreferences } from "./features/notification-preferences";
 import { streakRouter as streaks } from "./features/streaks";
 import { cronRouter as cron } from "./features/cron";
+import { oauthClientRouter as oauthClients } from "./features/oauth-clients";
 import { cors } from "hono/cors";
 import env from "./env";
 import { authMiddleware } from "@/lib/http/middleware/auth";
@@ -43,6 +44,7 @@ const routes = [
   notificationPreferences,
   streaks,
   cron,
+  oauthClients,
 ] as const;
 
 app.use(
@@ -118,6 +120,9 @@ app.route("/", chats);
 app.route("/", notificationPreferences);
 app.route("/", streaks);
 app.route("/", cron);
+// Deliberately not under /auth — that prefix skips authMiddleware and falls
+// through to better-auth. Managing your own grants needs a web session.
+app.route("/", oauthClients);
 
 app.all("/auth/*", (c) => betterAuthInstance.handler(c.req.raw));
 
