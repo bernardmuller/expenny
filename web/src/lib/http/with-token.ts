@@ -28,11 +28,6 @@ export function withToken<TSuccess, TError extends ErrorWithMessage>(
   }
 }
 
-/**
- * Guard a call that needs a signed-in user. The session cookie travels with
- * the request on its own, so nothing is handed to `fn` — this only stops the
- * call being made at all when nobody is signed in.
- */
 export function withSession<TSuccess, TError extends ErrorWithMessage>(
   fn: () => ResultAsync<TSuccess, TError>,
   createError: () => TError,

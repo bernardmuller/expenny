@@ -32,7 +32,6 @@ const loginSchema = z.object({
   email: z.email('Please provide a valid email address'),
 })
 
-/** better-auth error codes, as they arrive on `?error=`. */
 function oauthErrorMessage(code: string): string {
   switch (code) {
     case 'state_mismatch':
@@ -51,12 +50,6 @@ export const Route = createFileRoute('/login')({
     const params = new URLSearchParams(
       location.search as Record<string, string>,
     )
-    // Stay here only while genuinely mid-flow: an MCP authorize forwarded us
-    // here, or a social sign-in is returning to finish. Everyone else with a
-    // session goes home. Deliberately not keyed off the stored pending URL —
-    // better-auth's `after` hook often completes the authorize without ever
-    // coming back through /login, which leaves that entry behind and would
-    // strand a signed-in user on the login form.
     const isMidOAuth =
       hasAuthorizeParams(params) || params.get('resume') === '1'
     if (hasSession() && !isMidOAuth) {
@@ -80,15 +73,12 @@ function LoginPage() {
   const loginMutation = useLoginRequest()
   const verifyMutation = useLoginVerify()
 
-  // On mount: report any OAuth failure, resume a pending MCP authorize, or
-  // finish a plain Google sign-in that returned to /login?resume=1.
   useEffect(() => {
     const search = window.location.search
     const params = new URLSearchParams(search)
 
     const error = params.get('error')
     if (error) {
-      // better-auth redirects every OAuth callback failure back here.
       toast.error(oauthErrorMessage(error))
       sessionStorage.removeItem(PENDING_OAUTH_KEY)
       navigate({ to: '/login', replace: true })
@@ -96,15 +86,11 @@ function LoginPage() {
     }
 
     if (params.get('resume') === '1') {
-      // Google sign-in returned here; the session cookie is now set.
       const resumeUrl = consumePendingOAuth()
       if (resumeUrl) {
         window.location.href = resumeUrl
         return
       }
-      // No MCP authorize to resume — a plain sign-in. beforeLoad has normally
-      // redirected already; this covers the bootstrap in main.tsx having lost
-      // the race or failed.
       void bootstrapSessionFromCookie().then(() => {
         if (hasSession()) {
           auth.login()
@@ -116,12 +102,8 @@ function LoginPage() {
       return
     }
 
-    // Capture any fresh authorize params forwarded by better-auth
     const pending = capturePendingOAuth(search)
 
-    // Already signed in when the authorize arrived — there is nothing to ask
-    // for, so hand straight back to better-auth, which will see the session
-    // cookie and issue the code.
     if (pending && hasAuthorizeParams(params) && hasSession()) {
       consumePendingOAuth()
       window.location.href = pending
@@ -156,7 +138,6 @@ function LoginPage() {
       auth.login()
       const resumeUrl = consumePendingOAuth()
       if (resumeUrl) {
-        // Real navigation — the API needs to see the freshly-set session cookie
         window.location.href = resumeUrl
       } else {
         navigate({ to: '/' })

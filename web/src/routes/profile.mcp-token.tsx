@@ -105,7 +105,6 @@ function McpPage() {
       </AppHeader.Root>
 
       <Layout>
-        {/* ── Connect instructions ─────────────────────────────── */}
         <Card>
           <CardHeader>
             <CardTitle>Connect an MCP client</CardTitle>
@@ -176,7 +175,6 @@ function McpPage() {
           </CardContent>
         </Card>
 
-        {/* ── Authorised clients ───────────────────────────────── */}
         <Card>
           <CardHeader>
             <CardTitle>Authorised clients</CardTitle>

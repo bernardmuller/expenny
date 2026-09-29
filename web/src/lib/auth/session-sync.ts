@@ -32,13 +32,10 @@ export async function syncCurrentUserFromSession(): Promise<void> {
 export async function bootstrapSessionFromCookie(): Promise<void> {
   if (hasSession()) return
 
-  // best-effort; anonymous visitors simply stay on /login
   const data = await fetchSession()
   const token = data?.session?.token
   const user = data?.user
   if (token && user?.id) {
-    // Social sign-in only yields a session cookie; mirror it into local
-    // storage so the route guards behave like they do on the OTP path.
     setSession(token)
     setCurrentUser({
       userId: user.id,

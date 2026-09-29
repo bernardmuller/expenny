@@ -14,9 +14,6 @@ export const betterAuthSecret = env.BETTER_AUTH_SECRET || env.AUTH_SECRET;
 const mcpResourceUrl =
 	env.MCP_RESOURCE_URL ?? `${betterAuthUrl}/mcp`;
 
-// Where Google sends the browser back to. Defaults to the web origin so the
-// roundtrip never leaves the app — the web server proxies /auth to this API.
-// Must be registered verbatim in the Google Console.
 const googleRedirectURI =
 	env.GOOGLE_REDIRECT_URI ?? `${env.AUTH_URL}/auth/callback/google`;
 
@@ -48,9 +45,6 @@ export const betterAuthInstance = betterAuth({
 					},
 				}
 			: {},
-	// OAuth callback failures redirect here instead of better-auth's own error
-	// page on the API origin. parseState errors (state_mismatch, ...) are raised
-	// before the per-request errorCallbackURL is known, so only this catches them.
 	onAPIError: {
 		errorURL: `${env.AUTH_URL}/login`,
 	},

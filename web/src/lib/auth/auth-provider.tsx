@@ -24,17 +24,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      // Awaited, not fire-and-forget: navigating away cancels the request before
-      // the browser applies the Set-Cookie that clears the session, leaving a
-      // live cookie that bootstrapSessionFromCookie turns straight back into
-      // tokens on /login — signing the user back in.
       await fetch(`${import.meta.env.VITE_API_URL ?? ''}/auth/sign-out`, {
         method: 'POST',
         credentials: 'include',
         signal: AbortSignal.timeout(5000),
       })
     } catch {
-      // API down or offline — still drop local state so sign-out is honoured here.
     }
     clearSession()
     setIsAuthenticated(false)

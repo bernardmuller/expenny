@@ -34,9 +34,7 @@ const EnvSchema = z.object({
 	BETTER_AUTH_URL: z.string().url().optional(),
 	GOOGLE_CLIENT_ID: z.string().optional(),
 	GOOGLE_CLIENT_SECRET: z.string().optional(),
-	/** Google's redirect_uri. Defaults to `${AUTH_URL}/auth/callback/google`. */
 	GOOGLE_REDIRECT_URI: z.url().optional(),
-	/** URL of the MCP resource server (the Go MCP binary). Used in OAuth discovery. */
 	MCP_RESOURCE_URL: z.string().url().optional(),
 });
 

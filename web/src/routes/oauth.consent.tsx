@@ -57,7 +57,6 @@ function ConsentPage() {
       if (data.redirectURI) {
         window.location.href = data.redirectURI
       } else {
-        // Denied path — go back to the dashboard
         navigate({ to: '/' })
       }
     } catch {
