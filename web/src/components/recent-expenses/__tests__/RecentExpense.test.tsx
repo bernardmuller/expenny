@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { generateRecentExpenseProps } from '../__mocks__/RecentExpense.mock'
 import RecentExpense from '../RecentExpense'
 
@@ -62,5 +63,41 @@ describe('RecentExpense', () => {
       />,
     )
     expect(screen.getByText(/Food & Dining/i)).toBeInTheDocument()
+  })
+  it('should not render the actions menu without an onDelete handler', () => {
+    render(<RecentExpense {...generateRecentExpenseProps()} />)
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  })
+  it('should render the actions menu at any screen size when onDelete is given', async () => {
+    const user = userEvent.setup()
+    const props = generateRecentExpenseProps({
+      description: 'Flat white',
+      onDelete: vi.fn(),
+    })
+    render(<RecentExpense {...props} />)
+
+    await user.click(
+      screen.getByRole('button', { name: /actions for flat white/i }),
+    )
+
+    expect(
+      await screen.findByRole('menuitem', { name: /delete/i }),
+    ).toBeInTheDocument()
+  })
+  it('should call onDelete when the delete menu item is clicked', async () => {
+    const user = userEvent.setup()
+    const onDelete = vi.fn()
+    const props = generateRecentExpenseProps({
+      description: 'Flat white',
+      onDelete,
+    })
+    render(<RecentExpense {...props} />)
+
+    await user.click(
+      screen.getByRole('button', { name: /actions for flat white/i }),
+    )
+    await user.click(await screen.findByRole('menuitem', { name: /delete/i }))
+
+    expect(onDelete).toHaveBeenCalledTimes(1)
   })
 })

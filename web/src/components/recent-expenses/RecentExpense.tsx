@@ -7,7 +7,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useIsMobile } from '@/hooks/use-mobile'
 
 import type { RecentExpenseProps } from './RecentExpense.types'
 
@@ -18,8 +17,6 @@ export default function RecentExpense({
   createdAt,
   onDelete,
 }: RecentExpenseProps) {
-  const isMobile = useIsMobile()
-
   return (
     <div className="flex items-center justify-between py-2 pr-3 md:pr-0">
       <div className="flex items-center gap-3">
@@ -43,15 +40,22 @@ export default function RecentExpense({
       </div>
       <div className="flex items-center gap-2">
         <div className="text-md font-semibold">{amount}</div>
-        {onDelete && !isMobile && (
+        {onDelete && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-8">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8"
+                aria-label={`Actions for ${description}`}
+              >
                 <MoreVertical className="size-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onDelete}>
+              {/* onSelect, not onClick: on touch devices the menu unmounts
+                  before the click event lands, so onClick never fires. */}
+              <DropdownMenuItem onSelect={onDelete}>
                 <Trash2 />
                 Delete
               </DropdownMenuItem>

@@ -22,21 +22,18 @@ import {
   useRouter,
 } from '@tanstack/react-router'
 import { Suspense, useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 import { Confetti } from '@/components/confetti/Confetti'
 import { DashboardSkeleton } from './dashboard.skeleton'
 import RecentExpense from '@/components/recent-expenses/RecentExpense'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
-import { Trash2, User } from 'lucide-react'
-import { Swiper } from '@/components/swiper'
+import { User } from 'lucide-react'
 import { useDeleteExpense } from '@/lib/http/hooks/use-delete-expense'
 import { getUserIdFromAccessToken } from '@/lib/auth/decode-token'
 import { usePrivacy } from '@/lib/hooks/usePrivacy'
 import { getPrivacyDisplayValue } from '@/lib/utils/formatting/getPrivacyDisplayValue'
 import { AppHeader } from '@/components/app-header'
 import { differenceInCalendarDays, format } from 'date-fns'
-import { useIsMobile } from '@/hooks/use-mobile'
 
 export const Route = createFileRoute('/dashboard')({
   beforeLoad: () => requireAuth(),
@@ -89,14 +86,12 @@ function Dashboard() {
   const createTransactionMutation = useCreateTransaction(budget.id)
   const deleteExpenseMutation = useDeleteExpense()
   const { isPrivacyEnabled, togglePrivacy } = usePrivacy()
-  const isMobile = useIsMobile()
   const isRefreshing = useMemo(
     () => (budgetFetching || categoriesFetching) && categories,
     [categories, budgetFetching, categoriesFetching],
   )
   const [showConfetti, setShowConfetti] = useState(false)
 
-  const userId = userIdResult.isOk() ? userIdResult.value : ''
   const currentAmount = Math.floor(parseFloat(budget.currentAmount))
   const startAmount = Math.floor(parseFloat(budget.startAmount))
   const spentAmount = startAmount - currentAmount
@@ -221,47 +216,7 @@ function Dashboard() {
               No recent expenses
             </div>
           )}
-          {budget.expenses.length > 0 && isMobile && (
-            <div className="flex flex-col gap-2">
-              {budget.expenses.slice(0, 5).map((expense) => (
-                <Swiper
-                  key={expense.id}
-                  rightAction={{
-                    content: <Trash2 className="h-5 w-5 text-white" />,
-                    className: 'p-2 rounded-md',
-                    backgroundColor: 'oklch(0.6368 0.2078 25.3313)',
-                    width: '80px',
-                    onAction: () => {
-                      deleteExpenseMutation.mutate({
-                        userId,
-                        budgetId: budget.id,
-                        expenseId: expense.id,
-                      })
-                    },
-                  }}
-                >
-                  <RecentExpense
-                    amount={formatCurrency(parseFloat(expense.amount), 'za')}
-                    description={expense.description}
-                    emoji={expense.category.icon}
-                    categoryLabel={expense.category.label}
-                    onDelete={() => {
-                      deleteExpenseMutation.mutate({
-                        userId,
-                        budgetId: budget.id,
-                        expenseId: expense.id,
-                      })
-                    }}
-                    createdAt={format(
-                      new Date(expense.createdAt),
-                      'dd MMMM yyyy',
-                    )}
-                  />
-                </Swiper>
-              ))}
-            </div>
-          )}
-          {budget.expenses.length > 0 && !isMobile && (
+          {budget.expenses.length > 0 && (
             <div className="flex flex-col gap-2">
               {budget.expenses.slice(0, 5).map((expense) => (
                 <RecentExpense
@@ -272,7 +227,6 @@ function Dashboard() {
                   categoryLabel={expense.category.label}
                   onDelete={() => {
                     deleteExpenseMutation.mutate({
-                      userId,
                       budgetId: budget.id,
                       expenseId: expense.id,
                     })

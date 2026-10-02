@@ -355,26 +355,29 @@ function NewBudgetPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTemplateIdsKey, recurringTemplatesData.templates])
 
-  // Per-category previous floor + first-run flag let us decrement the
-  // allocation when a recurring template is unticked, while still preserving
-  // any user-typed amount that exceeded the floor.
-  const prevFloorByCategoryRef = useRef<Record<string, number>>({})
-  const floorFirstSyncRef = useRef(true)
+  const previousAmountByCategoryId = useMemo(() => {
+    const map: Record<string, number | undefined> = {}
+    for (const cb of budgetDetail.budget.categoryBudgets) {
+      map[cb.categoryId] = parseFloat(cb.allocatedAmount)
+    }
+    return map
+  }, [budgetDetail])
+
+  const autoAmountByCategoryRef = useRef<Record<string, number | undefined>>({})
+  const manuallyEditedCategoryIds = useRef<Set<string>>(new Set())
   useEffect(() => {
     const current = form.state.values.categories
     let changed = false
     const next = current.map((cat) => {
-      const floor = recurringByCategoryId[cat.id] ?? 0
-      if (floorFirstSyncRef.current) {
-        if (cat.amount < floor) {
-          changed = true
-          return { ...cat, amount: floor }
-        }
-        return cat
+      const recurring = recurringByCategoryId[cat.id] ?? 0
+      const lastAutoAmount = autoAmountByCategoryRef.current[cat.id]
+      if (lastAutoAmount !== undefined && cat.amount !== lastAutoAmount) {
+        manuallyEditedCategoryIds.current.add(cat.id)
       }
-      const previousFloor = prevFloorByCategoryRef.current[cat.id] ?? 0
-      const extra = Math.max(0, cat.amount - previousFloor)
-      const target = floor + extra
+      if (manuallyEditedCategoryIds.current.has(cat.id)) return cat
+
+      const target =
+        recurring > 0 ? recurring : (previousAmountByCategoryId[cat.id] ?? 0)
       if (cat.amount !== target) {
         changed = true
         return { ...cat, amount: target }
@@ -382,19 +385,21 @@ function NewBudgetPage() {
       return cat
     })
     if (changed) form.setFieldValue('categories', next)
-    floorFirstSyncRef.current = false
-    const newPrev: Record<string, number> = {}
-    current.forEach((cat) => {
-      newPrev[cat.id] = recurringByCategoryId[cat.id] ?? 0
-    })
-    prevFloorByCategoryRef.current = newPrev
+    autoAmountByCategoryRef.current = Object.fromEntries(
+      next.map((cat) => [cat.id, cat.amount]),
+    )
+    manuallyEditedCategoryIds.current = new Set(
+      next
+        .map((cat) => cat.id)
+        .filter((id) => manuallyEditedCategoryIds.current.has(id)),
+    )
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recurringByCategoryId, selectedCategoryIdsKey])
+  }, [
+    recurringByCategoryId,
+    selectedCategoryIdsKey,
+    previousAmountByCategoryId,
+  ])
 
-  // Auto-sync recurring template selection with category selection. When a
-  // category becomes selected, all of its templates are added (default-checked
-  // per spec). When a category is deselected, its templates are removed. User
-  // unchecks within still-selected categories are preserved.
   const prevSelectedCategoryIds = useRef<Set<string>>(new Set())
   useEffect(() => {
     const currentCategoryIds = new Set(
@@ -839,12 +844,11 @@ function NewBudgetPage() {
                                                 </span>
                                               </TooltipTrigger>
                                               <TooltipContent>
-                                                Includes{' '}
                                                 {formatCurrency(
                                                   recurringTotal,
                                                   'za',
                                                 )}{' '}
-                                                in recurring expenses
+                                                from recurring expenses
                                               </TooltipContent>
                                             </Tooltip>
                                           )}
@@ -906,7 +910,6 @@ function NewBudgetPage() {
         ) : (
           <Button
             onClick={() => {
-              console.log('submit')
               form.handleSubmit()
             }}
             disabled={form.state.isSubmitting || createBudgetMutation.isPending}
