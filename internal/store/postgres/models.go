@@ -13,7 +13,7 @@ import (
 
 type Account struct {
 	ID                    uuid.UUID
-	AccountID             uuid.UUID
+	AccountID             sql.NullString
 	UserID                uuid.UUID
 	AccessToken           sql.NullString
 	RefreshToken          sql.NullString
@@ -21,9 +21,18 @@ type Account struct {
 	AccessTokenExpiresAt  sql.NullTime
 	RefreshTokenExpiresAt sql.NullTime
 	Scope                 sql.NullString
-	Password              sql.NullString
 	CreatedAt             time.Time
 	UpdatedAt             time.Time
+	ProviderID            sql.NullString
+}
+
+type AuthVerification struct {
+	ID         string
+	Identifier string
+	Value      string
+	ExpiresAt  time.Time
+	CreatedAt  sql.NullTime
+	UpdatedAt  sql.NullTime
 }
 
 type Budget struct {
@@ -93,12 +102,19 @@ type Expense struct {
 	BudgetID    uuid.UUID
 	Description string
 	Amount      string
-	CategoryID  uuid.NullUUID
+	CategoryID  uuid.UUID
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	DeletedAt   sql.NullTime
 	Note        sql.NullString
 	TemplateID  uuid.NullUUID
+}
+
+type Jwk struct {
+	ID         uuid.UUID
+	PublicKey  string
+	PrivateKey string
+	CreatedAt  time.Time
 }
 
 type Notification struct {
@@ -121,6 +137,44 @@ type NotificationPreference struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	EntityID    uuid.NullUUID
+}
+
+type OauthAccessToken struct {
+	ID                    uuid.UUID
+	AccessToken           string
+	RefreshToken          string
+	AccessTokenExpiresAt  time.Time
+	RefreshTokenExpiresAt time.Time
+	ClientID              string
+	UserID                uuid.NullUUID
+	Scopes                string
+	CreatedAt             time.Time
+	UpdatedAt             time.Time
+}
+
+type OauthApplication struct {
+	ID           uuid.UUID
+	Name         string
+	Icon         sql.NullString
+	Metadata     sql.NullString
+	ClientID     string
+	ClientSecret sql.NullString
+	RedirectURLs string
+	Type         string
+	Disabled     sql.NullBool
+	UserID       uuid.NullUUID
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
+type OauthConsent struct {
+	ID           uuid.UUID
+	ClientID     string
+	UserID       uuid.UUID
+	Scopes       string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	ConsentGiven bool
 }
 
 type RecurringExpenseTemplate struct {
