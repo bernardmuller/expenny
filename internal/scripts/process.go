@@ -4,17 +4,28 @@
 // Usage:
 //
 //	go run ./internal/scripts [path/to/file.csv]
+//	go run ./internal/scripts jev
+//
+// The jev argument instead sends the Jev API's own example request and prints
+// the answers — a smoke test for the credentials and the client in
+// expenny.co.za/internal/jev, ahead of using it to categorise statement rows.
 package main
 
 import (
+	"context"
 	"encoding/csv"
 	"errors"
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/joho/godotenv"
+
+	"expenny.co.za/internal/jev"
 )
 
 const defaultCSVPath = "assets/csv/september.csv"
@@ -168,13 +179,95 @@ func run(path string) error {
 	return nil
 }
 
+// runJev sends the example request from the Jev API documentation and prints
+// the answers.
+func runJev(ctx context.Context) error {
+	_ = godotenv.Load()
+
+	key := os.Getenv("JEV_API_KEY")
+	if key == "" {
+		return errors.New("JEV_API_KEY is not set")
+	}
+
+	resp, err := jev.New(key).Decide(ctx, jev.Request{
+		State: map[string]any{
+			"customer_tier": "enterprise",
+			"ticket":        "My checkout page shows a blank screen after I click Pay.",
+		},
+		Questions: map[string]jev.Question{
+			"team": jev.Choice("Which team should own this ticket?", map[string]string{
+				"account":  "Login, permissions, or profile issues",
+				"frontend": "Rendering, layout, or browser compatibility issues",
+				"payments": "Checkout, billing, or payment processing issues",
+			}),
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("model: %s\n", resp.Model)
+	for _, name := range sortedKeys(resp.Answers) {
+		printAnswer(name, resp.Answers[name])
+	}
+	fmt.Printf("\n%d in / %d out tokens, $%.6f\n",
+		resp.Usage.InputTokens, resp.Usage.OutputTokens, resp.Usage.Cost)
+
+	return nil
+}
+
+func printAnswer(name string, a jev.Answer) {
+	fmt.Printf("\n%s (%s)\n", name, a.Type)
+
+	switch a.Type {
+	case jev.TypeChoice:
+		fmt.Printf("  choice: %s\n", a.Choice)
+	case jev.TypeScore:
+		if a.Score != nil {
+			fmt.Printf("  score: %.2f\n", *a.Score)
+		}
+		for _, level := range sortedKeys(a.Legend) {
+			fmt.Printf("  %s = %s\n", level, a.Legend[level])
+		}
+	case jev.TypeNoul:
+		if a.Noul != nil {
+			fmt.Printf("  yes: %.0f%%\n", *a.Noul*100)
+		}
+	}
+
+	if a.Confidence != nil {
+		fmt.Printf("  confidence: %.0f%%\n", *a.Confidence*100)
+	}
+	for _, option := range sortedKeys(a.Probabilities) {
+		fmt.Printf("  %-10s %.0f%%\n", option, a.Probabilities[option]*100)
+	}
+}
+
+// sortedKeys keeps the output stable — answers and probabilities both arrive as
+// maps, so iterating them directly would reorder the output on every run.
+func sortedKeys[V any](m map[string]V) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
 func main() {
 	path := defaultCSVPath
 	if len(os.Args) > 1 {
 		path = os.Args[1]
 	}
 
-	if err := run(path); err != nil {
+	var err error
+	if path == "jev" {
+		err = runJev(context.Background())
+	} else {
+		err = run(path)
+	}
+
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
