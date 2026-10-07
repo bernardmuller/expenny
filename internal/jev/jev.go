@@ -29,12 +29,15 @@ import (
 
 const (
 	// DefaultBaseURL is the Jev gateway origin.
-	DefaultBaseURL = "https://api.defapi.org"
+	// DefaultBaseURL = "https://api.defapi.org"
+	DefaultBaseURL = "https://api.typesafe.ai"
 
 	// DefaultModel is the model Decide uses when Request.Model is empty.
-	DefaultModel = "typesafe/jev-1.13"
+	// DefaultModel = "typesafe/jev-1.13"
+	DefaultModel = "jev-1.13.0"
 
-	decisionsPath = "/api/v1/decisions"
+	// decisionsPath = "/api/v1/decisions"
+	decisionsPath = "/v1/systemone"
 )
 
 // Question types.

@@ -5,36 +5,50 @@
 //
 //	go run ./internal/scripts [path/to/file.csv]
 //	go run ./internal/scripts categorise [path/to/file.csv]
+//	go run ./internal/scripts review [threshold] [--list]
 //	go run ./internal/scripts jev
 //
 // The categorise argument asks Jev, for every row, whether it is an expense and
-// which of the categories in the database best describes it. The jev argument
-// sends the Jev API's own example request — a smoke test for the credentials
-// and the client in expenny.co.za/internal/jev.
+// which of the categories in the database best describes it, writing the
+// verdicts to tmp/jev-results.json. The review argument then walks the
+// least-confident of those rows and asks for the right answer, saving each one
+// to assets/jev/corrections.json — which categorise feeds back to Jev on the
+// next run, so the same merchant isn't guessed at twice. The jev argument sends
+// the Jev API's own example request, as a smoke test for the credentials and the
+// client in expenny.co.za/internal/jev.
+//
+// Review is interactive and needs a real terminal. In particular it can't be run
+// under air, which gives its child no TTY and kills it without a signal.
 package main
 
 import (
 	"context"
 	"database/sql"
 	"encoding/csv"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
+	"path/filepath"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	"charm.land/huh/v2"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 
+	"expenny.co.za/internal/corrections"
 	"expenny.co.za/internal/jev"
 	"expenny.co.za/internal/store/postgres"
 )
 
-const defaultCSVPath = "assets/csv/september.csv"
+const defaultCSVPath = "assets/csv/transactions.csv"
 
 // Column positions in the statement export. The header is:
 //
@@ -292,6 +306,22 @@ const (
 // some concurrency is needed; too much just invites a 429.
 const categoriseWorkers = 6
 
+// Where the two JSON files live. Results are regenerable and land under tmp/,
+// which is already gitignored; corrections are hand-made and worth committing.
+const (
+	resultsPath     = "tmp/jev-results.json"
+	correctionsPath = "assets/jev/corrections.json"
+)
+
+// How a row's category was decided.
+const (
+	sourceRule = "rule"
+	sourceJev  = "jev"
+)
+
+// feeCategory is the category every fee row is assigned without asking Jev.
+const feeCategory = "bank-fees"
+
 // rowResult is one row's verdict, kept alongside its row so the output can be
 // printed back in statement order.
 type rowResult struct {
@@ -299,7 +329,21 @@ type rowResult struct {
 	expense  float64 // probability the row is an expense
 	category string
 	conf     float64
+	source   string
 	err      error
+}
+
+// savedResult is a rowResult flattened for tmp/jev-results.json, which is what
+// the review command works from.
+type savedResult struct {
+	Nr          int     `json:"nr"`
+	Description string  `json:"description"`
+	MoneyOut    float64 `json:"money_out"`
+	Fee         float64 `json:"fee"`
+	Expense     float64 `json:"expense"`
+	Category    string  `json:"category"`
+	Confidence  float64 `json:"confidence"`
+	Source      string  `json:"source"`
 }
 
 // runCategorise reads the statement, asks Jev to classify every row against the
@@ -325,18 +369,64 @@ func runCategorise(ctx context.Context, path string) error {
 		return err
 	}
 
+	known, err := corrections.Load(correctionsPath)
+	if err != nil {
+		return err
+	}
+
 	txns, failed, err := readTransactions(path)
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(os.Stderr, "classifying %d rows against %d categories...\n\n", len(txns), len(options))
+	fmt.Fprintf(os.Stderr, "classifying %d rows against %d categories, with %d past correction(s)...\n\n",
+		len(txns), len(options), len(known))
 
-	results := classify(ctx, jev.New(key), options, txns)
+	results := classify(ctx, jev.New(key), options, known, txns)
 	printResults(results)
+
+	if err := saveResults(resultsPath, results); err != nil {
+		return err
+	}
+	fmt.Printf("results written to %s\n", resultsPath)
 
 	if failed > 0 {
 		return fmt.Errorf("%d row(s) could not be parsed", failed)
+	}
+	return nil
+}
+
+// saveResults persists the verdicts so review can work from them without paying
+// to classify the statement again. Rows that errored are left out — there is
+// nothing to review about a failed call.
+func saveResults(path string, results []rowResult) error {
+	saved := make([]savedResult, 0, len(results))
+	for _, r := range results {
+		if r.err != nil {
+			continue
+		}
+		saved = append(saved, savedResult{
+			Nr:          r.txn.Nr,
+			Description: strings.TrimSpace(r.txn.Description),
+			MoneyOut:    r.txn.MoneyOut,
+			Fee:         r.txn.Fee,
+			Expense:     r.expense,
+			Category:    r.category,
+			Confidence:  r.conf,
+			Source:      r.source,
+		})
+	}
+
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return fmt.Errorf("failed to create %s: %w", filepath.Dir(path), err)
+	}
+
+	b, err := json.MarshalIndent(saved, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to encode results: %w", err)
+	}
+	if err := os.WriteFile(path, append(b, '\n'), 0o644); err != nil {
+		return fmt.Errorf("failed to write %s: %w", path, err)
 	}
 	return nil
 }
@@ -371,7 +461,7 @@ func categoryOptions(ctx context.Context, dbURL string) (map[string]string, erro
 }
 
 // classify runs every row through Jev, returning results in statement order.
-func classify(ctx context.Context, client *jev.Client, options map[string]string, txns []Transaction) []rowResult {
+func classify(ctx context.Context, client *jev.Client, options map[string]string, known corrections.Set, txns []Transaction) []rowResult {
 	results := make([]rowResult, len(txns))
 
 	var wg sync.WaitGroup
@@ -382,7 +472,7 @@ func classify(ctx context.Context, client *jev.Client, options map[string]string
 		go func() {
 			defer wg.Done()
 			for i := range queue {
-				results[i] = classifyRow(ctx, client, options, txns[i])
+				results[i] = classifyRow(ctx, client, options, known, txns[i])
 			}
 		}()
 	}
@@ -396,31 +486,56 @@ func classify(ctx context.Context, client *jev.Client, options map[string]string
 	return results
 }
 
-func classifyRow(ctx context.Context, client *jev.Client, options map[string]string, t Transaction) rowResult {
+func classifyRow(ctx context.Context, client *jev.Client, options map[string]string, known corrections.Set, t Transaction) rowResult {
 	res := rowResult{txn: t}
 
-	resp, err := client.Decide(ctx, jev.Request{
+	// A fee is a bank charge by definition, so there is nothing to ask. No row
+	// in the statement carries both a Fee and a Money Out amount, so this can't
+	// shadow a real merchant.
+	//
+	// The row still isn't an expense: an expense is money out, and a fee is not
+	// that. It carries the category so the charge can be attributed, but stays
+	// off the expense ledger.
+	if t.Fee != 0 {
+		res.category = feeCategory
+		res.conf = 1
+		res.expense = 0
+		res.source = sourceRule
+		return res
+	}
+	res.source = sourceJev
+
+	state := map[string]any{
 		// Parent Category and Category are left out on purpose — handing Jev
 		// the answer the bank already guessed would make the choice question
 		// meaningless.
-		State: map[string]any{
-			"description":          strings.TrimSpace(t.Description),
-			"original_description": strings.TrimSpace(t.OriginalDescription),
-			"transaction_date":     t.TransactionDate.Format(transactionDateLayout),
-			"money_in":             t.MoneyIn,
-			"money_out":            t.MoneyOut,
-			"fee":                  t.Fee,
-		},
+		"description":          strings.TrimSpace(t.Description),
+		"original_description": strings.TrimSpace(t.OriginalDescription),
+		"transaction_date":     t.TransactionDate.Format(transactionDateLayout),
+		"money_in":             t.MoneyIn,
+		"money_out":            t.MoneyOut,
+		"fee":                  t.Fee,
+	}
+
+	categoryInstructions := "Which category best describes what this transaction was spent on? Match on the merchant and wording in the description."
+
+	// Past corrections go in whole rather than as a single pre-matched entry, so
+	// Jev can generalise sideways: a correction for one Woolworths branch should
+	// inform the next one.
+	if len(known) > 0 {
+		state["past_corrections"] = known
+		categoryInstructions += " The state includes past_corrections, a map of previously human-confirmed descriptions to category keys, keyed by a normalised form of the description with card and reference numbers removed. Where this row's merchant matches one of those entries, follow it."
+	}
+
+	resp, err := client.Decide(ctx, jev.Request{
+		State: state,
 		Questions: map[string]jev.Question{
 			qExpense: jev.NoulWithCriteria(
 				"This row is an expense: money left the account.",
 				"The money_out field holds a non-zero amount.",
-				"money_out is zero — the row is income, a fee-only line, or a transfer in.",
+				"money_out is zero — the row is income or a transfer in.",
 			),
-			qCategory: jev.Choice(
-				"Which category best describes what this transaction was spent on? Match on the merchant and wording in the description.",
-				options,
-			),
+			qCategory: jev.Choice(categoryInstructions, options),
 		},
 	})
 	if err != nil {
@@ -441,7 +556,7 @@ func classifyRow(ctx context.Context, client *jev.Client, options map[string]str
 }
 
 func printResults(results []rowResult) {
-	var failed, disagreed int
+	var failed, disagreed, ruled int
 
 	for _, r := range results {
 		if r.err != nil {
@@ -452,26 +567,39 @@ func printResults(results []rowResult) {
 
 		isExpense := r.expense >= 0.5
 
-		// The expense question has a deterministic answer in the data, so a
-		// mismatch is worth seeing — it's the cheapest signal of how far Jev
-		// can be trusted on the category question, which has no ground truth.
+		// Jev's expense answer has a deterministic counterpart in the data, so a
+		// mismatch is worth seeing — it's the cheapest signal of how far it can
+		// be trusted on the category question, which has no ground truth. A
+		// ruled row has nothing to disagree with.
 		marker := " "
-		if isExpense != (r.txn.MoneyOut != 0) {
+		if r.source == sourceJev && isExpense != (r.txn.MoneyOut != 0) {
 			marker = "!"
 			disagreed++
 		}
+		if r.source == sourceRule {
+			ruled++
+		}
 
+		// A non-expense has no category worth showing, except a ruled fee row:
+		// those carry one by design even though they stay off the ledger.
 		label := r.category
-		if !isExpense {
+		if !isExpense && r.source != sourceRule {
 			label = "-"
 		}
 
-		fmt.Printf("%s %3d  %-44.44s %10.2f  %-22s %3.0f%%  expense %3.0f%%\n",
-			marker, r.txn.Nr, strings.TrimSpace(r.txn.Description), r.txn.MoneyOut,
-			label, r.conf*100, r.expense*100)
+		// Fee rows carry their amount in the Fee column, not Money Out.
+		amount := r.txn.MoneyOut
+		if amount == 0 {
+			amount = r.txn.Fee
+		}
+
+		fmt.Printf("%s %3d  %-44.44s %10.2f  %-22s %3.0f%%  %-4s\n",
+			marker, r.txn.Nr, strings.TrimSpace(r.txn.Description), amount,
+			label, r.conf*100, r.source)
 	}
 
-	fmt.Printf("\n%d rows classified", len(results)-failed)
+	classified := len(results) - failed
+	fmt.Printf("\n%d rows classified (%d by rule, %d by Jev)", classified, ruled, classified-ruled)
 	if disagreed > 0 {
 		fmt.Printf(", %d disagreed with the Money Out column (marked !)", disagreed)
 	}
@@ -479,6 +607,150 @@ func printResults(results []rowResult) {
 		fmt.Printf(", %d failed", failed)
 	}
 	fmt.Println()
+}
+
+// Sentinel values for the two control entries at the bottom of the dropdown.
+// Neither is a real category key, so neither can collide with one.
+const (
+	optKeep = "\x00keep"
+	optSkip = "\x00skip"
+)
+
+// defaultReviewThreshold is the confidence below which a row is worth a second
+// look. Overridable as the first argument to the review command.
+const defaultReviewThreshold = 0.7
+
+// runReview walks the low-confidence rows of the last classification and asks
+// for the right category, saving each answer as it is given.
+//
+// Rows decided by rule are skipped: they are certain by construction. So are
+// non-expenses, which have no category to correct.
+func runReview(ctx context.Context, threshold float64, list bool) error {
+	_ = godotenv.Load()
+
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		return errors.New("DATABASE_URL is not set")
+	}
+
+	results, err := loadResults(resultsPath)
+	if err != nil {
+		return err
+	}
+
+	var queue []savedResult
+	for _, r := range results {
+		if r.Source == sourceJev && r.Expense >= 0.5 && r.Confidence < threshold {
+			queue = append(queue, r)
+		}
+	}
+
+	// Worst first, so the most valuable corrections are made even if the session
+	// is cut short.
+	sort.Slice(queue, func(i, j int) bool { return queue[i].Confidence < queue[j].Confidence })
+
+	if len(queue) == 0 {
+		fmt.Printf("nothing under %.0f%% confidence to review\n", threshold*100)
+		return nil
+	}
+
+	if list {
+		for _, r := range queue {
+			fmt.Printf("%3d  %-44.44s %10.2f  %-22s %3.0f%%\n",
+				r.Nr, r.Description, r.MoneyOut, r.Category, r.Confidence*100)
+		}
+		fmt.Printf("\n%d row(s) under %.0f%% confidence\n", len(queue), threshold*100)
+		return nil
+	}
+
+	options, err := categoryOptions(ctx, dbURL)
+	if err != nil {
+		return err
+	}
+
+	known, err := corrections.Load(correctionsPath)
+	if err != nil {
+		return err
+	}
+
+	return review(queue, options, known)
+}
+
+func loadResults(path string) ([]savedResult, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil, fmt.Errorf("%s not found — run `go run ./internal/scripts categorise` first", path)
+		}
+		return nil, fmt.Errorf("failed to read %s: %w", path, err)
+	}
+
+	var results []savedResult
+	if err := json.Unmarshal(b, &results); err != nil {
+		return nil, fmt.Errorf("failed to parse %s: %w", path, err)
+	}
+	return results, nil
+}
+
+// review prompts for each row in turn. Answers are written to disk one at a
+// time: a session is long enough that losing it to a stray ctrl-c would hurt.
+func review(queue []savedResult, options map[string]string, known corrections.Set) error {
+	choices := make([]huh.Option[string], 0, len(options)+2)
+	for _, key := range sortedKeys(options) {
+		choices = append(choices, huh.NewOption(options[key], key))
+	}
+
+	var saved int
+	for i, r := range queue {
+		keep := fmt.Sprintf("── keep %s ──", r.Category)
+		opts := append(slices.Clone(choices),
+			huh.NewOption(keep, optKeep),
+			huh.NewOption("── skip this row ──", optSkip),
+		)
+
+		// Pre-select whatever is already on record for this merchant, falling
+		// back to Jev's pick, so pressing enter repeatedly is a safe no-op.
+		choice := r.Category
+		key := corrections.Normalise(r.Description)
+		if prev, ok := known[key]; ok {
+			choice = prev
+		}
+
+		err := huh.NewSelect[string]().
+			Title(fmt.Sprintf("[%d/%d]  %s", i+1, len(queue), r.Description)).
+			Description(fmt.Sprintf("R%.2f · Jev chose %s (%.0f%%) · saves as %q",
+				-r.MoneyOut, r.Category, r.Confidence*100, key)).
+			Options(opts...).
+			Filtering(true).
+			Value(&choice).
+			Run()
+
+		if err != nil {
+			if errors.Is(err, huh.ErrUserAborted) {
+				fmt.Printf("\nstopped at %d of %d — %d correction(s) saved to %s\n",
+					i, len(queue), saved, correctionsPath)
+				return nil
+			}
+			return err
+		}
+
+		if choice == optSkip {
+			continue
+		}
+		if choice == optKeep {
+			choice = r.Category
+		}
+
+		known[key] = choice
+		if err := known.Save(correctionsPath); err != nil {
+			return err
+		}
+		saved++
+	}
+
+	fmt.Printf("\nreviewed %d row(s) — %d correction(s) saved to %s\n",
+		len(queue), saved, correctionsPath)
+	return nil
 }
 
 func main() {
@@ -499,6 +771,22 @@ func main() {
 			csvPath = os.Args[2]
 		}
 		err = runCategorise(ctx, csvPath)
+	case "review":
+		threshold := defaultReviewThreshold
+		list := false
+		for _, arg := range os.Args[2:] {
+			if arg == "--list" {
+				list = true
+				continue
+			}
+			if threshold, err = strconv.ParseFloat(arg, 64); err != nil {
+				err = fmt.Errorf("threshold %q: %w", arg, err)
+				break
+			}
+		}
+		if err == nil {
+			err = runReview(ctx, threshold, list)
+		}
 	default:
 		err = run(path)
 	}
