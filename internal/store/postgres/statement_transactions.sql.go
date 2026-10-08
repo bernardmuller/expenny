@@ -14,17 +14,45 @@ import (
 )
 
 const upsertStatementTransaction = `-- name: UpsertStatementTransaction :one
-   INSERT INTO statement_transactions (
-     id, user_id, account, nr, posting_date, transaction_date, description,
-     original_description, parent_category, category, money_in, money_out,
-     fee, balance, dedup_hash, created_at, updated_at
-   ) VALUES (
-     $1, $2, $3, $4, $5, $6, $7,
-     $8, $9, $10, $11, $12,
-     $13, $14, $15, now(), now()
-   )
-   ON CONFLICT (dedup_hash) DO UPDATE SET updated_at = now()
-   RETURNING id, user_id, account, nr, posting_date, transaction_date, description, original_description, parent_category, category, money_in, money_out, fee, balance, dedup_hash, created_at, updated_at
+INSERT INTO statement_transactions (
+     id,
+     user_id,
+     account,
+     nr,
+     posting_date,
+     transaction_date,
+     description,
+     original_description,
+     parent_category,
+     category,
+     money_in,
+     money_out,
+     fee,
+     balance,
+     dedup_hash,
+     created_at,
+     updated_at
+) VALUES (
+     $1,
+     $2,
+     $3,
+     $4,
+     $5,
+     $6,
+     $7,
+     $8,
+     $9,
+     $10,
+     $11,
+     $12,
+     $13,
+     $14,
+     $15,
+     now(),
+     now()
+)
+ON CONFLICT (dedup_hash) DO UPDATE SET updated_at = now()
+RETURNING id, user_id, account, nr, posting_date, transaction_date, description, original_description, parent_category, category, money_in, money_out, fee, balance, dedup_hash, created_at, updated_at
 `
 
 type UpsertStatementTransactionParams struct {

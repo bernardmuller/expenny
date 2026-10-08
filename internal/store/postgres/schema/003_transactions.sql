@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS "transactions" (
       "id" uuid PRIMARY KEY NOT NULL,
       "user_id" uuid NOT NULL,
       "statement_transaction_id" uuid NOT NULL,
-      "category_id" uuid,
+      "category_id" uuid, -- we will probably need to make this not null, transactions might vanish if we can't categorise them under category-budgets
       "description" varchar(255) NOT NULL,
       "amount" numeric(10, 2) NOT NULL, -- signed: negative = money out
       "note" varchar(255),
