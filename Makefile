@@ -2,18 +2,18 @@ include .env
 
 db_migrate_up:
 	@echo "Migrating up..."
-	@cd ./internal/store/postgres/schema &&	goose postgres ${POSTGRES_URI} up
+	@cd ./internal/store/postgres/schema &&	goose postgres ${DATABASE_URL} up
 
 db_migrate_down:
 	@echo "Migrating down..."
-	@cd ./internal/store/postgres/schema &&	goose postgres ${POSTGRES_URI} down
+	@cd ./internal/store/postgres/schema &&	goose postgres ${DATABASE_URL} down
 
 db_generate_queries:
 	@echo "Generating queries..."
 	@sqlc generate
 
 .PHONY: help
-help: ## print make targets 
+help: ## print make targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: get-install-tailwindcss
@@ -32,11 +32,11 @@ tailwind-build: ## one-time compile tailwindcss styles
 
 .PHONY: categorise
 categorise: ## classify the statement csv with jev
-	go run ./internal/scripts categorise
+	go run ./cmd/cli categorise
 
 .PHONY: review
 review: ## correct the low-confidence rows of the last classification
-	go run ./internal/scripts review
+	go run ./cmd/cli review
 
 .PHONY: build
 build: ## build the Go bot binary
@@ -49,4 +49,3 @@ watch: ## build and watch the project with air
 build_mcp_binary:
 	@mkdir -p dist
 	@env GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -tags lambda.norpc -ldflags="-s -w" -o ./dist/bootstrap ./cmd/mcp/main.go
-

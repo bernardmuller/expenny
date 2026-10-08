@@ -97,6 +97,15 @@ type Chat struct {
 	UpdatedAt time.Time
 }
 
+type Correction struct {
+	ID                    uuid.UUID
+	UserID                uuid.UUID
+	NormalisedDescription string
+	CategoryID            uuid.UUID
+	CreatedAt             time.Time
+	UpdatedAt             time.Time
+}
+
 type Expense struct {
 	ID          uuid.UUID
 	BudgetID    uuid.UUID
@@ -198,6 +207,53 @@ type Session struct {
 	IpAddress sql.NullString
 	UserAgent sql.NullString
 	UserID    uuid.UUID
+}
+
+type StatementTransaction struct {
+	ID                  uuid.UUID
+	UserID              uuid.UUID
+	Account             string
+	Nr                  int32
+	PostingDate         time.Time
+	TransactionDate     time.Time
+	Description         string
+	OriginalDescription string
+	ParentCategory      sql.NullString
+	Category            sql.NullString
+	MoneyIn             string
+	MoneyOut            string
+	Fee                 string
+	Balance             sql.NullString
+	DedupHash           string
+	CreatedAt           time.Time
+	UpdatedAt           time.Time
+}
+
+type StatementTransactionClassification struct {
+	ID                     uuid.UUID
+	StatementTransactionID uuid.UUID
+	CategoryID             uuid.NullUUID
+	IsExpense              sql.NullBool
+	ExpenseProb            sql.NullString
+	Confidence             sql.NullString
+	Source                 string
+	ClassifierVersion      sql.NullString
+	ClassifiedAt           sql.NullTime
+	CreatedAt              time.Time
+	UpdatedAt              time.Time
+}
+
+type Transaction struct {
+	ID                     uuid.UUID
+	UserID                 uuid.UUID
+	StatementTransactionID uuid.UUID
+	CategoryID             uuid.NullUUID
+	Description            string
+	Amount                 string
+	Note                   sql.NullString
+	CreatedAt              time.Time
+	UpdatedAt              time.Time
+	DeletedAt              sql.NullTime
 }
 
 type User struct {
