@@ -38,3 +38,8 @@ INSERT INTO statement_transactions (
 )
 ON CONFLICT (dedup_hash) DO UPDATE SET updated_at = now()
 RETURNING *;
+
+-- name: GetALlStatementTransactionsByUserID :many
+SELECT st.*
+FROM statement_transactions st
+WHERE st.user_id = @user_id;

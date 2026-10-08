@@ -35,3 +35,9 @@ ON CONFLICT (statement_transaction_id) DO UPDATE SET
      updated_at         = now()
 WHERE statement_transaction_classifications.source <> 'human'
 RETURNING *;
+
+-- name: GetAllClassificationsByUserID :many
+SELECT c.*
+FROM statement_transaction_classifications c
+JOIN statement_transactions st ON st.id = c.statement_transaction_id
+WHERE st.user_id = @user_id;

@@ -12,6 +12,48 @@ import (
 	"github.com/google/uuid"
 )
 
+const getAllClassificationsByUserID = `-- name: GetAllClassificationsByUserID :many
+SELECT c.id, c.statement_transaction_id, c.category_id, c.is_expense, c.expense_prob, c.confidence, c.source, c.classifier_version, c.classified_at, c.created_at, c.updated_at
+FROM statement_transaction_classifications c
+JOIN statement_transactions st ON st.id = c.statement_transaction_id
+WHERE st.user_id = $1
+`
+
+func (q *Queries) GetAllClassificationsByUserID(ctx context.Context, userID uuid.UUID) ([]StatementTransactionClassification, error) {
+	rows, err := q.db.QueryContext(ctx, getAllClassificationsByUserID, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []StatementTransactionClassification
+	for rows.Next() {
+		var i StatementTransactionClassification
+		if err := rows.Scan(
+			&i.ID,
+			&i.StatementTransactionID,
+			&i.CategoryID,
+			&i.IsExpense,
+			&i.ExpenseProb,
+			&i.Confidence,
+			&i.Source,
+			&i.ClassifierVersion,
+			&i.ClassifiedAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const upsertClassification = `-- name: UpsertClassification :one
 INSERT INTO statement_transaction_classifications (
     id,

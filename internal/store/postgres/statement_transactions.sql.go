@@ -13,6 +13,53 @@ import (
 	"github.com/google/uuid"
 )
 
+const getALlStatementTransactionsByUserID = `-- name: GetALlStatementTransactionsByUserID :many
+SELECT st.id, st.user_id, st.account, st.nr, st.posting_date, st.transaction_date, st.description, st.original_description, st.parent_category, st.category, st.money_in, st.money_out, st.fee, st.balance, st.dedup_hash, st.created_at, st.updated_at
+FROM statement_transactions st
+WHERE st.user_id = $1
+`
+
+func (q *Queries) GetALlStatementTransactionsByUserID(ctx context.Context, userID uuid.UUID) ([]StatementTransaction, error) {
+	rows, err := q.db.QueryContext(ctx, getALlStatementTransactionsByUserID, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []StatementTransaction
+	for rows.Next() {
+		var i StatementTransaction
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Account,
+			&i.Nr,
+			&i.PostingDate,
+			&i.TransactionDate,
+			&i.Description,
+			&i.OriginalDescription,
+			&i.ParentCategory,
+			&i.Category,
+			&i.MoneyIn,
+			&i.MoneyOut,
+			&i.Fee,
+			&i.Balance,
+			&i.DedupHash,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const upsertStatementTransaction = `-- name: UpsertStatementTransaction :one
 INSERT INTO statement_transactions (
      id,
