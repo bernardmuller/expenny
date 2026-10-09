@@ -5,8 +5,8 @@ import (
 	"strings"
 	"sync"
 
+	"expenny.co.za/internal/classifier/jev"
 	"expenny.co.za/internal/corrections"
-	"expenny.co.za/internal/jev"
 	"expenny.co.za/internal/statements"
 )
 

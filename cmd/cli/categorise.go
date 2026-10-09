@@ -14,31 +14,23 @@ import (
 	_ "github.com/lib/pq"
 
 	"expenny.co.za/internal/classifier"
+	"expenny.co.za/internal/classifier/jev"
 	"expenny.co.za/internal/corrections"
-	"expenny.co.za/internal/jev"
 	"expenny.co.za/internal/statements"
 	"expenny.co.za/internal/store/postgres"
 )
 
-// savedResult is a classifier.Result flattened for tmp/jev-results.json, which is
-// what the review command works from.
 type savedResult struct {
-	Nr          int             `json:"nr"`
-	Description string          `json:"description"`
-	MoneyOut    float64         `json:"money_out"`
-	Fee         float64         `json:"fee"`
-	Expense     float64         `json:"expense"`
-	Category    string          `json:"category"`
-	Confidence  float64         `json:"confidence"`
+	Nr          int               `json:"nr"`
+	Description string            `json:"description"`
+	MoneyOut    float64           `json:"money_out"`
+	Fee         float64           `json:"fee"`
+	Expense     float64           `json:"expense"`
+	Category    string            `json:"category"`
+	Confidence  float64           `json:"confidence"`
 	Source      classifier.Source `json:"source"`
 }
 
-// runCategorise reads the statement, asks the provider to classify every row
-// against the categories in the database, and prints the result.
-//
-// The Parent Category and Category columns already present in the export are
-// deliberately ignored: the point is to see what the provider makes of the
-// description on its own.
 func runCategorise(ctx context.Context, path string) error {
 	_ = godotenv.Load()
 
@@ -85,9 +77,6 @@ func runCategorise(ctx context.Context, path string) error {
 	return reportRowErrors(rowErrs)
 }
 
-// saveResults persists the verdicts so review can work from them without paying
-// to classify the statement again. Rows that errored are left out — there is
-// nothing to review about a failed call.
 func saveResults(path string, results []classifier.Result) error {
 	saved := make([]savedResult, 0, len(results))
 	for _, r := range results {
@@ -120,9 +109,6 @@ func saveResults(path string, results []classifier.Result) error {
 	return nil
 }
 
-// categoryOptions loads the categories and shapes them into provider choice
-// criteria: the category key is what comes back in the answer, the label is the
-// description the provider matches the row against.
 func categoryOptions(ctx context.Context, dbURL string) (map[string]string, error) {
 	conn, err := sql.Open("postgres", dbURL)
 	if err != nil {
@@ -161,10 +147,6 @@ func printResults(results []classifier.Result) {
 
 		isExpense := r.Expense >= 0.5
 
-		// The expense answer has a deterministic counterpart in the data, so a
-		// mismatch is worth seeing — it's the cheapest signal of how far the
-		// provider can be trusted on the category question, which has no ground
-		// truth. A ruled row has nothing to disagree with.
 		marker := " "
 		if r.Source == classifier.SourceJev && isExpense != (r.Transaction.MoneyOut != 0) {
 			marker = "!"
@@ -174,14 +156,11 @@ func printResults(results []classifier.Result) {
 			ruled++
 		}
 
-		// A non-expense has no category worth showing, except a ruled fee row:
-		// those carry one by design even though they stay off the ledger.
 		label := r.Category
 		if !isExpense && r.Source != classifier.SourceRule {
 			label = "-"
 		}
 
-		// Fee rows carry their amount in the Fee column, not Money Out.
 		amount := r.Transaction.MoneyOut
 		if amount == 0 {
 			amount = r.Transaction.Fee
