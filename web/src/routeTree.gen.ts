@@ -15,6 +15,7 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as V2IndexRouteImport } from './routes/v2/index'
 import { Route as ProfileIndexRouteImport } from './routes/profile.index'
 import { Route as ProfileRecurringExpensesRouteImport } from './routes/profile.recurring-expenses'
 import { Route as ProfilePreferencesRouteImport } from './routes/profile.preferences'
@@ -56,6 +57,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const V2IndexRoute = V2IndexRouteImport.update({
+  id: '/v2/',
+  path: '/v2/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileIndexRoute = ProfileIndexRouteImport.update({
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/profile/preferences': typeof ProfilePreferencesRoute
   '/profile/recurring-expenses': typeof ProfileRecurringExpensesRoute
   '/profile/': typeof ProfileIndexRoute
+  '/v2': typeof V2IndexRoute
   '/budgets/$id/expenses': typeof BudgetsIdExpensesRoute
   '/budgets/$id/': typeof BudgetsIdIndexRoute
 }
@@ -155,6 +162,7 @@ export interface FileRoutesByTo {
   '/profile/preferences': typeof ProfilePreferencesRoute
   '/profile/recurring-expenses': typeof ProfileRecurringExpensesRoute
   '/profile': typeof ProfileIndexRoute
+  '/v2': typeof V2IndexRoute
   '/budgets/$id/expenses': typeof BudgetsIdExpensesRoute
   '/budgets/$id': typeof BudgetsIdIndexRoute
 }
@@ -176,6 +184,7 @@ export interface FileRoutesById {
   '/profile/preferences': typeof ProfilePreferencesRoute
   '/profile/recurring-expenses': typeof ProfileRecurringExpensesRoute
   '/profile/': typeof ProfileIndexRoute
+  '/v2/': typeof V2IndexRoute
   '/budgets/$id/expenses': typeof BudgetsIdExpensesRoute
   '/budgets/$id/': typeof BudgetsIdIndexRoute
 }
@@ -198,6 +207,7 @@ export interface FileRouteTypes {
     | '/profile/preferences'
     | '/profile/recurring-expenses'
     | '/profile/'
+    | '/v2'
     | '/budgets/$id/expenses'
     | '/budgets/$id/'
   fileRoutesByTo: FileRoutesByTo
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/profile/preferences'
     | '/profile/recurring-expenses'
     | '/profile'
+    | '/v2'
     | '/budgets/$id/expenses'
     | '/budgets/$id'
   id:
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '/profile/preferences'
     | '/profile/recurring-expenses'
     | '/profile/'
+    | '/v2/'
     | '/budgets/$id/expenses'
     | '/budgets/$id/'
   fileRoutesById: FileRoutesById
@@ -251,6 +263,7 @@ export interface RootRouteChildren {
   BudgetsNewRoute: typeof BudgetsNewRoute
   CategoriesIdRoute: typeof CategoriesIdRoute
   OauthConsentRoute: typeof OauthConsentRoute
+  V2IndexRoute: typeof V2IndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -295,6 +308,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/v2/': {
+      id: '/v2/'
+      path: '/v2'
+      fullPath: '/v2'
+      preLoaderRoute: typeof V2IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile/': {
@@ -430,6 +450,7 @@ const rootRouteChildren: RootRouteChildren = {
   BudgetsNewRoute: BudgetsNewRoute,
   CategoriesIdRoute: CategoriesIdRoute,
   OauthConsentRoute: OauthConsentRoute,
+  V2IndexRoute: V2IndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
