@@ -9,6 +9,7 @@ import (
 	"expenny.co.za/internal/services"
 	"expenny.co.za/internal/statements"
 	"expenny.co.za/internal/store"
+	"expenny.co.za/internal/store/postgres"
 )
 
 type Application struct {
@@ -35,6 +36,10 @@ func CreateApplication(cfg Config) (*Application, error) {
 		Ingestion: services.NewIngestionService(parser, st),
 		db:        db,
 	}, nil
+}
+
+func (a *Application) Queries() *postgres.Queries {
+	return postgres.New(a.db)
 }
 
 func (a *Application) Close() error {

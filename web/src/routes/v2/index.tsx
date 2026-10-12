@@ -2,9 +2,7 @@ import { useEffect, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { requireAuth } from '@/lib/auth/route-guard'
 
-// Called directly (no dev proxy). Override with VITE_V2_API_URL, e.g. the
-// Lambda/API Gateway URL.
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:5420'
+const API_BASE = import.meta.env.VITE_API_URL ?? ''
 
 export const Route = createFileRoute('/v2/')({
   beforeLoad: () => requireAuth(),

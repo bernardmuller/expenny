@@ -9,8 +9,10 @@ import (
 )
 
 const (
-	keyClassifierAPI = "CLASSIFIER_API_KEY"
-	keyDatabaseURL   = "DATABASE_URL"
+	keyClassifierAPI    = "CLASSIFIER_API_KEY"
+	keyDatabaseURL      = "DATABASE_URL"
+	keyBetterAuthSecret = "BETTER_AUTH_SECRET"
+	keyAuthSecret       = "AUTH_SECRET"
 )
 
 // Only DATABASE_URL is required to build an Application. The classifier key is
@@ -31,6 +33,7 @@ func missingEnvs(keys []string) []string {
 type Config struct {
 	ClassifierApiKey string
 	DbUrl            string
+	BetterAuthSecret string
 }
 
 func CreateConfig() (Config, error) {
@@ -40,8 +43,14 @@ func CreateConfig() (Config, error) {
 		return Config{}, fmt.Errorf("missing required env vars: %s", strings.Join(missing, ", "))
 	}
 
+	betterAuthSecret := os.Getenv(keyBetterAuthSecret)
+	if betterAuthSecret == "" {
+		betterAuthSecret = os.Getenv(keyAuthSecret)
+	}
+
 	return Config{
 		ClassifierApiKey: os.Getenv(keyClassifierAPI),
 		DbUrl:            os.Getenv(keyDatabaseURL),
+		BetterAuthSecret: betterAuthSecret,
 	}, nil
 }

@@ -49,3 +49,8 @@ watch: ## build and watch the project with air
 build_mcp_binary:
 	@mkdir -p dist
 	@env GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -tags lambda.norpc -ldflags="-s -w" -o ./dist/bootstrap ./cmd/mcp/main.go
+
+build_http_binary:
+	@mkdir -p dist/http
+	@env GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -tags lambda.norpc -ldflags="-s -w" -o ./dist/http/bootstrap ./cmd/http
+	@cd ./dist/http && rm -f function.zip && zip -j function.zip bootstrap

@@ -9,6 +9,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 import netlify from '@netlify/vite-plugin'
 
 const API_TARGET = 'http://localhost:8080'
+const V2_TARGET = 'http://localhost:5420'
 
 const spaFallback = (req: IncomingMessage, _res: ServerResponse | undefined) =>
   req.headers.accept?.includes('text/html') ? '/index.html' : undefined
@@ -50,6 +51,7 @@ export default defineConfig({
       '/streaks': API_TARGET,
       '/transactions': API_TARGET,
       '/users': API_TARGET,
+      '/v2': { target: V2_TARGET, bypass: spaFallback },
       '/verifications': API_TARGET,
     },
   },
