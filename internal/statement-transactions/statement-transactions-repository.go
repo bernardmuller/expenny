@@ -33,7 +33,7 @@ type CreateStatementTransactionDTO struct {
 func DedupHash(account string, t CreateStatementTransactionDTO) string {
 	h := sha256.New()
 	write := func(s string) { fmt.Fprintf(h, "%d:%s|", len(s), s) }
-	write(account)
+	write(t.Account)
 	write(t.TransactionDate.UTC().Format(time.RFC3339))
 	write(strconv.FormatFloat(t.MoneyIn, 'f', 2, 64))
 	write(strconv.FormatFloat(t.MoneyOut, 'f', 2, 64))
@@ -43,11 +43,15 @@ func DedupHash(account string, t CreateStatementTransactionDTO) string {
 }
 
 type StatementTransactionsRepository struct {
-	Queries *postgres.Queries
+	DB *postgres.Queries
 }
 
-func (r StatementTransactionsRepository) Create(ctx context.Context, dto CreateStatementTransactionDTO, userID uuid.UUID) (postgres.StatementTransaction, error) {
-	return r.Queries.UpsertStatementTransaction(ctx, postgres.UpsertStatementTransactionParams{
+func NewStatementTransactionRepository(db *postgres.Queries) *StatementTransactionsRepository {
+	return &StatementTransactionsRepository{DB: db}
+}
+
+func (r *StatementTransactionsRepository) Create(ctx context.Context, dto CreateStatementTransactionDTO, userID uuid.UUID) (postgres.StatementTransaction, error) {
+	return r.DB.UpsertStatementTransaction(ctx, postgres.UpsertStatementTransactionParams{
 		ID:                  uuid.New(),
 		UserID:              userID,
 		Account:             dto.Account,

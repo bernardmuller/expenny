@@ -5,16 +5,16 @@ import (
 	"strings"
 	"sync"
 
-	"expenny.co.za/internal/classifier/jev"
 	"expenny.co.za/internal/corrections"
 	"expenny.co.za/internal/statements"
+	"expenny.co.za/internal/systemone"
 )
 
 type Source string
 
 const (
-	SourceRule Source = "rule"
-	SourceJev  Source = "jev"
+	SourceRule     Source = "rule"
+	SourceProvider Source = "provider"
 )
 
 const FeeCategory = "bank-fees"
@@ -28,7 +28,7 @@ const (
 const DefaultWorkers = 6
 
 type Provider interface {
-	Decide(ctx context.Context, req jev.Request) (*jev.Response, error)
+	Decide(ctx context.Context, req systemone.Request) (*systemone.Response, error)
 }
 
 type Config struct {
@@ -111,7 +111,7 @@ func (c *Classifier) classifyRow(ctx context.Context, t statements.Transaction) 
 		return res
 	}
 
-	res.Source = SourceJev
+	res.Source = SourceProvider
 
 	state := map[string]any{
 		"description":          strings.TrimSpace(t.Description),
@@ -129,15 +129,15 @@ func (c *Classifier) classifyRow(ctx context.Context, t statements.Transaction) 
 		categoryInstructions += " The state includes past_corrections, a map of previously human-confirmed descriptions to category keys, keyed by a normalised form of the description with card and reference numbers removed. Where this row's merchant matches one of those entries, follow it."
 	}
 
-	resp, err := c.provider.Decide(ctx, jev.Request{
+	resp, err := c.provider.Decide(ctx, systemone.Request{
 		State: state,
-		Questions: map[string]jev.Question{
-			qExpense: jev.NoulWithCriteria(
+		Questions: map[string]systemone.Question{
+			qExpense: systemone.NoulWithCriteria(
 				"This row is an expense: money left the account.",
 				"The money_out field holds a non-zero amount.",
 				"money_out is zero — the row is income or a transfer in.",
 			),
-			qCategory: jev.Choice(categoryInstructions, c.categories),
+			qCategory: systemone.Choice(categoryInstructions, c.categories),
 		},
 	})
 	if err != nil {

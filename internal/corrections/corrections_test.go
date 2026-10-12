@@ -83,7 +83,6 @@ func TestLoadMissingFileIsEmpty(t *testing.T) {
 }
 
 func TestSaveLoadRoundTrip(t *testing.T) {
-	// Nested path so the test also covers Save creating the directory.
 	path := filepath.Join(t.TempDir(), "jev", "corrections.json")
 
 	want := Set{"checkers": "groceries", "recurring payment: rent": "rent"}

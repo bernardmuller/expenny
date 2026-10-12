@@ -1,4 +1,4 @@
-package jev
+package systemone
 
 import (
 	"context"
@@ -12,51 +12,63 @@ import (
 )
 
 const (
-	DefaultBaseURL = "https://api.typesafe.ai"
-	DefaultModel   = "jev-1.13.0"
-	decisionsPath  = "/v1/systemone"
-)
-
-const (
 	TypeChoice = "choice"
 	TypeScore  = "score"
 	TypeNoul   = "noul"
 )
 
-type Client struct {
-	APIKey  string
+type Config struct {
 	BaseURL string
-	client  *httpclient.Client
+	Path    string
+	APIKey  string
+	Model   string
 }
 
-func New(apiKey string) *Client {
+type Client struct {
+	path   string
+	model  string
+	client *httpclient.Client
+}
+
+func New(cfg Config) *Client {
 	return &Client{
+		path:  cfg.Path,
+		model: cfg.Model,
 		client: &httpclient.Client{
-			BaseURL:    DefaultBaseURL,
+			BaseURL:    cfg.BaseURL,
 			HTTPClient: &http.Client{Timeout: 30 * time.Second},
-			Headers:    http.Header{"Authorization": {"Bearer " + apiKey}},
+			Headers:    http.Header{"Authorization": {"Bearer " + cfg.APIKey}},
 		},
 	}
 }
 
 type Request struct {
-	Model     string              `json:"model"`
 	State     any                 `json:"state"`
 	Questions map[string]Question `json:"questions"`
 }
 
 type Question struct {
-	Type         string `json:"type"`
-	Instructions any    `json:"instructions"`
-	Criteria     any    `json:"criteria,omitempty"`
+	Type         string   `json:"type"`
+	Instructions string   `json:"instructions"`
+	Criteria     Criteria `json:"criteria,omitempty"`
 }
 
+type Options map[string]string
+
+type Criteria interface{ criteria() }
+
+func (Options) criteria() {}
+
+type Levels []string
+
+func (Levels) criteria() {}
+
 func Choice(instructions string, options map[string]string) Question {
-	return Question{Type: TypeChoice, Instructions: instructions, Criteria: options}
+	return Question{Type: TypeChoice, Instructions: instructions, Criteria: Options(options)}
 }
 
 func Score(instructions string, levels ...string) Question {
-	return Question{Type: TypeScore, Instructions: instructions, Criteria: levels}
+	return Question{Type: TypeScore, Instructions: instructions, Criteria: Levels(levels)}
 }
 
 func Noul(instructions string) Question {
@@ -67,7 +79,7 @@ func NoulWithCriteria(instructions, whenTrue, whenFalse string) Question {
 	return Question{
 		Type:         TypeNoul,
 		Instructions: instructions,
-		Criteria:     map[string]string{"true": whenTrue, "false": whenFalse},
+		Criteria:     Options{"true": whenTrue, "false": whenFalse},
 	}
 }
 
@@ -106,18 +118,24 @@ type APIError struct {
 
 func (e *APIError) Error() string {
 	if e.Detail != "" {
-		return fmt.Sprintf("jev: %d %s: %s", e.Status, e.Message, e.Detail)
+		return fmt.Sprintf("systemone: %d %s: %s", e.Status, e.Message, e.Detail)
 	}
-	return fmt.Sprintf("jev: %d %s", e.Status, e.Message)
+	return fmt.Sprintf("systemone: %d %s", e.Status, e.Message)
 }
 
 func (c *Client) Decide(ctx context.Context, req Request) (*Response, error) {
-	if req.Model == "" {
-		req.Model = DefaultModel
+	payload := struct {
+		Model     string              `json:"model"`
+		State     any                 `json:"state"`
+		Questions map[string]Question `json:"questions"`
+	}{
+		Model:     c.model,
+		State:     req.State,
+		Questions: req.Questions,
 	}
 
 	var out Response
-	if err := c.client.Post(ctx, decisionsPath, req, &out); err != nil {
+	if err := c.client.Post(ctx, c.path, payload, &out); err != nil {
 		return nil, toAPIError(err)
 	}
 	return &out, nil
@@ -133,5 +151,5 @@ func toAPIError(err error) error {
 	if json.Unmarshal(se.Body, &apiErr) == nil && apiErr.Message != "" {
 		return &apiErr
 	}
-	return fmt.Errorf("decisions returned %d: %s", se.StatusCode, se.Body)
+	return fmt.Errorf("systemone returned %d: %s", se.StatusCode, se.Body)
 }

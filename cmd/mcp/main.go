@@ -13,10 +13,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 
 	"github.com/joho/godotenv"
+
+	"expenny.co.za/internal/application"
 )
 
 var apiURL string
@@ -143,9 +146,25 @@ func authHandler(next http.Handler) http.Handler {
 	})
 }
 
+type ingestResponse struct {
+	Processed int      `json:"processed"`
+	Skipped   int      `json:"skipped"`
+	Errors    []string `json:"errors,omitempty"`
+}
+
 func main() {
 	_ = godotenv.Load()
 	apiURL = resolveAPIURL()
+
+	cfg, err := application.CreateConfig()
+	if err != nil {
+		log.Fatalf("load config: %v", err)
+	}
+	app, err := application.CreateApplication(cfg)
+	if err != nil {
+		log.Fatalf("initialize application: %v", err)
+	}
+	defer app.Close()
 
 	s := server.NewMCPServer(
 		"Expenny MCP",
@@ -163,6 +182,41 @@ func main() {
 		}
 		msg := fmt.Sprintf("Hello, %s! Your email is %s.", p.Name, p.Email)
 		return mcp.NewToolResultText(msg), nil
+	})
+
+	ingestTool := mcp.NewTool("ingest_statement",
+		mcp.WithDescription("Ingest a bank statement CSV for the authenticated user. Rows are upserted, so re-ingesting the same statement is safe."),
+		mcp.WithString("content",
+			mcp.Required(),
+			mcp.Description("Raw CSV contents of the statement, including the header row."),
+		),
+	)
+	s.AddTool(ingestTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		p, ok := ctx.Value(userKey).(*Principal)
+		if !ok || p == nil {
+			return mcp.NewToolResultError("not authenticated"), nil
+		}
+
+		userID, err := uuid.Parse(p.Sub)
+		if err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("authenticated subject %q is not a valid user id", p.Sub)), nil
+		}
+
+		content, err := req.RequireString("content")
+		if err != nil {
+			return mcp.NewToolResultError("content is required"), nil
+		}
+
+		res, err := app.Ingestion.Ingest(ctx, userID, strings.NewReader(content))
+		if err != nil {
+			return mcp.NewToolResultErrorFromErr("ingest failed", err), nil
+		}
+
+		out := ingestResponse{Processed: len(res.Rows), Skipped: len(res.RowErrors)}
+		for _, e := range res.RowErrors {
+			out.Errors = append(out.Errors, e.Error())
+		}
+		return mcp.NewToolResultJSON(out)
 	})
 
 	port := os.Getenv("PORT")

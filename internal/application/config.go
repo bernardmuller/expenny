@@ -1,4 +1,4 @@
-package config
+package application
 
 import (
 	"fmt"
@@ -13,7 +13,10 @@ const (
 	keyDatabaseURL   = "DATABASE_URL"
 )
 
-var keys = []string{keyClassifierAPI, keyDatabaseURL}
+// Only DATABASE_URL is required to build an Application. The classifier key is
+// used by the CLI (categorise) and may legitimately be absent in processes that
+// only ingest statements, such as the MCP server.
+var keys = []string{keyDatabaseURL}
 
 func missingEnvs(keys []string) []string {
 	var missing []string
@@ -30,23 +33,15 @@ type Config struct {
 	DbUrl            string
 }
 
-type Application struct {
-}
-
 func CreateConfig() (Config, error) {
 	_ = godotenv.Load()
 
 	if missing := missingEnvs(keys); len(missing) > 0 {
-		return Config{}, fmt.Errorf("missing required env vars :s", strings.Join(missing, ", "))
+		return Config{}, fmt.Errorf("missing required env vars: %s", strings.Join(missing, ", "))
 	}
 
 	return Config{
-		ClassifierApiKey: keyClassifierAPI,
-		DbUrl:            keyDatabaseURL,
+		ClassifierApiKey: os.Getenv(keyClassifierAPI),
+		DbUrl:            os.Getenv(keyDatabaseURL),
 	}, nil
-}
-
-func CreateApplication(cfg Config) (Application, error) {
-
-	return nil, nil
 }

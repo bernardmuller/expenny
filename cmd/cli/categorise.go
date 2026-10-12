@@ -10,11 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 
 	"expenny.co.za/internal/classifier"
-	"expenny.co.za/internal/classifier/jev"
 	"expenny.co.za/internal/corrections"
 	"expenny.co.za/internal/statements"
 	"expenny.co.za/internal/store/postgres"
@@ -32,16 +30,6 @@ type savedResult struct {
 }
 
 func runCategorise(ctx context.Context, path string) error {
-	_ = godotenv.Load()
-
-	key := os.Getenv("JEV_API_KEY")
-	if key == "" {
-		return errors.New("JEV_API_KEY is not set")
-	}
-	dbURL := os.Getenv("DATABASE_URL")
-	if dbURL == "" {
-		return errors.New("DATABASE_URL is not set")
-	}
 
 	options, err := categoryOptions(ctx, dbURL)
 	if err != nil {

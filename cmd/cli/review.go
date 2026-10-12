@@ -17,12 +17,8 @@ import (
 	"expenny.co.za/internal/corrections"
 )
 
-// defaultReviewThreshold is the confidence below which a row is worth a second
-// look. Overridable as the first argument to the review command.
 const defaultReviewThreshold = 0.7
 
-// Sentinel values for the two control entries at the bottom of the dropdown.
-// Neither is a real category key, so neither can collide with one.
 const (
 	optKeep = "\x00keep"
 	optSkip = "\x00skip"
@@ -48,8 +44,6 @@ func runReview(ctx context.Context, threshold float64, list bool) error {
 		}
 	}
 
-	// Worst first, so the most valuable corrections are made even if the session
-	// is cut short.
 	sort.Slice(queue, func(i, j int) bool { return queue[i].Confidence < queue[j].Confidence })
 
 	if len(queue) == 0 {

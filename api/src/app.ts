@@ -20,6 +20,7 @@ import { authMiddleware } from "@/lib/http/middleware/auth";
 import { cronAuth } from "@/lib/http/middleware/cronAuth";
 import {
   betterAuthInstance,
+  betterAuthUrl,
 } from "@/lib/auth/better-auth";
 import {
   oAuthDiscoveryMetadata,
@@ -80,9 +81,14 @@ app.get("/.well-known/oauth-authorization-server", (c) =>
 app.get("/.well-known/oauth-authorization-server/*", (c) =>
   oAuthDiscoveryMetadata(betterAuthInstance)(c.req.raw),
 );
-app.get("/.well-known/oauth-protected-resource", (c) =>
-  oAuthProtectedResourceMetadata(betterAuthInstance)(c.req.raw),
-);
+app.get("/.well-known/oauth-protected-resource", async (c) => {
+  const res = await oAuthProtectedResourceMetadata(betterAuthInstance)(c.req.raw);
+  const metadata = (await res.json()) as Record<string, unknown>;
+  return c.json(
+    { ...metadata, authorization_servers: [betterAuthUrl] },
+    res.status as 200,
+  );
+});
 
 app.use("*", async (c, next) => {
   const path = c.req.path;
