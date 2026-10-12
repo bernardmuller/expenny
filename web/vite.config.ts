@@ -9,7 +9,6 @@ import { VitePWA } from 'vite-plugin-pwa'
 import netlify from '@netlify/vite-plugin'
 
 const API_TARGET = 'http://localhost:8080'
-const GO_API_TARGET = 'http://localhost:5420'
 
 const spaFallback = (req: IncomingMessage, _res: ServerResponse | undefined) =>
   req.headers.accept?.includes('text/html') ? '/index.html' : undefined
@@ -52,7 +51,6 @@ export default defineConfig({
       '/transactions': API_TARGET,
       '/users': API_TARGET,
       '/verifications': API_TARGET,
-      '/v2': GO_API_TARGET,
     },
   },
 })
