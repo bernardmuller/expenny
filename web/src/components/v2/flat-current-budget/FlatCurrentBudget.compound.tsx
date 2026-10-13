@@ -1,8 +1,8 @@
 import { ChevronRight } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
 
-import { Card, CardDescription, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
+import { Card, CardDescription, CardTitle } from '@/components/v2/ui/card'
+import { Progress } from '@/components/v2/ui/progress'
 import { cn } from '@/lib/utils/cn'
 import { formatPercentage } from '@/lib/utils/formatting/formatPercentage'
 
@@ -16,8 +16,8 @@ export function Root({ className, ...props }: RootProps) {
   return (
     <Card
       className={cn(
-        `flex-col gap-4 px-6 py-5 md:flex-row md:items-center md:justify-between
-        md:gap-8`,
+        `flex-col gap-5 px-5 py-5 md:flex-row md:flex-wrap md:items-center
+        md:justify-between md:gap-10 md:px-7 md:py-6`,
         className,
       )}
       {...props}
@@ -32,7 +32,12 @@ type InfoProps = {
 
 export function Info({ children, className }: InfoProps) {
   return (
-    <div className={cn('flex shrink-0 flex-col gap-1', className)}>
+    <div
+      className={cn(
+        'flex shrink-0 flex-col gap-0.5 md:min-w-[150px]',
+        className,
+      )}
+    >
       {children}
     </div>
   )
@@ -45,7 +50,12 @@ type TitleProps = {
 
 export function Title({ children, className }: TitleProps) {
   return (
-    <CardTitle className={cn('text-base font-semibold', className)}>
+    <CardTitle
+      className={cn(
+        'text-foreground flex items-center gap-1 text-lg font-semibold',
+        className,
+      )}
+    >
       {children}
     </CardTitle>
   )
@@ -59,7 +69,7 @@ export function Period({
   className?: string
 }) {
   return (
-    <CardDescription className={cn('text-sm', className)}>
+    <CardDescription className={cn('text-muted-foreground text-sm', className)}>
       {children}
     </CardDescription>
   )
@@ -75,17 +85,19 @@ export function Remaining({ amount, of, className }: RemainingProps) {
   return (
     <div
       className={cn(
-        'flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1',
+        'flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-1',
         className,
       )}
     >
       <span
-        className="text-primary font-grotesk text-4xl font-bold tracking-tight
-          sm:text-5xl"
+        className="text-primary font-display text-[50px] leading-none
+          font-semibold tracking-[2px]"
       >
         {amount}
       </span>
-      <span className="text-muted-foreground text-lg">remaining of {of}</span>
+      <span className="text-muted-foreground text-[15px]">
+        remaining of {of}
+      </span>
     </div>
   )
 }
@@ -101,19 +113,19 @@ export function Spent({ amount, percentage, className }: SpentProps) {
 
   return (
     <div
-      className={cn('flex w-full min-w-0 flex-1 flex-col gap-1.5', className)}
+      className={cn('flex w-full min-w-0 flex-1 flex-col gap-2.5', className)}
     >
       <div className="flex items-center justify-between gap-3">
         <span className="text-muted-foreground text-sm">Spent: {amount}</span>
-        <span className="text-sm font-semibold">
+        <span className="text-foreground text-sm font-semibold">
           {formatPercentage(percentage)}
         </span>
       </div>
-      <Progress value={clamped} aria-valuenow={clamped} className="h-2.5" />
+      <Progress value={clamped} aria-valuenow={clamped} showTicks />
     </div>
   )
 }
 
 export function Chevron() {
-  return <ChevronRight className="size-4 shrink-0" />
+  return <ChevronRight className="size-4.5 shrink-0" />
 }

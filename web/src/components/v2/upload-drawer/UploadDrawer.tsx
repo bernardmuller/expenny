@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/v2/ui/button'
 
 import * as UploadDrawerCompound from './UploadDrawer.compound'
 import type { UploadDrawerProps } from './UploadDrawer.types'

@@ -1,25 +1,41 @@
 import { Search } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
 
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
+import { Badge } from '@/components/v2/ui/badge'
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from '@/components/v2/ui/card'
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
-} from '@/components/ui/input-group'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+} from '@/components/v2/ui/input-group'
+import { Tabs, TabsList, TabsTrigger } from '@/components/v2/ui/tabs'
 import { cn } from '@/lib/utils/cn'
 
+import { categoryTint } from '../shared/categories'
 import { ConfidenceStat } from '../shared/ConfidenceBar'
 import type { TransactionFilter } from '../shared/Transaction.types'
 
-export { Table, TableBody, TableHeader, TableRow } from '@/components/ui/table'
+export {
+  Table,
+  TableBody,
+  TableHeader,
+  TableRow,
+} from '@/components/v2/ui/table'
 
 type RootProps = ComponentProps<typeof Card>
 
 export function Root({ className, ...props }: RootProps) {
-  return <Card className={cn('overflow-hidden', className)} {...props} />
+  return (
+    <Card
+      className={cn('gap-0 overflow-hidden px-4 pt-5 pb-3', className)}
+      {...props}
+    />
+  )
 }
 
 type ToolbarProps = {
@@ -31,7 +47,7 @@ export function Toolbar({ children, className }: ToolbarProps) {
   return (
     <CardHeader
       className={cn(
-        'flex-row flex-wrap items-center justify-between gap-3',
+        'flex flex-row flex-wrap items-center justify-between gap-3 px-3',
         className,
       )}
     >
@@ -59,22 +75,41 @@ export function FilterTabs({
       onValueChange={onValueChange}
       className={cn('w-fit', className)}
     >
-      <TabsList className="h-auto gap-2 bg-transparent p-0">
-        {filters.map((filter) => (
-          <TabsTrigger
-            key={filter.id}
-            value={filter.id}
-            className="border-border data-[state=active]:border-primary
-              data-[state=active]:bg-primary
-              data-[state=active]:text-primary-foreground h-9 flex-none
-              rounded-full border px-4"
-          >
-            {filter.label}
-            {typeof filter.count === 'number' && (
-              <span className="opacity-80">· {filter.count}</span>
-            )}
-          </TabsTrigger>
-        ))}
+      <TabsList className="h-auto gap-2.5 bg-transparent p-0">
+        {filters.map((filter) => {
+          const isReview = filter.id === 'review'
+
+          return (
+            <TabsTrigger
+              key={filter.id}
+              value={filter.id}
+              className={cn(
+                'h-10 flex-none rounded-full border px-4.5 text-sm',
+                isReview
+                  ? `border-chart-3/45 bg-chart-3/12 text-chart-3
+                    hover:bg-chart-3/12 data-[state=active]:border-chart-3/45
+                    data-[state=active]:bg-chart-3/12
+                    data-[state=active]:text-chart-3 font-bold
+                    [box-shadow:0_3px_0_color-mix(in_srgb,var(--color-chart-3)_18%,var(--color-card))]
+                    data-[state=active]:font-bold
+                    data-[state=active]:[box-shadow:0_3px_0_color-mix(in_srgb,var(--color-chart-3)_18%,var(--color-card))]`
+                  : `border-border bg-raised text-card-foreground
+                    hover:bg-raised hover:text-foreground
+                    data-[state=active]:border-primary
+                    data-[state=active]:bg-primary
+                    data-[state=active]:text-primary-foreground font-semibold
+                    [box-shadow:0_3px_0_var(--lip-sm)]
+                    data-[state=active]:font-bold
+                    data-[state=active]:[box-shadow:0_3px_0_color-mix(in_srgb,var(--color-primary)_72%,black)]`,
+              )}
+            >
+              {filter.label}
+              {typeof filter.count === 'number' && (
+                <span>· {filter.count}</span>
+              )}
+            </TabsTrigger>
+          )
+        })}
       </TabsList>
     </Tabs>
   )
@@ -88,15 +123,16 @@ type SearchFieldProps = {
 
 export function SearchField({ value, onChange, className }: SearchFieldProps) {
   return (
-    <InputGroup className={cn('h-10 w-full max-w-xs', className)}>
-      <InputGroupAddon>
-        <Search />
+    <InputGroup className={cn('h-10 w-47.5 max-w-full', className)}>
+      <InputGroupAddon className="text-muted-foreground pr-0 pl-3.5">
+        <Search className="size-4" />
       </InputGroupAddon>
       <InputGroupInput
         type="search"
         placeholder="Search"
         value={value}
         onChange={(event) => onChange?.(event.target.value)}
+        className="text-[15px]"
       />
     </InputGroup>
   )
@@ -106,7 +142,7 @@ export function Content({
   className,
   ...props
 }: ComponentProps<typeof CardContent>) {
-  return <CardContent className={cn('p-0', className)} {...props} />
+  return <CardContent className={cn('px-0 pt-3', className)} {...props} />
 }
 
 type FooterProps = ComponentProps<typeof CardFooter>
@@ -114,7 +150,11 @@ type FooterProps = ComponentProps<typeof CardFooter>
 export function Footer({ className, ...props }: FooterProps) {
   return (
     <CardFooter
-      className={cn('items-center justify-between', className)}
+      className={cn(
+        `border-border mt-1.5 items-center justify-between border-t px-3 pt-2.5
+        pb-1`,
+        className,
+      )}
       {...props}
     />
   )
@@ -124,6 +164,7 @@ type MerchantCellProps = {
   emoji: string
   description: string
   originalDescription?: string
+  category?: string
   className?: string
 }
 
@@ -131,22 +172,34 @@ export function MerchantCell({
   emoji,
   description,
   originalDescription,
+  category,
   className,
 }: MerchantCellProps) {
+  const tint = categoryTint(category)
+
   return (
     <div className={cn('flex items-center gap-3', className)}>
       <div
-        className="bg-muted flex size-10 shrink-0 items-center justify-center
-          rounded-xl text-base [box-shadow:var(--input-groove)]"
+        aria-hidden="true"
+        className="flex size-9.5 shrink-0 items-center justify-center rounded-xl
+          border text-lg"
+        style={{
+          backgroundColor: tint.background,
+          borderColor: tint.border,
+          boxShadow: `0 3px 0 ${tint.lip}`,
+        }}
       >
         {emoji}
       </div>
       <div className="min-w-0">
-        <p className="font-grotesk max-w-40 truncate font-semibold">
+        <p className="max-w-40 truncate text-[15px] font-semibold">
           {description}
         </p>
         {originalDescription && (
-          <p className="text-muted-foreground max-w-40 truncate text-xs">
+          <p
+            className="text-muted-foreground font-statement max-w-45 truncate
+              text-[11.5px]"
+          >
             {originalDescription}
           </p>
         )}
@@ -156,29 +209,46 @@ export function MerchantCell({
 }
 
 type CategoryPillProps = {
-  icon: string
+  icon?: string
   label: string
   className?: string
 }
 
 export function CategoryPill({ icon, label, className }: CategoryPillProps) {
+  const tint = categoryTint(label)
+
   return (
     <Badge
       variant="outline"
-      className={cn('gap-1.5 rounded-full px-2.5 py-1', className)}
+      className={cn('h-6.5 gap-1.5 border px-2.5', className)}
+      style={{
+        color: tint.color,
+        backgroundColor: tint.background,
+        borderColor: tint.border,
+      }}
     >
-      <span>{icon}</span>
+      {icon && <span aria-hidden="true">{icon}</span>}
       {label}
     </Badge>
   )
 }
 
-export function ConfidenceCell({ value }: { value: number }) {
+type ConfidenceCellProps = {
+  value: number
+  className?: string
+}
+
+export function ConfidenceCell({ value, className }: ConfidenceCellProps) {
   return (
     <ConfidenceStat
       value={value}
+      size="sm"
       label={`${value}%`}
-      className="[&>span]:w-9 [&>span]:text-right [&>span]:text-xs"
+      className={cn(
+        `[&>span:last-child]:w-8 [&>span:last-child]:text-right
+        [&>span:last-child]:text-xs`,
+        className,
+      )}
     />
   )
 }

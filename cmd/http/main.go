@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -26,15 +25,19 @@ const (
 )
 
 func main() {
-	app, secret, err := loadApplication()
+
+	cfg, err := application.CreateConfig()
 	if err != nil {
 		log.Fatalf("startup: %v", err)
 	}
 
-	handler := newHandler(app, secret)
+	app, err := application.CreateApplication(cfg)
+	if err != nil {
+		log.Fatalf("startup: %v", err)
+	}
 
-	// The AWS provided runtime sets AWS_LAMBDA_FUNCTION_NAME in the execution
-	// environment. Locally we fall back to a normal HTTP listener.
+	handler := newHandler(app, cfg.AuthSecret)
+
 	if os.Getenv("AWS_LAMBDA_FUNCTION_NAME") != "" {
 		basePath, ok := os.LookupEnv("API_BASE_PATH")
 		if !ok {
@@ -58,24 +61,6 @@ func main() {
 	}
 }
 
-func loadApplication() (*application.Application, string, error) {
-	cfg, err := application.CreateConfig()
-	if err != nil {
-		return nil, "", err
-	}
-
-	if cfg.BetterAuthSecret == "" {
-		return nil, "", errors.New("BETTER_AUTH_SECRET (or AUTH_SECRET) must be set to verify sessions")
-	}
-
-	app, err := application.CreateApplication(cfg)
-	if err != nil {
-		return nil, "", err
-	}
-
-	return app, cfg.BetterAuthSecret, nil
-}
-
 func newHandler(app *application.Application, secret string) http.Handler {
 	verifier := auth.NewSessionVerifier(secret, app.Queries())
 
@@ -86,9 +71,6 @@ func newHandler(app *application.Application, secret string) http.Handler {
 	return logRequests(withCORS(mux))
 }
 
-// withCORS allows the browser to call the API cross-origin with credentials.
-// The requesting Origin is reflected (not "*") because credentialed requests
-// forbid a wildcard.
 func withCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if origin := r.Header.Get("Origin"); origin != "" {
@@ -122,7 +104,6 @@ type meResponse struct {
 func handleMe(w http.ResponseWriter, r *http.Request) {
 	user, ok := auth.UserFromContext(r.Context())
 	if !ok {
-		// Unreachable when wired behind RequireUser, but keeps the handler safe.
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
 		return
 	}

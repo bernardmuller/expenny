@@ -52,7 +52,7 @@ describe('CurrentBudget.Remaining', () => {
   it('renders the amount and the starting amount', () => {
     render(<CurrentBudget.Remaining amount="R 4 632" of="R 24 000" />)
     expect(screen.getByText('R 4 632')).toBeInTheDocument()
-    expect(screen.getByText('left of R 24 000')).toBeInTheDocument()
+    expect(screen.getByText('remaining of R 24 000')).toBeInTheDocument()
   })
 })
 

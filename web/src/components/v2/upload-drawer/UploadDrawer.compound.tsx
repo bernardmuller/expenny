@@ -1,7 +1,7 @@
 import { Check, FileText, X } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/v2/ui/button'
 import {
   Drawer,
   DrawerClose,
@@ -10,12 +10,13 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-} from '@/components/ui/drawer'
-import { Progress } from '@/components/ui/progress'
-import { Separator } from '@/components/ui/separator'
-import { Spinner } from '@/components/ui/spinner'
+} from '@/components/v2/ui/drawer'
+import { Progress } from '@/components/v2/ui/progress'
+import { Separator } from '@/components/v2/ui/separator'
+import { Spinner } from '@/components/v2/ui/spinner'
 import { cn } from '@/lib/utils/cn'
 
+import { categoryTint } from '../shared/categories'
 import type { UploadStepStatus } from './UploadDrawer.types'
 
 type RootProps = ComponentProps<typeof Drawer>
@@ -62,7 +63,7 @@ type TitleProps = ComponentProps<typeof DrawerTitle>
 export function Title({ className, ...props }: TitleProps) {
   return (
     <DrawerTitle
-      className={cn('font-grotesk text-2xl font-semibold', className)}
+      className={cn('font-display text-2xl font-semibold', className)}
       {...props}
     />
   )
@@ -112,19 +113,18 @@ export function File({ fileName, fileRange, className }: FileProps) {
   return (
     <div
       className={cn(
-        `border-border bg-input/40 flex items-center gap-4 rounded-2xl border
-        p-4 [box-shadow:var(--input-groove)]`,
+        'border-border bg-muted flex items-center gap-4 rounded-2xl border p-4',
         className,
       )}
     >
       <div
-        className="bg-muted flex size-12 shrink-0 items-center justify-center
-          rounded-xl"
+        className="bg-raised text-card-foreground flex size-12 shrink-0
+          items-center justify-center rounded-xl"
       >
         <FileText className="size-5" />
       </div>
       <div className="min-w-0">
-        <p className="font-grotesk truncate font-semibold">{fileName}</p>
+        <p className="truncate font-semibold">{fileName}</p>
         <p className="text-muted-foreground text-sm">{fileRange}</p>
       </div>
     </div>
@@ -145,7 +145,8 @@ function StepIcon({ status }: { status: UploadStepStatus }) {
     return (
       <span
         className="bg-primary text-primary-foreground flex size-6 shrink-0
-          items-center justify-center rounded-full"
+          items-center justify-center rounded-full
+          [box-shadow:0_2px_0_color-mix(in_srgb,var(--color-primary)_72%,black)]"
       >
         <Check className="size-3.5" />
       </span>
@@ -161,10 +162,7 @@ function StepIcon({ status }: { status: UploadStepStatus }) {
   }
 
   return (
-    <span
-      className="border-muted-foreground/40 size-6 shrink-0 rounded-full
-        border-2"
-    />
+    <span className="border-muted/40 size-6 shrink-0 rounded-full border-2" />
   )
 }
 
@@ -194,7 +192,7 @@ export function Step({
         <div className="flex items-center justify-between gap-3">
           <p
             className={cn(
-              'font-grotesk font-semibold',
+              'font-body font-semibold',
               muted && 'text-muted-foreground',
             )}
           >
@@ -207,7 +205,12 @@ export function Step({
           )}
         </div>
         {typeof progress === 'number' && (
-          <Progress value={progress} aria-valuenow={progress} className="h-2" />
+          <Progress
+            value={progress}
+            aria-valuenow={progress}
+            indicatorVariant="primary"
+            className="h-3.5"
+          />
         )}
         <p className="text-muted-foreground text-sm">{description}</p>
       </div>
@@ -229,12 +232,12 @@ export function Sorted({
   return (
     <div className={cn('space-y-1', className)}>
       <p
-        className="text-muted-foreground text-xs font-medium tracking-wide
+        className="text-muted-foreground text-xs font-semibold tracking-[0.06em]
           uppercase"
       >
         {label}
       </p>
-      <Separator />
+      <Separator className="bg-border" />
       <div className="divide-border divide-y">{children}</div>
     </div>
   )
@@ -253,16 +256,32 @@ export function SortedRow({
   category,
   className,
 }: SortedRowProps) {
+  const tint = categoryTint(category)
+
   return (
     <div className={cn('flex items-center gap-3 py-3', className)}>
       <div
-        className="bg-muted flex size-11 shrink-0 items-center justify-center
-          rounded-2xl text-lg [box-shadow:var(--input-groove)]"
+        aria-hidden="true"
+        className="flex size-11 shrink-0 items-center justify-center rounded-2xl
+          border text-lg"
+        style={{
+          backgroundColor: tint.background,
+          borderColor: tint.border,
+          boxShadow: `0 3px 0 ${tint.lip}`,
+        }}
       >
         {emoji}
       </div>
-      <span className="font-grotesk flex-1 truncate font-semibold">{name}</span>
-      <span className="border-border rounded-full border px-3 py-1.5 text-sm">
+      <span className="flex-1 truncate font-semibold">{name}</span>
+      <span
+        className="inline-flex h-6.5 items-center rounded-full border px-2.5
+          text-[13px] font-semibold"
+        style={{
+          color: tint.color,
+          backgroundColor: tint.background,
+          borderColor: tint.border,
+        }}
+      >
         {category}
       </span>
     </div>

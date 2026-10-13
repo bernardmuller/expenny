@@ -3,8 +3,8 @@ import {
   CardContent,
   CardFooter,
   CardHeader,
-} from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
+} from '@/components/v2/ui/card'
+import { Skeleton } from '@/components/v2/ui/skeleton'
 
 import * as CurrentBudgetCompound from './CurrentBudget.compound'
 

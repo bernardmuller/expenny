@@ -38,7 +38,10 @@ describe('ReviewPanel', () => {
   })
 
   it('renders the selected category', () => {
-    expect(screen.getByDisplayValue('🛍️ Shopping')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Shopping' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
   })
 
   it('renders the confidence hint', () => {

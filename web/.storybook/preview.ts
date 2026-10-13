@@ -6,7 +6,15 @@ import '../src/styles.css'
 const preview: Preview = {
   parameters: {
     viewport: {
-      options: { ...MINIMAL_VIEWPORTS, ...INITIAL_VIEWPORTS },
+      options: {
+        ...MINIMAL_VIEWPORTS,
+        ...INITIAL_VIEWPORTS,
+        'desktop-1440': {
+          name: 'Desktop (1440)',
+          styles: { width: '1440px', height: '1024px' },
+          type: 'desktop',
+        },
+      },
     },
     darkMode: {
       classTarget: 'html',

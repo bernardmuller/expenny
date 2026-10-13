@@ -6,7 +6,7 @@ export function createReviewItem(
   return {
     id: 'review-1',
     merchant: 'Engen 1 Stop',
-    emoji: '🛒',
+    emoji: '⛽',
     date: 'Sun 11 Oct 2026',
     amount: 'R 874.00',
     originalDescription: 'POS PURCHASE ENGEN 1STOP N1 CITY',
@@ -28,18 +28,18 @@ export const mockReviewItems: Array<ReviewItem> = [
     date: 'Sat 10 Oct 2026',
     amount: 'R 899.00',
     originalDescription: 'TAKEALOT.COM ORDER 77402918',
-    category: { id: 'shopping', label: 'Shopping', icon: '🛍️' },
+    category: { id: 'shopping', label: 'Shopping', icon: '📦' },
     confidence: 62,
     balanceAfter: 'R 32 563.40',
   }),
   createReviewItem({
     id: 'review-3',
     merchant: 'PayShap payment',
-    emoji: '❓',
+    emoji: '❔',
     date: 'Fri 10 Oct 2026',
     amount: 'R 450.00',
     originalDescription: 'PAYSHAP PAYMENT',
-    category: { id: 'uncategorised', label: 'Uncategorised', icon: '❓' },
+    category: { id: 'uncategorised', label: 'Uncategorised', icon: '❔' },
     confidence: 41,
     balanceAfter: 'R 33 462.40',
   }),
@@ -47,8 +47,8 @@ export const mockReviewItems: Array<ReviewItem> = [
 
 export const mockCategoryOptions: Array<CategoryOption> = [
   { label: '⛽ Fuel', value: 'fuel' },
-  { label: '🛍️ Shopping', value: 'shopping' },
+  { label: '📦 Shopping', value: 'shopping' },
   { label: '🥡 Eating out', value: 'eating-out' },
   { label: '🛒 Groceries', value: 'groceries' },
-  { label: '❓ Uncategorised', value: 'uncategorised' },
+  { label: '❔ Uncategorised', value: 'uncategorised' },
 ]

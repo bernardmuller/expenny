@@ -38,9 +38,8 @@ describe('CurrentBudget', () => {
   })
 
   it('should render the title with the budget name', () => {
-    expect(
-      screen.getByText(`Current Budget · ${budgetName}`),
-    ).toBeInTheDocument()
+    expect(screen.getByText('Current Budget')).toBeInTheDocument()
+    expect(screen.getByText(budgetName)).toBeInTheDocument()
   })
 
   it('should render the days left badge', () => {
@@ -49,7 +48,9 @@ describe('CurrentBudget', () => {
 
   it('should render the remaining amount and the starting amount', () => {
     expect(screen.getByText(currentAmount)).toBeInTheDocument()
-    expect(screen.getByText(`left of ${startingAmount}`)).toBeInTheDocument()
+    expect(
+      screen.getByText(`remaining of ${startingAmount}`),
+    ).toBeInTheDocument()
   })
 
   it('should render the spent amount', () => {

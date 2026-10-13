@@ -40,7 +40,9 @@ describe('ReviewCard', () => {
   })
 
   it('renders the predicted category and confidence', () => {
-    expect(screen.getByText(item.category.label)).toBeInTheDocument()
+    expect(
+      document.querySelector('[data-slot="category-pill"]'),
+    ).toHaveTextContent(item.category.label)
     expect(screen.getByText('76% sure')).toBeInTheDocument()
   })
 

@@ -7,30 +7,47 @@ export function AppSidebar({
   userName,
   defaultOpen,
   onNavigate,
+  onUpload,
 }: AppSidebarProps) {
   return (
     <AppSidebarCompound.Provider defaultOpen={defaultOpen}>
       <AppSidebarCompound.Root>
         <AppSidebarCompound.Header>
           <AppSidebarCompound.Logo name="Expenny" />
+          {onUpload && <AppSidebarCompound.UploadAction onClick={onUpload} />}
         </AppSidebarCompound.Header>
         <AppSidebarCompound.Content>
           <AppSidebarCompound.Nav>
             {items.map((item) => {
               const Icon = item.icon
               const isActive = item.id === activeId
+              const contents = (
+                <>
+                  <AppSidebarCompound.NavIcon
+                    accent={item.accent}
+                    active={isActive}
+                  >
+                    <Icon />
+                  </AppSidebarCompound.NavIcon>
+                  <span
+                    className="truncate group-data-[collapsible=icon]:hidden"
+                  >
+                    {item.label}
+                  </span>
+                  {item.badge != null && (
+                    <AppSidebarCompound.NavBadge>
+                      {item.badge}
+                    </AppSidebarCompound.NavBadge>
+                  )}
+                </>
+              )
 
               if (item.linkProvider) {
                 const LinkProvider = item.linkProvider
                 return (
                   <AppSidebarCompound.NavItem key={item.id}>
                     <AppSidebarCompound.NavButton asChild isActive={isActive}>
-                      <LinkProvider>
-                        <Icon />
-                        <span className="group-data-[collapsible=icon]:hidden">
-                          {item.label}
-                        </span>
-                      </LinkProvider>
+                      <LinkProvider>{contents}</LinkProvider>
                     </AppSidebarCompound.NavButton>
                   </AppSidebarCompound.NavItem>
                 )
@@ -42,10 +59,7 @@ export function AppSidebar({
                     isActive={isActive}
                     onClick={() => onNavigate?.(item.id)}
                   >
-                    <Icon />
-                    <span className="group-data-[collapsible=icon]:hidden">
-                      {item.label}
-                    </span>
+                    {contents}
                   </AppSidebarCompound.NavButton>
                 </AppSidebarCompound.NavItem>
               )

@@ -1,8 +1,13 @@
 import type { ComponentProps, ReactNode } from 'react'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/v2/ui/badge'
+import { Button } from '@/components/v2/ui/button'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/v2/ui/card'
 import {
   Item,
   ItemActions,
@@ -10,14 +15,16 @@ import {
   ItemDescription,
   ItemMedia,
   ItemTitle,
-} from '@/components/ui/item'
-import { Toggle } from '@/components/ui/toggle'
+} from '@/components/v2/ui/item'
+import { Toggle } from '@/components/v2/ui/toggle'
 import { cn } from '@/lib/utils/cn'
+
+import { categoryTint } from '../shared/categories'
 
 type RootProps = ComponentProps<typeof Card>
 
 export function Root({ className, ...props }: RootProps) {
-  return <Card className={className} {...props} />
+  return <Card className={cn('gap-0 px-5 pt-5 pb-3.5', className)} {...props} />
 }
 
 type HeaderProps = ComponentProps<typeof CardHeader>
@@ -25,7 +32,10 @@ type HeaderProps = ComponentProps<typeof CardHeader>
 export function Header({ className, ...props }: HeaderProps) {
   return (
     <CardHeader
-      className={cn('flex-row items-center justify-between gap-3', className)}
+      className={cn(
+        'flex flex-row items-center justify-between gap-3 px-0 pb-0.5',
+        className,
+      )}
       {...props}
     />
   )
@@ -43,7 +53,7 @@ export function ViewAll({ className, ...props }: ViewAllProps) {
   return (
     <Button
       variant="link"
-      className={cn('text-primary h-auto p-0 text-sm', className)}
+      className={cn('text-primary h-11 p-0 text-[15px]', className)}
       {...props}
     />
   )
@@ -58,8 +68,8 @@ export function Filters({ children, className }: FiltersProps) {
   return (
     <CardContent
       className={cn(
-        `flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]
-        [&::-webkit-scrollbar]:hidden`,
+        `-mx-5 flex gap-2.5 overflow-x-auto px-5 pt-0.5 pb-2
+        [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`,
         className,
       )}
     >
@@ -74,9 +84,13 @@ export function Filter({ className, ...props }: FilterProps) {
   return (
     <Toggle
       className={cn(
-        `border-border data-[state=on]:border-primary data-[state=on]:bg-primary
-        data-[state=on]:text-primary-foreground h-9 shrink-0 rounded-full border
-        px-4 text-sm font-medium`,
+        `border-border bg-raised text-card-foreground
+        data-[state=on]:border-primary data-[state=on]:bg-primary
+        data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary
+        data-[state=on]:hover:text-primary-foreground h-11 shrink-0 rounded-full
+        border px-4.5 text-sm font-semibold [box-shadow:0_3px_0_var(--lip-sm)]
+        data-[state=on]:font-bold
+        data-[state=on]:[box-shadow:0_3px_0_color-mix(in_srgb,var(--color-primary)_72%,black)]`,
         className,
       )}
       {...props}
@@ -90,11 +104,7 @@ type ListProps = {
 }
 
 export function List({ children, className }: ListProps) {
-  return (
-    <CardContent className={cn('divide-border divide-y p-2', className)}>
-      {children}
-    </CardContent>
-  )
+  return <CardContent className={cn('p-0', className)}>{children}</CardContent>
 }
 
 type RowProps = ComponentProps<typeof Item> & {
@@ -105,21 +115,36 @@ export function Row({ className, dimmed = false, ...props }: RowProps) {
   return (
     <Item
       size="sm"
-      className={cn('cursor-pointer px-2', dimmed && 'opacity-50', className)}
+      className={cn(
+        `hover:bg-raised/40 border-t-border flex cursor-pointer gap-3
+        rounded-none border-t border-b-0 px-0 py-2.5`,
+        dimmed && 'opacity-60',
+        className,
+      )}
       {...props}
     />
   )
 }
 
-type RowEmojiProps = ComponentProps<typeof ItemMedia>
+type RowEmojiProps = ComponentProps<typeof ItemMedia> & {
+  category?: string
+}
 
-export function RowEmoji({ className, ...props }: RowEmojiProps) {
+export function RowEmoji({ category, className, ...props }: RowEmojiProps) {
+  const tint = categoryTint(category)
+
   return (
     <ItemMedia
       className={cn(
-        'bg-muted size-11 rounded-2xl text-lg [box-shadow:var(--input-groove)]',
+        `flex size-11 shrink-0 translate-y-0 items-center justify-center
+        self-center rounded-[14px] border text-xl`,
         className,
       )}
+      style={{
+        backgroundColor: tint.background,
+        borderColor: tint.border,
+        boxShadow: `0 3px 0 ${tint.lip}`,
+      }}
       {...props}
     />
   )
@@ -138,7 +163,7 @@ export function RowTitle({
 }: ComponentProps<typeof ItemTitle>) {
   return (
     <ItemTitle
-      className={cn('font-grotesk text-base font-semibold', className)}
+      className={cn('text-base font-semibold', className)}
       {...props}
     />
   )
@@ -150,9 +175,27 @@ export function RowMeta({
 }: ComponentProps<typeof ItemDescription>) {
   return (
     <ItemDescription
-      className={cn('flex items-center gap-2 text-sm', className)}
+      className={cn('flex items-center gap-2 text-[13px]', className)}
       {...props}
     />
+  )
+}
+
+type RowCategoryProps = {
+  label: string
+  className?: string
+}
+
+export function RowCategory({ label, className }: RowCategoryProps) {
+  const tint = categoryTint(label)
+
+  return (
+    <span
+      className={cn('text-[13px] font-semibold', className)}
+      style={{ color: tint.color }}
+    >
+      {label}
+    </span>
   )
 }
 
@@ -160,6 +203,7 @@ type RowAmountProps = {
   amount: string
   meta: string
   muted?: boolean
+  emphasis?: boolean
   className?: string
 }
 
@@ -167,14 +211,16 @@ export function RowAmount({
   amount,
   meta,
   muted = false,
+  emphasis = false,
   className,
 }: RowAmountProps) {
   return (
     <ItemActions className={cn('flex-col items-end gap-0.5', className)}>
       <span
         className={cn(
-          'font-grotesk font-semibold',
+          'font-display text-[17px] font-semibold',
           muted && 'text-muted-foreground',
+          emphasis && 'text-primary',
         )}
       >
         {amount}
@@ -186,13 +232,7 @@ export function RowAmount({
 
 export function ReviewBadge({ className }: { className?: string }) {
   return (
-    <Badge
-      variant="outline"
-      className={cn(
-        'border-chart-3/50 text-chart-3 rounded-full px-2 py-0.5 text-xs',
-        className,
-      )}
-    >
+    <Badge variant="gold" className={cn('h-5 px-2 text-xs', className)}>
       Review
     </Badge>
   )

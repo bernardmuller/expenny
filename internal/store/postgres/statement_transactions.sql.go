@@ -60,6 +60,77 @@ func (q *Queries) GetALlStatementTransactionsByUserID(ctx context.Context, userI
 	return items, nil
 }
 
+const getClassifiedStatementTransactionsByUserId = `-- name: GetClassifiedStatementTransactionsByUserId :many
+SELECT
+  st.description,
+  st.original_description,
+  st.transaction_date,
+  st.money_in,
+  st.money_out,
+  c.icon,
+  c.label,
+  stc.is_expense,
+  stc.expense_prob,
+  stc.confidence,
+  st.balance,
+  st.user_id
+FROM statement_transactions st
+JOIN statement_transaction_classifications stc ON stc.statement_transaction_id = st.id
+JOIN categories c ON stc.category_id = c.id
+WHERE st.user_id = $1
+`
+
+type GetClassifiedStatementTransactionsByUserIdRow struct {
+	Description         string
+	OriginalDescription string
+	TransactionDate     time.Time
+	MoneyIn             string
+	MoneyOut            string
+	Icon                string
+	Label               string
+	IsExpense           sql.NullBool
+	ExpenseProb         sql.NullString
+	Confidence          sql.NullString
+	Balance             sql.NullString
+	UserID              uuid.UUID
+}
+
+func (q *Queries) GetClassifiedStatementTransactionsByUserId(ctx context.Context, userID uuid.UUID) ([]GetClassifiedStatementTransactionsByUserIdRow, error) {
+	rows, err := q.db.QueryContext(ctx, getClassifiedStatementTransactionsByUserId, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetClassifiedStatementTransactionsByUserIdRow
+	for rows.Next() {
+		var i GetClassifiedStatementTransactionsByUserIdRow
+		if err := rows.Scan(
+			&i.Description,
+			&i.OriginalDescription,
+			&i.TransactionDate,
+			&i.MoneyIn,
+			&i.MoneyOut,
+			&i.Icon,
+			&i.Label,
+			&i.IsExpense,
+			&i.ExpenseProb,
+			&i.Confidence,
+			&i.Balance,
+			&i.UserID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const upsertStatementTransaction = `-- name: UpsertStatementTransaction :one
 INSERT INTO statement_transactions (
      id,

@@ -1,23 +1,29 @@
 import { AlertCircle } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/v2/ui/button'
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
+} from '@/components/v2/ui/card'
 import { cn } from '@/lib/utils/cn'
 
+import { categoryTint } from '../shared/categories'
 import { ConfidenceStat } from '../shared/ConfidenceBar'
 
 type RootProps = ComponentProps<typeof Card>
 
 export function Root({ className, ...props }: RootProps) {
-  return <Card variant="highlight" className={className} {...props} />
+  return (
+    <Card
+      variant="highlight"
+      className={cn('gap-4 p-5', className)}
+      {...props}
+    />
+  )
 }
 
 type HeaderProps = ComponentProps<typeof CardHeader>
@@ -25,7 +31,10 @@ type HeaderProps = ComponentProps<typeof CardHeader>
 export function Header({ className, ...props }: HeaderProps) {
   return (
     <CardHeader
-      className={cn('flex-row items-center justify-between gap-3', className)}
+      className={cn(
+        'flex flex-row items-center justify-between gap-3 px-0',
+        className,
+      )}
       {...props}
     />
   )
@@ -40,11 +49,11 @@ export function Title({ children, className }: TitleProps) {
   return (
     <CardTitle
       className={cn(
-        'text-chart-3 flex items-center gap-1.5 text-sm font-semibold',
+        'text-chart-3 flex items-center gap-2 text-base font-semibold',
         className,
       )}
     >
-      <AlertCircle className="size-4" />
+      <AlertCircle className="size-4.5" />
       {children}
     </CardTitle>
   )
@@ -58,20 +67,21 @@ type StepMeterProps = {
 
 export function StepMeter({ total, current, className }: StepMeterProps) {
   return (
-    <div className={cn('flex shrink-0 items-center gap-2', className)}>
+    <div className={cn('flex shrink-0 items-center gap-2.5', className)}>
       <div className="flex gap-1">
         {Array.from({ length: total }).map((_, i) => (
           <span
             key={i}
             className={cn(
-              'h-1.5 w-5 rounded-full',
-              i < current ? 'bg-chart-3' : 'bg-muted',
+              'h-1.5 w-5 rounded-[3px]',
+              i < current ? 'bg-chart-3' : 'bg-border',
             )}
           />
         ))}
       </div>
       <span
-        className="text-muted-foreground text-xs font-medium whitespace-nowrap"
+        className="text-muted-foreground text-[13px] font-medium
+          whitespace-nowrap"
       >
         {current} of {total}
       </span>
@@ -84,6 +94,8 @@ type MerchantProps = {
   name: string
   date: string
   amount: string
+  category?: string
+  size?: 'sm' | 'md'
   className?: string
 }
 
@@ -92,21 +104,56 @@ export function Merchant({
   name,
   date,
   amount,
+  category,
+  size = 'sm',
   className,
 }: MerchantProps) {
+  const tint = categoryTint(category)
+  const isMedium = size === 'md'
+
   return (
-    <CardContent className={cn('flex items-center gap-3', className)}>
+    <CardContent
+      className={cn(
+        'flex items-center px-0',
+        isMedium ? 'gap-3.5' : 'gap-3',
+        className,
+      )}
+    >
       <div
-        className="bg-muted flex size-12 shrink-0 items-center justify-center
-          rounded-2xl text-xl [box-shadow:var(--input-groove)]"
+        aria-hidden="true"
+        className={cn(
+          'flex shrink-0 items-center justify-center border',
+          isMedium
+            ? 'size-14 rounded-[18px] text-[26px]'
+            : 'size-13 rounded-2xl text-2xl',
+        )}
+        style={{
+          backgroundColor: tint.background,
+          borderColor: tint.border,
+          boxShadow: `0 4px 0 ${tint.lip}`,
+        }}
       >
         {emoji}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="font-grotesk truncate font-semibold">{name}</p>
-        <p className="text-muted-foreground text-sm">{date}</p>
+        <p
+          className={cn(
+            'font-display truncate leading-tight font-semibold',
+            isMedium ? 'text-2xl' : 'text-[22px]',
+          )}
+        >
+          {name}
+        </p>
+        <p className="text-muted-foreground mt-0.5 text-sm">{date}</p>
       </div>
-      <span className="font-grotesk shrink-0 font-semibold">{amount}</span>
+      <span
+        className={cn(
+          'font-display shrink-0 font-semibold',
+          isMedium ? 'text-2xl' : 'text-[22px]',
+        )}
+      >
+        {amount}
+      </span>
     </CardContent>
   )
 }
@@ -114,46 +161,105 @@ export function Merchant({
 type StatementProps = {
   children: ReactNode
   label?: string
+  date?: string
+  amount?: string
+  merchant?: string
+  category?: string
   className?: string
 }
 
 export function Statement({
   children,
   label = 'On your statement',
+  date,
+  amount,
+  merchant,
+  category,
   className,
 }: StatementProps) {
   return (
-    <CardContent className={cn('space-y-2', className)}>
+    <CardContent className={cn('space-y-2 px-0', className)}>
       <p
-        className="text-muted-foreground text-xs font-medium tracking-wide
+        className="text-muted-foreground text-xs font-semibold tracking-[0.06em]
           uppercase"
       >
         {label}
       </p>
-      <div
-        className="border-border bg-input/40 rounded-xl border px-3 py-2.5
-          text-sm [box-shadow:var(--input-groove)]"
-      >
-        {children}
+      <div className="mx-1">
+        <div className="rotate-[-1.2deg]">
+          <div
+            className="font-statement rounded-t-md bg-[#f1ecde] px-4 pt-3.5
+              pb-2.5 text-[12.5px] leading-[1.6] text-[#26241f]"
+          >
+            <div className="font-medium tracking-[0.04em]">{children}</div>
+            {date && amount && (
+              <div className="text-[#5b574b]">
+                {date} · {amount}
+              </div>
+            )}
+            {merchant && (
+              <>
+                <div className="my-2 border-t-2 border-dashed border-[#b9b29d]" />
+                <div className="flex justify-between gap-3">
+                  <span>→ {merchant}</span>
+                  {category && <span>{category}</span>}
+                </div>
+              </>
+            )}
+          </div>
+          <div
+            aria-hidden="true"
+            className="h-2"
+            style={{
+              background:
+                'linear-gradient(135deg,#f1ecde 25%,transparent 25%) -4px 0, linear-gradient(225deg,#f1ecde 25%,transparent 25%) -4px 0',
+              backgroundSize: '8px 8px',
+            }}
+          />
+        </div>
       </div>
     </CardContent>
   )
 }
 
+type ClassificationProps = {
+  children: ReactNode
+  /** Optional eyebrow label, used by the desktop panel. */
+  label?: string
+  /** Lay the label and content out on a single row (desktop panel). */
+  inline?: boolean
+  className?: string
+}
+
 export function Classification({
   children,
-  label = 'We think this is',
+  label,
+  inline = false,
   className,
-}: StatementProps) {
+}: ClassificationProps) {
   return (
-    <CardContent className={cn('space-y-2', className)}>
-      <p
-        className="text-muted-foreground text-xs font-medium tracking-wide
-          uppercase"
+    <CardContent
+      className={cn(
+        inline ? 'flex items-center justify-between px-0' : 'px-0',
+        className,
+      )}
+    >
+      {label && (
+        <p
+          className="text-muted-foreground text-xs font-semibold
+            tracking-[0.06em] uppercase"
+        >
+          {label}
+        </p>
+      )}
+      <div
+        className={cn(
+          'flex items-center',
+          inline ? 'shrink-0' : 'justify-between gap-3',
+        )}
       >
-        {label}
-      </p>
-      <div className="flex items-center justify-between gap-3">{children}</div>
+        {children}
+      </div>
     </CardContent>
   )
 }
@@ -165,17 +271,25 @@ type CategoryPillProps = {
 }
 
 export function CategoryPill({ icon, label, className }: CategoryPillProps) {
+  const tint = categoryTint(label)
+
   return (
-    <Badge
-      variant="outline"
+    <span
+      data-slot="category-pill"
       className={cn(
-        'gap-2 rounded-full px-3 py-2 text-sm font-semibold',
+        `inline-flex h-9 items-center gap-2 rounded-full border px-3.5
+        text-[15px] font-semibold`,
         className,
       )}
+      style={{
+        color: tint.color,
+        backgroundColor: tint.background,
+        borderColor: tint.border,
+      }}
     >
-      <span className="text-base">{icon}</span>
+      <span aria-hidden="true">{icon}</span>
       {label}
-    </Badge>
+    </span>
   )
 }
 
@@ -190,6 +304,7 @@ export function Confidence({
     <ConfidenceStat
       value={value}
       tone="warning"
+      size="md"
       className={className}
       label={`${value}% sure`}
     />
@@ -203,7 +318,7 @@ type ActionsProps = {
 
 export function Actions({ children, className }: ActionsProps) {
   return (
-    <CardContent className={cn('flex gap-3', className)}>
+    <CardContent className={cn('flex gap-2.5 px-0', className)}>
       {children}
     </CardContent>
   )
@@ -216,7 +331,7 @@ type FooterProps = {
 
 export function Footer({ children, className }: FooterProps) {
   return (
-    <CardFooter className={cn('justify-between', className)}>
+    <CardFooter className={cn('justify-between px-0', className)}>
       {children}
     </CardFooter>
   )
@@ -228,7 +343,11 @@ export function LinkAction({ className, ...props }: LinkActionProps) {
   return (
     <Button
       variant="link"
-      className={cn('text-muted-foreground h-auto p-0 text-sm', className)}
+      className={cn(
+        `text-muted-foreground h-11 p-0 text-[15px] font-medium underline
+        underline-offset-[3px] hover:no-underline`,
+        className,
+      )}
       {...props}
     />
   )

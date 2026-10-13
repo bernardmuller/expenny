@@ -12,7 +12,7 @@ const meta = {
     layout: 'centered',
   },
   decorators: (Story) => (
-    <div className="w-full max-w-xl">
+    <div className="bg-background font-body text-foreground w-full max-w-xl">
       <Story />
     </div>
   ),

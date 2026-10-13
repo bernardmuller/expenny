@@ -66,7 +66,7 @@ export const mockTransactions: Array<StatementTransaction> = [
     date: '10 Oct',
     description: 'PayShap payment',
     originalDescription: 'PAYSHAP PAYMENT',
-    category: { id: 'uncategorised', label: 'Uncategorised', icon: '❓' },
+    category: { id: 'uncategorised', label: 'Uncategorised', icon: '❔' },
     amount: 'R 450.00',
     balance: 'R 33 462.40',
     confidence: 41,

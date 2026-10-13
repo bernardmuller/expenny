@@ -40,7 +40,9 @@ export function TransactionList({
             dimmed={transaction.counted === false}
             onClick={() => onSelect?.(transaction.id)}
           >
-            <TransactionListCompound.RowEmoji>
+            <TransactionListCompound.RowEmoji
+              category={transaction.category.label}
+            >
               {transaction.category.icon}
             </TransactionListCompound.RowEmoji>
             <TransactionListCompound.RowContent>
@@ -48,9 +50,9 @@ export function TransactionList({
                 {transaction.description}
               </TransactionListCompound.RowTitle>
               <TransactionListCompound.RowMeta>
-                <span className="text-muted-foreground">
-                  {transaction.category.label}
-                </span>
+                <TransactionListCompound.RowCategory
+                  label={transaction.category.label}
+                />
                 {transaction.needsReview && (
                   <TransactionListCompound.ReviewBadge />
                 )}
@@ -59,6 +61,7 @@ export function TransactionList({
             <TransactionListCompound.RowAmount
               amount={transaction.amount}
               muted={transaction.counted === false}
+              emphasis={transaction.direction === 'in'}
               meta={
                 transaction.counted === false
                   ? `Not counted · ${transaction.date}`

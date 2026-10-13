@@ -11,17 +11,27 @@ export function CurrentBudget({
   onClick,
   linkProvider: LinkProvider,
 }: CurrentBudgetProps) {
-  const title = `Current Budget · ${budgetName}`
-
   return (
     <CurrentBudgetCompound.Root>
       <CurrentBudgetCompound.Header>
-        <CurrentBudgetCompound.Title>
-          {LinkProvider ? <LinkProvider>{title}</LinkProvider> : title}
-        </CurrentBudgetCompound.Title>
+        <div className="flex flex-col gap-0.5">
+          <CurrentBudgetCompound.Title>
+            {LinkProvider ? (
+              <LinkProvider>Current Budget</LinkProvider>
+            ) : (
+              'Current Budget'
+            )}
+          </CurrentBudgetCompound.Title>
+          <CurrentBudgetCompound.Period>
+            {budgetName}
+          </CurrentBudgetCompound.Period>
+        </div>
         {typeof daysLeft === 'number' && (
           <CurrentBudgetCompound.Action>
-            <CurrentBudgetCompound.DaysLeftBadge daysLeft={daysLeft} />
+            <CurrentBudgetCompound.DaysLeftBadge
+              daysLeft={daysLeft}
+              size="sm"
+            />
           </CurrentBudgetCompound.Action>
         )}
       </CurrentBudgetCompound.Header>
@@ -30,11 +40,11 @@ export function CurrentBudget({
         of={startingAmount}
         onClick={onClick}
       />
-      <CurrentBudgetCompound.ProgressBar percentage={spentPercentage} />
       <CurrentBudgetCompound.Footer>
         <CurrentBudgetCompound.Spent amount={spentAmount} />
         <CurrentBudgetCompound.Percentage value={spentPercentage} />
       </CurrentBudgetCompound.Footer>
+      <CurrentBudgetCompound.ProgressBar percentage={spentPercentage} />
     </CurrentBudgetCompound.Root>
   )
 }

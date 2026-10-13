@@ -13,11 +13,22 @@ import { AppSidebar } from './AppSidebar'
 import type { SidebarNavItem } from './AppSidebar.types'
 
 const items: Array<SidebarNavItem> = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'transactions', label: 'Transactions', icon: ArrowLeftRight },
-  { id: 'budgets', label: 'Budgets', icon: Wallet },
-  { id: 'statements', label: 'Statements', icon: FileText },
-  { id: 'settings', label: 'Settings', icon: Settings2 },
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    icon: LayoutDashboard,
+    accent: '#4cc38a',
+  },
+  {
+    id: 'transactions',
+    label: 'Transactions',
+    icon: ArrowLeftRight,
+    accent: '#5bb5ff',
+    badge: 3,
+  },
+  { id: 'budgets', label: 'Budgets', icon: Wallet, accent: '#f472b6' },
+  { id: 'statements', label: 'Statements', icon: FileText, accent: '#a78bfa' },
+  { id: 'settings', label: 'Settings', icon: Settings2, accent: '#bdbdbd' },
 ]
 
 const meta = {
@@ -29,10 +40,10 @@ const meta = {
   decorators: [
     (Story) => (
       <ThemeProvider defaultTheme="dark">
-        <div className="bg-background flex h-svh">
+        <div className="bg-background font-body text-foreground flex h-svh">
           <Story />
           <main className="min-w-0 flex-1 p-8">
-            <h1 className="font-grotesk text-2xl font-semibold">
+            <h1 className="font-display text-[34px] font-semibold">
               Hi, Bernard!
             </h1>
           </main>
@@ -44,6 +55,7 @@ const meta = {
     items,
     activeId: 'dashboard',
     userName: 'Bernard',
+    onUpload: () => {},
   },
 } satisfies Meta<typeof AppSidebar>
 

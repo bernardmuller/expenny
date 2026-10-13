@@ -1,11 +1,3 @@
-// Package auth verifies better-auth session cookies so that non-Hono services
-// (the Go HTTP API) can authenticate requests against the same Postgres session
-// store used by the Node API.
-//
-// The cookie is a signed cookie emitted by better-call via better-auth's
-// setSignedCookie: its value is "<sessionToken>.<base64 HMAC-SHA256>" and then
-// URL-encoded as a whole. The session token (before the final dot, after
-// verification) is the plaintext value stored in sessions.token.
 package auth
 
 import (
@@ -23,8 +15,6 @@ import (
 	"expenny.co.za/internal/store/postgres"
 )
 
-// Distinct causes for a rejected session, so callers (and logs) can tell them
-// apart instead of collapsing everything into a single 401.
 var (
 	ErrNoCookie        = errors.New("no session cookie present")
 	ErrMalformedCookie = errors.New("session cookie is malformed")
@@ -32,16 +22,11 @@ var (
 	ErrSessionNotFound = errors.New("session not found or expired")
 )
 
-// better-auth prefixes the cookie name with the configured cookiePrefix
-// ("expenny" in api/src/lib/auth/better-auth.ts). When it decides it is running
-// over https it prepends "__Secure-". We accept either so the same binary works
-// in local (http) and deployed (https) environments.
 var cookieNames = []string{
 	"__Secure-expenny.session_token",
 	"expenny.session_token",
 }
 
-// SessionVerifier resolves an authenticated user from a request's cookie.
 type SessionVerifier struct {
 	secret  string
 	queries *postgres.Queries
@@ -51,9 +36,6 @@ func NewSessionVerifier(secret string, queries *postgres.Queries) *SessionVerifi
 	return &SessionVerifier{secret: secret, queries: queries}
 }
 
-// verifySignedValue reproduces better-call's getSignedCookie: URL-decode the
-// value, split at the last dot, require a 44-char base64 signature ending in
-// "=", then verify HMAC-SHA256 over the value that precedes the dot.
 func (v *SessionVerifier) verifySignedValue(raw string) (string, error) {
 	value, err := url.PathUnescape(raw)
 	if err != nil {
@@ -108,9 +90,6 @@ func (v *SessionVerifier) sessionToken(r *http.Request) (string, error) {
 	return "", ErrNoCookie
 }
 
-// User returns the authenticated user for the request. Failures are one of the
-// sentinel errors above; any other failure (e.g. the database is down) is
-// returned as-is so callers can distinguish a 401 from a 500.
 func (v *SessionVerifier) User(ctx context.Context, r *http.Request) (postgres.User, error) {
 	token, err := v.sessionToken(r)
 	if err != nil {
@@ -140,9 +119,6 @@ type contextKey string
 
 const userContextKey contextKey = "auth-user"
 
-// RequireUser wraps a handler, rejecting unauthenticated requests with 401 and
-// otherwise making the user available via UserFromContext. The 401 body carries
-// the specific reason to make a POC debuggable; drop the reason for production.
 func (v *SessionVerifier) RequireUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := v.User(r.Context(), r)
@@ -166,7 +142,6 @@ func (v *SessionVerifier) RequireUser(next http.Handler) http.Handler {
 	})
 }
 
-// UserFromContext returns the user populated by RequireUser.
 func UserFromContext(ctx context.Context) (postgres.User, bool) {
 	user, ok := ctx.Value(userContextKey).(postgres.User)
 	return user, ok

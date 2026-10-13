@@ -3,17 +3,13 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
   ArrowLeftRight,
   FileText,
+  Home,
   LayoutDashboard,
   Settings2,
-  Upload,
-  User,
   Wallet,
 } from 'lucide-react'
 
-import { AppHeader } from '@/components/app-header'
-import { Layout } from '@/components/layouts/Layout'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
-import { Button } from '@/components/ui/button'
 
 import { AppSidebar } from '../app-sidebar/AppSidebar'
 import type { SidebarNavItem } from '../app-sidebar/AppSidebar.types'
@@ -21,6 +17,8 @@ import { CurrentBudget } from '../current-budget/CurrentBudget'
 import { FlatCurrentBudget } from '../flat-current-budget/FlatCurrentBudget'
 import { ReviewCard } from '../classification-review/ReviewCard'
 import { ReviewPanel } from '../classification-review/ReviewPanel'
+import { MobileNav } from '../mobile-nav/MobileNav'
+import type { MobileNavItem } from '../mobile-nav/MobileNav.types'
 import { TransactionList } from '../transaction-list/TransactionList'
 import { TransactionTable } from '../transaction-table/TransactionTable'
 import { UploadDrawer } from '../upload-drawer/UploadDrawer'
@@ -39,11 +37,35 @@ import {
 import type { StatementTransaction } from '../shared/Transaction.types'
 
 const navItems: Array<SidebarNavItem> = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'transactions', label: 'Transactions', icon: ArrowLeftRight },
-  { id: 'budgets', label: 'Budgets', icon: Wallet },
-  { id: 'statements', label: 'Statements', icon: FileText },
-  { id: 'settings', label: 'Settings', icon: Settings2 },
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    icon: LayoutDashboard,
+    accent: '#4cc38a',
+  },
+  {
+    id: 'transactions',
+    label: 'Transactions',
+    icon: ArrowLeftRight,
+    accent: '#5bb5ff',
+    badge: 3,
+  },
+  { id: 'budgets', label: 'Budgets', icon: Wallet, accent: '#f472b6' },
+  { id: 'statements', label: 'Statements', icon: FileText, accent: '#a78bfa' },
+  { id: 'settings', label: 'Settings', icon: Settings2, accent: '#bdbdbd' },
+]
+
+const mobileNavItems: Array<MobileNavItem> = [
+  { id: 'dashboard', label: 'Home', icon: Home, accent: '#4cc38a' },
+  {
+    id: 'transactions',
+    label: 'Activity',
+    icon: ArrowLeftRight,
+    accent: '#5bb5ff',
+    badge: 3,
+  },
+  { id: 'budgets', label: 'Budgets', icon: Wallet, accent: '#f472b6' },
+  { id: 'statements', label: 'Files', icon: FileText, accent: '#a78bfa' },
 ]
 
 const MASK = '✱✱✱✱✱✱✱✱'
@@ -87,28 +109,35 @@ function DesktopDashboard() {
   )
 
   return (
-    <div className="bg-background flex min-h-svh">
+    <div className="bg-background font-body text-foreground flex min-h-svh">
       <AppSidebar
         items={navItems}
         activeId="dashboard"
         userName="Bernard"
         onNavigate={() => {}}
+        onUpload={() => {}}
       />
       <main className="min-w-0 flex-1">
-        <div className="mx-auto space-y-6 p-8">
-          <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="mx-auto max-w-[1160px] space-y-6 px-8 pt-8 pb-16">
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h1 className="font-grotesk text-3xl font-semibold">
+              <h1
+                className="font-display text-[34px] leading-[1.1] font-semibold"
+              >
                 Hi, Bernard!
               </h1>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-muted-foreground mt-1 text-[15px]">
                 Here's where October stands.
               </p>
             </div>
-            <Button>
-              <Upload />
-              Upload statement
-            </Button>
+            <div
+              className="bg-card border-border text-card-foreground flex h-11
+                items-center gap-2.5 rounded-full border px-4 text-sm
+                [box-shadow:0_3px_0_var(--lip)]"
+            >
+              <FileText className="size-4 text-[#a78bfa]" />
+              capitec_oct_2026.csv · 45 sorted · 3 to review
+            </div>
           </div>
 
           <FlatCurrentBudget
@@ -122,7 +151,7 @@ function DesktopDashboard() {
           />
 
           <div
-            className="grid items-start gap-6
+            className="grid items-start gap-5
               lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
           >
             <TransactionTable
@@ -161,6 +190,7 @@ function DesktopDashboard() {
 
 function MobileDashboard({ masked = false }: { masked?: boolean }) {
   const [activeFilter, setActiveFilter] = useState('all')
+  const [activeNav, setActiveNav] = useState('dashboard')
 
   const transactions = useMemo(
     () => filterTransactions(mockTransactions, activeFilter, '').slice(0, 7),
@@ -168,24 +198,17 @@ function MobileDashboard({ masked = false }: { masked?: boolean }) {
   )
 
   return (
-    <>
-      <AppHeader.Root>
-        <AppHeader.Left>
-          <AppHeader.Icon src="/favicon.ico" alt="Expenny icon" />
-          <AppHeader.Info appName="Expenny" message="Hi, Bernard!" />
-        </AppHeader.Left>
-        <div />
-        <AppHeader.Right>
-          <Button size="sm" className="rounded-2xl">
-            <Upload />
-            Upload
-          </Button>
-          <Button variant="ghost" size="icon" aria-label="Profile">
-            <User />
-          </Button>
-        </AppHeader.Right>
-      </AppHeader.Root>
-      <Layout>
+    <div className="bg-background font-body text-foreground min-h-svh">
+      <div
+        className="mx-auto flex w-full max-w-lg flex-col gap-4 px-4 pt-4 pb-32"
+      >
+        <MobileNav
+          userName="Bernard"
+          items={mobileNavItems}
+          activeId={activeNav}
+          onNavigate={setActiveNav}
+          onUpload={() => {}}
+        />
         <CurrentBudget
           budgetName="October 2026"
           currentAmount={masked ? MASK : 'R 4 632'}
@@ -208,10 +231,11 @@ function MobileDashboard({ masked = false }: { masked?: boolean }) {
           activeFilter={activeFilter}
           totalCount={48}
           onFilterChange={setActiveFilter}
+          onSelect={() => {}}
           linkProvider={({ children }) => <a href="/">{children}</a>}
         />
-      </Layout>
-    </>
+      </div>
+    </div>
   )
 }
 
@@ -254,7 +278,7 @@ type Story = StoryObj<typeof meta>
 
 export const Desktop: Story = {
   globals: {
-    // viewport: { value: 'desktop' },
+    viewport: { value: 'desktop-1440' },
   },
   render: () => <DesktopDashboard />,
 }

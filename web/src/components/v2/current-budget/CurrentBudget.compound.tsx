@@ -1,30 +1,39 @@
-import { Calendar } from 'lucide-react'
+import { Calendar, ChevronRight } from 'lucide-react'
 import type { ComponentProps } from 'react'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/v2/ui/badge'
+import { Button } from '@/components/v2/ui/button'
 import {
   Card,
   CardAction,
   CardContent,
+  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
+} from '@/components/v2/ui/card'
+import { Progress } from '@/components/v2/ui/progress'
 import { cn } from '@/lib/utils/cn'
 import { formatPercentage } from '@/lib/utils/formatting/formatPercentage'
 
 type RootProps = ComponentProps<typeof Card>
 
 export function Root({ className, ...props }: RootProps) {
-  return <Card className={className} {...props} />
+  return <Card className={cn('gap-[18px] px-5 py-5', className)} {...props} />
 }
 
 type HeaderProps = ComponentProps<typeof CardHeader>
 
 export function Header({ className, ...props }: HeaderProps) {
-  return <CardHeader className={className} {...props} />
+  return (
+    <CardHeader
+      className={cn(
+        'flex flex-row items-start justify-between gap-3 px-0',
+        className,
+      )}
+      {...props}
+    />
+  )
 }
 
 type ActionProps = ComponentProps<typeof CardAction>
@@ -35,15 +44,18 @@ export function Action({ className, ...props }: ActionProps) {
 
 type TitleProps = ComponentProps<typeof CardTitle>
 
-export function Title({ className, ...props }: TitleProps) {
+export function Title({ className, children, ...props }: TitleProps) {
   return (
     <CardTitle
       className={cn(
-        'text-muted-foreground font-grotesk text-base font-medium sm:text-lg',
+        'text-foreground flex items-center gap-1 text-lg font-semibold',
         className,
       )}
       {...props}
-    />
+    >
+      {children}
+      <ChevronRight className="size-4.5 shrink-0" />
+    </CardTitle>
   )
 }
 
@@ -57,10 +69,12 @@ export function getDaysLeftLabel(daysLeft: number) {
 
 type DaysLeftBadgeProps = ComponentProps<typeof Badge> & {
   daysLeft: number
+  size?: 'sm' | 'md'
 }
 
 export function DaysLeftBadge({
   daysLeft,
+  size = 'md',
   className,
   ...props
 }: DaysLeftBadgeProps) {
@@ -68,14 +82,16 @@ export function DaysLeftBadge({
 
   return (
     <Badge
-      variant={hasEnded ? 'destructive' : 'outline'}
+      variant={hasEnded ? 'destructive' : 'secondary'}
       className={cn(
-        'gap-2 rounded-full px-3 py-1.5 text-sm font-semibold [&>svg]:size-4',
+        'gap-2 rounded-full text-[13px] font-semibold',
+        '[box-shadow:0_3px_0_var(--lip-sm)]',
+        size === 'sm' ? 'h-8.5 px-3' : 'h-9 px-3.5',
         className,
       )}
       {...props}
     >
-      {daysLeft !== 0 && <Calendar />}
+      {daysLeft !== 0 && <Calendar className="size-3.5!" />}
       {getDaysLeftLabel(daysLeft)}
     </Badge>
   )
@@ -84,7 +100,18 @@ export function DaysLeftBadge({
 type ContentProps = ComponentProps<typeof CardContent>
 
 export function Content({ className, ...props }: ContentProps) {
-  return <CardContent className={className} {...props} />
+  return <CardContent className={cn('px-0', className)} {...props} />
+}
+
+type PeriodProps = ComponentProps<typeof CardDescription>
+
+export function Period({ className, ...props }: PeriodProps) {
+  return (
+    <CardDescription
+      className={cn('text-muted-foreground text-sm', className)}
+      {...props}
+    />
+  )
 }
 
 type RemainingProps = ComponentProps<typeof CardContent> & {
@@ -102,7 +129,7 @@ export function Remaining({
 }: RemainingProps) {
   return (
     <CardContent
-      className={cn('flex flex-wrap items-end gap-x-3 gap-y-1', className)}
+      className={cn('flex flex-col items-center gap-2 px-0', className)}
       {...props}
     >
       <Button
@@ -112,14 +139,14 @@ export function Remaining({
         className="h-auto rounded-none p-0 hover:bg-transparent"
       >
         <span
-          className="text-primary font-grotesk text-4xl font-bold tracking-tight
-            sm:text-5xl"
+          className="text-primary font-display text-[44px] leading-none
+            font-semibold tracking-[2px]"
         >
           {amount}
         </span>
       </Button>
-      <span className="text-muted-foreground pb-1 text-base sm:text-lg">
-        left of {of}
+      <span className="text-muted-foreground text-[15px]">
+        remaining of {of}
       </span>
     </CardContent>
   )
@@ -134,8 +161,13 @@ export function ProgressBar({ percentage, className }: ProgressBarProps) {
   const clamped = Math.min(Math.max(percentage, 0), 100)
 
   return (
-    <CardContent className={className}>
-      <Progress value={clamped} aria-valuenow={clamped} className="h-3.5" />
+    <CardContent className={cn('px-0', className)}>
+      <Progress
+        value={clamped}
+        aria-valuenow={clamped}
+        showTicks
+        className="h-[30px]"
+      />
     </CardContent>
   )
 }
@@ -145,7 +177,7 @@ type FooterProps = ComponentProps<typeof CardFooter>
 export function Footer({ className, ...props }: FooterProps) {
   return (
     <CardFooter
-      className={cn('items-end justify-between', className)}
+      className={cn('items-end justify-between px-0', className)}
       {...props}
     />
   )
@@ -158,9 +190,7 @@ type SpentProps = {
 
 export function Spent({ amount, className }: SpentProps) {
   return (
-    <span
-      className={cn('text-muted-foreground text-sm sm:text-base', className)}
-    >
+    <span className={cn('text-muted-foreground text-sm', className)}>
       Spent {amount}
     </span>
   )
@@ -173,12 +203,7 @@ type PercentageProps = {
 
 export function Percentage({ value, className }: PercentageProps) {
   return (
-    <span
-      className={cn(
-        'text-foreground font-grotesk text-lg font-bold sm:text-xl',
-        className,
-      )}
-    >
+    <span className={cn('text-foreground text-sm font-semibold', className)}>
       {formatPercentage(value)}
     </span>
   )

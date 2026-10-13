@@ -13,7 +13,7 @@ const meta = {
     layout: 'centered',
   },
   decorators: (Story) => (
-    <div className="w-full max-w-sm p-4">
+    <div className="bg-background font-body text-foreground w-full max-w-sm p-4">
       <Story />
     </div>
   ),

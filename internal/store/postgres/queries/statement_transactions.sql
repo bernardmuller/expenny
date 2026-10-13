@@ -43,3 +43,22 @@ RETURNING *;
 SELECT st.*
 FROM statement_transactions st
 WHERE st.user_id = @user_id;
+
+-- name: GetClassifiedStatementTransactionsByUserId :many
+SELECT
+  st.description,
+  st.original_description,
+  st.transaction_date,
+  st.money_in,
+  st.money_out,
+  c.icon,
+  c.label,
+  stc.is_expense,
+  stc.expense_prob,
+  stc.confidence,
+  st.balance,
+  st.user_id
+FROM statement_transactions st
+JOIN statement_transaction_classifications stc ON stc.statement_transaction_id = st.id
+JOIN categories c ON stc.category_id = c.id
+WHERE st.user_id = @user_id;

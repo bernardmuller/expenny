@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/v2/ui/button'
 
 import { UploadDrawer } from './UploadDrawer'
 import {
@@ -33,7 +33,10 @@ export const Importing: Story = {
     const [open, setOpen] = useState(true)
 
     return (
-      <div className="flex min-h-svh items-center justify-center p-8">
+      <div
+        className="bg-background font-body text-foreground flex min-h-svh
+          items-center justify-center p-8"
+      >
         <Button onClick={() => setOpen(true)}>Upload statement</Button>
         <UploadDrawer
           {...args}

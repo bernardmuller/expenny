@@ -1,7 +1,7 @@
 import { Check } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/components/v2/ui/button'
+import { Input } from '@/components/v2/ui/input'
 
 import * as ReviewPanelCompound from './ReviewPanel.compound'
 import type { ReviewPanelProps } from '../shared/Review.types'
@@ -35,8 +35,15 @@ export function ReviewPanel({
         name={item.merchant}
         date={item.date}
         amount={item.amount}
+        category={item.category.label}
+        size="md"
       />
-      <ReviewPanelCompound.Statement>
+      <ReviewPanelCompound.Statement
+        date={item.date}
+        amount={item.amount}
+        merchant={item.merchant}
+        category={item.category.label}
+      >
         {item.originalDescription}
       </ReviewPanelCompound.Statement>
       <ReviewPanelCompound.Field label="Display name">
@@ -45,14 +52,13 @@ export function ReviewPanel({
           onChange={(event) => onDisplayNameChange?.(event.target.value)}
         />
       </ReviewPanelCompound.Field>
-      <ReviewPanelCompound.CategoryField
+      <ReviewPanelCompound.Classification inline label="We think it's">
+        <ReviewPanelCompound.Confidence value={item.confidence} />
+      </ReviewPanelCompound.Classification>
+      <ReviewPanelCompound.CategoryGrid
         value={categoryId}
         options={categoryOptions}
         onChange={onCategoryChange}
-      />
-      <ReviewPanelCompound.Confidence
-        value={item.confidence}
-        className="px-6"
       />
       <ReviewPanelCompound.CountsTowardBudget
         checked={countsTowardBudget}
@@ -60,18 +66,18 @@ export function ReviewPanel({
         onCheckedChange={onCountsTowardBudgetChange}
       />
       <ReviewPanelCompound.Actions>
-        <Button className="w-full" onClick={onConfirm}>
+        <Button size="lg" className="w-full text-[17px]" onClick={onConfirm}>
           <Check />
           Confirm and next
         </Button>
       </ReviewPanelCompound.Actions>
       <ReviewPanelCompound.Footer>
-        <span className="text-muted-foreground text-xs">
+        <span className="text-muted-foreground text-[13px]">
           Balance after: {item.balanceAfter}
         </span>
         <Button
           variant="link"
-          className="text-muted-foreground h-auto p-0 text-xs"
+          className="text-muted-foreground h-auto p-0 text-[13px]"
           onClick={onSkip}
         >
           Skip for now

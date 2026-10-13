@@ -1,6 +1,6 @@
 import { Check } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/v2/ui/button'
 
 import * as ReviewCardCompound from './ReviewCard.compound'
 import type { ReviewCardProps } from '../shared/Review.types'
@@ -25,8 +25,14 @@ export function ReviewCard({
         name={item.merchant}
         date={item.date}
         amount={item.amount}
+        category={item.category.label}
       />
-      <ReviewCardCompound.Statement>
+      <ReviewCardCompound.Statement
+        date={item.date}
+        amount={item.amount}
+        merchant={item.merchant}
+        category={item.category.label}
+      >
         {item.originalDescription}
       </ReviewCardCompound.Statement>
       <ReviewCardCompound.Classification>
@@ -37,11 +43,20 @@ export function ReviewCard({
         <ReviewCardCompound.Confidence value={item.confidence} />
       </ReviewCardCompound.Classification>
       <ReviewCardCompound.Actions>
-        <Button className="flex-1" onClick={onLooksRight}>
+        <Button
+          size="lg"
+          className="flex-1 [&_svg]:size-4.5"
+          onClick={onLooksRight}
+        >
           <Check />
           Looks right
         </Button>
-        <Button variant="outline" className="flex-1" onClick={onChange}>
+        <Button
+          size="lg"
+          variant="outline"
+          className="flex-1"
+          onClick={onChange}
+        >
           Change
         </Button>
       </ReviewCardCompound.Actions>
