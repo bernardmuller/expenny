@@ -68,4 +68,4 @@ function TooltipContent({
   )
 }
 
-export { Tooltip, TooltipTrigger, TooltipContent,  }
+export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }

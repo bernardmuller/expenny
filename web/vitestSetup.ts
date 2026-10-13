@@ -11,3 +11,18 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 }))
 
 document.elementFromPoint = vi.fn()
+
+// jsdom does not implement matchMedia, used by useIsMobile and vaul.
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+})

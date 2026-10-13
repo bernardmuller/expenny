@@ -1,12 +1,12 @@
 import { withThemeByClassName } from '@storybook/addon-themes'
-import { INITIAL_VIEWPORTS } from 'storybook/viewport'
+import { INITIAL_VIEWPORTS, MINIMAL_VIEWPORTS } from 'storybook/viewport'
 import type { Preview } from '@storybook/react-vite'
 import '../src/styles.css'
 
 const preview: Preview = {
   parameters: {
     viewport: {
-      options: INITIAL_VIEWPORTS,
+      options: { ...MINIMAL_VIEWPORTS, ...INITIAL_VIEWPORTS },
     },
     darkMode: {
       classTarget: 'html',
