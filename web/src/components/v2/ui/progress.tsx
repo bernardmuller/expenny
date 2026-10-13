@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils/cn'
 
 const progressVariants = cva(
   `relative h-8 w-full overflow-hidden rounded-full border border-border
-  bg-muted p-[3px] [box-shadow:var(--input-groove),0_3px_0_var(--lip)]`,
+  bg-input p-[3px] [box-shadow:var(--input-groove),0_3px_0_var(--lip)]`,
   {
     variants: {
       variant: {

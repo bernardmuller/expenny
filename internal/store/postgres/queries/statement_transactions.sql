@@ -44,21 +44,39 @@ SELECT st.*
 FROM statement_transactions st
 WHERE st.user_id = @user_id;
 
+-- name: GetStatementTransactionById :one
+SELECT st.*
+FROM statement_transactions st
+WHERE st.id = @id AND st.user_id = @user_id;
+
 -- name: GetClassifiedStatementTransactionsByUserId :many
 SELECT
+  st.id,
+  st.nr,
+  st.account,
+  st.posting_date,
+  st.transaction_date,
   st.description,
   st.original_description,
-  st.transaction_date,
+  st.parent_category,
+  st.category,
   st.money_in,
   st.money_out,
-  c.icon,
-  c.label,
+  st.fee,
+  st.balance,
+  stc.id AS classification_id,
   stc.is_expense,
   stc.expense_prob,
   stc.confidence,
-  st.balance,
-  st.user_id
+  stc.source,
+  stc.classifier_version,
+  stc.classified_at,
+  c.id AS category_id,
+  c.key AS category_key,
+  c.label AS category_label,
+  c.icon AS category_icon
 FROM statement_transactions st
-JOIN statement_transaction_classifications stc ON stc.statement_transaction_id = st.id
-JOIN categories c ON stc.category_id = c.id
-WHERE st.user_id = @user_id;
+LEFT JOIN statement_transaction_classifications stc ON stc.statement_transaction_id = st.id
+LEFT JOIN categories c ON stc.category_id = c.id
+WHERE st.user_id = @user_id
+ORDER BY st.transaction_date DESC, st.nr DESC;

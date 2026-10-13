@@ -30,14 +30,6 @@ tailwind-watch: ## compile tailwindcss and watch for changes
 tailwind-build: ## one-time compile tailwindcss styles
 	./tailwindcss -i ./static/css/globals.css -o ./static/css/style.css
 
-.PHONY: categorise
-categorise: ## classify the statement csv with jev
-	go run ./cmd/cli categorise
-
-.PHONY: review
-review: ## correct the low-confidence rows of the last classification
-	go run ./cmd/cli review
-
 .PHONY: build
 build: ## build the Go bot binary
 	go build -o ./tmp/bot ./cmd/bot/main.go

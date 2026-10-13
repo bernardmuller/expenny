@@ -9,9 +9,11 @@ import (
 )
 
 const (
-	keyClassifierAPI = "CLASSIFIER_API_KEY"
-	keyDatabaseURL   = "DATABASE_URL"
-	keyAuthSecret    = "AUTH_SECRET"
+	keyClassifierAPI     = "CLASSIFIER_API_KEY"
+	keyClassifierBaseURL = "CLASSIFIER_BASE_URL"
+	keyClassifierModel   = "CLASSIFIER_MODEL"
+	keyDatabaseURL       = "DATABASE_URL"
+	keyAuthSecret        = "AUTH_SECRET"
 )
 
 var keys = []string{keyClassifierAPI, keyDatabaseURL, keyAuthSecret}
@@ -27,9 +29,11 @@ func missingEnvs(keys []string) []string {
 }
 
 type Config struct {
-	ClassifierApiKey string
-	DbUrl            string
-	AuthSecret       string
+	ClassifierApiKey  string
+	ClassifierBaseURL string
+	ClassifierModel   string
+	DbUrl             string
+	AuthSecret        string
 }
 
 func CreateConfig() (Config, error) {
@@ -40,8 +44,10 @@ func CreateConfig() (Config, error) {
 	}
 
 	return Config{
-		ClassifierApiKey: os.Getenv(keyClassifierAPI),
-		DbUrl:            os.Getenv(keyDatabaseURL),
-		AuthSecret:       os.Getenv(keyAuthSecret),
+		ClassifierApiKey:  os.Getenv(keyClassifierAPI),
+		ClassifierBaseURL: os.Getenv(keyClassifierBaseURL),
+		ClassifierModel:   os.Getenv(keyClassifierModel),
+		DbUrl:             os.Getenv(keyDatabaseURL),
+		AuthSecret:        os.Getenv(keyAuthSecret),
 	}, nil
 }

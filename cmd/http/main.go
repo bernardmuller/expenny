@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -25,7 +24,6 @@ const (
 )
 
 func main() {
-
 	cfg, err := application.CreateConfig()
 	if err != nil {
 		log.Fatalf("startup: %v", err)
@@ -63,10 +61,15 @@ func main() {
 
 func newHandler(app *application.Application, secret string) http.Handler {
 	verifier := auth.NewSessionVerifier(secret, app.Queries())
+	api := &api{app: app}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /v2/hello", handleHello)
 	mux.Handle("GET /v2/me", verifier.RequireUser(http.HandlerFunc(handleMe)))
+	mux.Handle("POST /v2/statements", verifier.RequireUser(http.HandlerFunc(api.ingestStatement)))
+	mux.Handle("GET /v2/statements/transactions", verifier.RequireUser(http.HandlerFunc(api.listTransactions)))
+	mux.Handle("POST /v2/statements/transactions/{id}/correction", verifier.RequireUser(http.HandlerFunc(api.correctTransaction)))
+	mux.Handle("GET /v2/categories", verifier.RequireUser(http.HandlerFunc(api.listCategories)))
 
 	return logRequests(withCORS(mux))
 }
@@ -88,30 +91,6 @@ func withCORS(next http.Handler) http.Handler {
 		}
 
 		next.ServeHTTP(w, r)
-	})
-}
-
-func handleHello(w http.ResponseWriter, _ *http.Request) {
-	fmt.Fprintln(w, "hello from v2")
-}
-
-type meResponse struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
-}
-
-func handleMe(w http.ResponseWriter, r *http.Request) {
-	user, ok := auth.UserFromContext(r.Context())
-	if !ok {
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
-		return
-	}
-
-	writeJSON(w, http.StatusOK, meResponse{
-		ID:    user.ID.String(),
-		Name:  user.Name,
-		Email: user.Email,
 	})
 }
 

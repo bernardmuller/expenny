@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"github.com/google/uuid"
@@ -14,19 +15,29 @@ import (
 )
 
 type IngestionService struct {
-	parser *statements.Parser
-	store  *store.Store
+	parser          *statements.Parser
+	store           *store.Store
+	classifications *ClassificationsService
 }
 
 type IngestResult struct {
-	Rows      []postgres.StatementTransaction
-	RowErrors []error
+	Rows       []postgres.StatementTransaction
+	Classified int
+	RowErrors  []error
+	// ClassifyError reports a failure that affected classification as a
+	// whole (loading categories/corrections or saving the results). The
+	// statement rows are still stored when it is set.
+	ClassifyError error
 }
 
-func NewIngestionService(parser *statements.Parser, store *store.Store) *IngestionService {
-	return &IngestionService{parser: parser, store: store}
+func NewIngestionService(parser *statements.Parser, store *store.Store, classifications *ClassificationsService) *IngestionService {
+	return &IngestionService{parser: parser, store: store, classifications: classifications}
 }
 
+// Ingest parses a statement CSV, stores every row it can, and then classifies
+// the stored rows. Storage and classification are separate transactions: the
+// statement is a faithful copy of the CSV even if the classifier is down, and
+// re-ingesting the same file is safe because rows upsert on their dedup hash.
 func (s *IngestionService) Ingest(ctx context.Context, userID uuid.UUID, r io.Reader) (IngestResult, error) {
 	txns, rowErrs, err := s.parser.Parse(r)
 	if err != nil {
@@ -48,7 +59,21 @@ func (s *IngestionService) Ingest(ctx context.Context, userID uuid.UUID, r io.Re
 		return IngestResult{}, err
 	}
 
-	return IngestResult{Rows: rows, RowErrors: rowErrs}, nil
+	results, err := s.classifications.Classify(ctx, userID, txns, rows)
+	if err != nil {
+		return IngestResult{Rows: rows, RowErrors: rowErrs, ClassifyError: err}, nil
+	}
+
+	classified := 0
+	for _, result := range results {
+		if result.Err != nil {
+			rowErrs = append(rowErrs, fmt.Errorf("row %d: %w", result.Transaction.Nr, result.Err))
+			continue
+		}
+		classified++
+	}
+
+	return IngestResult{Rows: rows, Classified: classified, RowErrors: rowErrs}, nil
 }
 
 func toStatementTransactionDTO(t statements.Transaction) statementtransactions.CreateStatementTransactionDTO {

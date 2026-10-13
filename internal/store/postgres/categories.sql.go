@@ -7,6 +7,8 @@ package postgres
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const getAllCategories = `-- name: GetAllCategories :many
@@ -42,4 +44,23 @@ func (q *Queries) GetAllCategories(ctx context.Context) ([]Category, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const getCategoryById = `-- name: GetCategoryById :one
+select id, key, label, icon, created_at, updated_at, deleted_at from "categories" where id = $1
+`
+
+func (q *Queries) GetCategoryById(ctx context.Context, id uuid.UUID) (Category, error) {
+	row := q.db.QueryRowContext(ctx, getCategoryById, id)
+	var i Category
+	err := row.Scan(
+		&i.ID,
+		&i.Key,
+		&i.Label,
+		&i.Icon,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
 }

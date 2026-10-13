@@ -147,9 +147,11 @@ func authHandler(next http.Handler) http.Handler {
 }
 
 type ingestResponse struct {
-	Processed int      `json:"processed"`
-	Skipped   int      `json:"skipped"`
-	Errors    []string `json:"errors,omitempty"`
+	Processed           int      `json:"processed"`
+	Classified          int      `json:"classified"`
+	Skipped             int      `json:"skipped"`
+	Errors              []string `json:"errors,omitempty"`
+	ClassificationError string   `json:"classification_error,omitempty"`
 }
 
 func main() {
@@ -212,7 +214,10 @@ func main() {
 			return mcp.NewToolResultErrorFromErr("ingest failed", err), nil
 		}
 
-		out := ingestResponse{Processed: len(res.Rows), Skipped: len(res.RowErrors)}
+		out := ingestResponse{Processed: len(res.Rows), Classified: res.Classified, Skipped: len(res.RowErrors)}
+		if res.ClassifyError != nil {
+			out.ClassificationError = res.ClassifyError.Error()
+		}
 		for _, e := range res.RowErrors {
 			out.Errors = append(out.Errors, e.Error())
 		}

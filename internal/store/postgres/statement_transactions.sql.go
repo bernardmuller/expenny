@@ -62,37 +62,62 @@ func (q *Queries) GetALlStatementTransactionsByUserID(ctx context.Context, userI
 
 const getClassifiedStatementTransactionsByUserId = `-- name: GetClassifiedStatementTransactionsByUserId :many
 SELECT
+  st.id,
+  st.nr,
+  st.account,
+  st.posting_date,
+  st.transaction_date,
   st.description,
   st.original_description,
-  st.transaction_date,
+  st.parent_category,
+  st.category,
   st.money_in,
   st.money_out,
-  c.icon,
-  c.label,
+  st.fee,
+  st.balance,
+  stc.id AS classification_id,
   stc.is_expense,
   stc.expense_prob,
   stc.confidence,
-  st.balance,
-  st.user_id
+  stc.source,
+  stc.classifier_version,
+  stc.classified_at,
+  c.id AS category_id,
+  c.key AS category_key,
+  c.label AS category_label,
+  c.icon AS category_icon
 FROM statement_transactions st
-JOIN statement_transaction_classifications stc ON stc.statement_transaction_id = st.id
-JOIN categories c ON stc.category_id = c.id
+LEFT JOIN statement_transaction_classifications stc ON stc.statement_transaction_id = st.id
+LEFT JOIN categories c ON stc.category_id = c.id
 WHERE st.user_id = $1
+ORDER BY st.transaction_date DESC, st.nr DESC
 `
 
 type GetClassifiedStatementTransactionsByUserIdRow struct {
+	ID                  uuid.UUID
+	Nr                  int32
+	Account             string
+	PostingDate         time.Time
+	TransactionDate     time.Time
 	Description         string
 	OriginalDescription string
-	TransactionDate     time.Time
+	ParentCategory      sql.NullString
+	Category            sql.NullString
 	MoneyIn             string
 	MoneyOut            string
-	Icon                string
-	Label               string
+	Fee                 string
+	Balance             sql.NullString
+	ClassificationID    uuid.NullUUID
 	IsExpense           sql.NullBool
 	ExpenseProb         sql.NullString
 	Confidence          sql.NullString
-	Balance             sql.NullString
-	UserID              uuid.UUID
+	Source              sql.NullString
+	ClassifierVersion   sql.NullString
+	ClassifiedAt        sql.NullTime
+	CategoryID          uuid.NullUUID
+	CategoryKey         sql.NullString
+	CategoryLabel       sql.NullString
+	CategoryIcon        sql.NullString
 }
 
 func (q *Queries) GetClassifiedStatementTransactionsByUserId(ctx context.Context, userID uuid.UUID) ([]GetClassifiedStatementTransactionsByUserIdRow, error) {
@@ -105,18 +130,30 @@ func (q *Queries) GetClassifiedStatementTransactionsByUserId(ctx context.Context
 	for rows.Next() {
 		var i GetClassifiedStatementTransactionsByUserIdRow
 		if err := rows.Scan(
+			&i.ID,
+			&i.Nr,
+			&i.Account,
+			&i.PostingDate,
+			&i.TransactionDate,
 			&i.Description,
 			&i.OriginalDescription,
-			&i.TransactionDate,
+			&i.ParentCategory,
+			&i.Category,
 			&i.MoneyIn,
 			&i.MoneyOut,
-			&i.Icon,
-			&i.Label,
+			&i.Fee,
+			&i.Balance,
+			&i.ClassificationID,
 			&i.IsExpense,
 			&i.ExpenseProb,
 			&i.Confidence,
-			&i.Balance,
-			&i.UserID,
+			&i.Source,
+			&i.ClassifierVersion,
+			&i.ClassifiedAt,
+			&i.CategoryID,
+			&i.CategoryKey,
+			&i.CategoryLabel,
+			&i.CategoryIcon,
 		); err != nil {
 			return nil, err
 		}
@@ -129,6 +166,42 @@ func (q *Queries) GetClassifiedStatementTransactionsByUserId(ctx context.Context
 		return nil, err
 	}
 	return items, nil
+}
+
+const getStatementTransactionById = `-- name: GetStatementTransactionById :one
+SELECT st.id, st.user_id, st.account, st.nr, st.posting_date, st.transaction_date, st.description, st.original_description, st.parent_category, st.category, st.money_in, st.money_out, st.fee, st.balance, st.dedup_hash, st.created_at, st.updated_at
+FROM statement_transactions st
+WHERE st.id = $1 AND st.user_id = $2
+`
+
+type GetStatementTransactionByIdParams struct {
+	ID     uuid.UUID
+	UserID uuid.UUID
+}
+
+func (q *Queries) GetStatementTransactionById(ctx context.Context, arg GetStatementTransactionByIdParams) (StatementTransaction, error) {
+	row := q.db.QueryRowContext(ctx, getStatementTransactionById, arg.ID, arg.UserID)
+	var i StatementTransaction
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Account,
+		&i.Nr,
+		&i.PostingDate,
+		&i.TransactionDate,
+		&i.Description,
+		&i.OriginalDescription,
+		&i.ParentCategory,
+		&i.Category,
+		&i.MoneyIn,
+		&i.MoneyOut,
+		&i.Fee,
+		&i.Balance,
+		&i.DedupHash,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const upsertStatementTransaction = `-- name: UpsertStatementTransaction :one

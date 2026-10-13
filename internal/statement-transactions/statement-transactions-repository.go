@@ -50,6 +50,20 @@ func NewStatementTransactionRepository(db *postgres.Queries) *StatementTransacti
 	return &StatementTransactionsRepository{DB: db}
 }
 
+func (r *StatementTransactionsRepository) GetByID(ctx context.Context, id, userID uuid.UUID) (postgres.StatementTransaction, error) {
+	return r.DB.GetStatementTransactionById(ctx, postgres.GetStatementTransactionByIdParams{
+		ID:     id,
+		UserID: userID,
+	})
+}
+
+// ListClassifiedByUser returns every statement row for the user together with
+// its classification and category. Rows that were never classified are still
+// returned, with the classification and category fields left NULL.
+func (r *StatementTransactionsRepository) ListClassifiedByUser(ctx context.Context, userID uuid.UUID) ([]postgres.GetClassifiedStatementTransactionsByUserIdRow, error) {
+	return r.DB.GetClassifiedStatementTransactionsByUserId(ctx, userID)
+}
+
 func (r *StatementTransactionsRepository) Create(ctx context.Context, dto CreateStatementTransactionDTO, userID uuid.UUID) (postgres.StatementTransaction, error) {
 	return r.DB.UpsertStatementTransaction(ctx, postgres.UpsertStatementTransactionParams{
 		ID:                  uuid.New(),

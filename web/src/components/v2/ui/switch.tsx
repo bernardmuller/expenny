@@ -13,7 +13,7 @@ function Switch({
       className={cn(
         `peer focus-visible:ring-primary/40
         data-[state=checked]:border-primary/50 data-[state=checked]:bg-accent
-        data-[state=unchecked]:border-border data-[state=unchecked]:bg-muted
+        data-[state=unchecked]:border-border data-[state=unchecked]:bg-input
         inline-flex h-8.5 w-14 shrink-0 items-center rounded-full border
         transition-all outline-none focus-visible:ring-[3px]
         disabled:cursor-not-allowed disabled:opacity-50

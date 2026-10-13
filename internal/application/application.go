@@ -10,10 +10,13 @@ import (
 	"expenny.co.za/internal/statements"
 	"expenny.co.za/internal/store"
 	"expenny.co.za/internal/store/postgres"
+	"expenny.co.za/internal/systemone"
 )
 
 type Application struct {
-	Ingestion *services.IngestionService
+	Ingestion   *services.IngestionService
+	Review      *services.ReviewService
+	Corrections *services.CorrectionsService
 
 	db *sql.DB
 }
@@ -32,9 +35,19 @@ func CreateApplication(cfg Config) (*Application, error) {
 	st := store.New(db)
 	parser := statements.NewParser()
 
+	provider := systemone.New(systemone.Config{
+		BaseURL: cfg.ClassifierBaseURL,
+		APIKey:  cfg.ClassifierApiKey,
+		Model:   cfg.ClassifierModel,
+	})
+
+	classifications := services.NewClassificationsService(st, provider)
+
 	return &Application{
-		Ingestion: services.NewIngestionService(parser, st),
-		db:        db,
+		Ingestion:   services.NewIngestionService(parser, st, classifications),
+		Review:      services.NewReviewService(st),
+		Corrections: services.NewCorrectionsService(st),
+		db:          db,
 	}, nil
 }
 

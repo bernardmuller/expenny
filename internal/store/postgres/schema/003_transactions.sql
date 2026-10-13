@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS "statement_transaction_classifications" (
       "is_expense" boolean,
       "expense_prob" numeric(4, 3),
       "confidence" numeric(4, 3),
-      "source" varchar(10) NOT NULL, -- rule | classifier | human
+      "source" varchar(10) NOT NULL, -- rule | provider | human
       "classifier_version" varchar(50),
       "classified_at" timestamp,
       "created_at" timestamp NOT NULL,

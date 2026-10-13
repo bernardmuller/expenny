@@ -3,6 +3,8 @@ package categories
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	"expenny.co.za/internal/store/postgres"
 )
 
@@ -12,6 +14,10 @@ type CategoriesRepository struct {
 
 func NewCategoriesRepository(queries *postgres.Queries) *CategoriesRepository {
 	return &CategoriesRepository{queries: queries}
+}
+
+func (r *CategoriesRepository) GetByID(ctx context.Context, id uuid.UUID) (postgres.Category, error) {
+	return r.queries.GetCategoryById(ctx, id)
 }
 
 func (r *CategoriesRepository) List(ctx context.Context) ([]postgres.Category, error) {

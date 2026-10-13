@@ -14,7 +14,7 @@ export function ThemeToggle() {
       aria-checked={isDark}
       aria-label="Dark mode"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      className="bg-muted border-border text-muted-foreground
+      className="bg-input border-border text-muted-foreground
         focus-visible:ring-primary/40 relative h-12 w-full overflow-hidden
         rounded-full border
         [box-shadow:var(--input-groove),0_4px_0_var(--lip-sm)] transition-colors

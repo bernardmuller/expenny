@@ -17,6 +17,17 @@ const (
 	TypeNoul   = "noul"
 )
 
+const (
+	// DefaultBaseURL is the decision API gateway origin.
+	DefaultBaseURL = "https://api.typesafe.ai"
+
+	// DefaultPath is the decisions endpoint.
+	DefaultPath = "/v1/systemone"
+
+	// DefaultModel is the model used when Config.Model is empty.
+	DefaultModel = "jev-1.13.0"
+)
+
 type Config struct {
 	BaseURL string
 	Path    string
@@ -31,6 +42,16 @@ type Client struct {
 }
 
 func New(cfg Config) *Client {
+	if cfg.BaseURL == "" {
+		cfg.BaseURL = DefaultBaseURL
+	}
+	if cfg.Path == "" {
+		cfg.Path = DefaultPath
+	}
+	if cfg.Model == "" {
+		cfg.Model = DefaultModel
+	}
+
 	return &Client{
 		path:  cfg.Path,
 		model: cfg.Model,
