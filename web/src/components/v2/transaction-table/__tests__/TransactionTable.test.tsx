@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 
 import { TransactionTable } from '../TransactionTable'
 import {
@@ -10,8 +11,16 @@ describe('TransactionTable', () => {
   const onFilterChange = vi.fn()
   const onSearchChange = vi.fn()
   const onSelect = vi.fn()
+  const onCategoryChange = vi.fn()
+
+  const categoryOptions = [
+    { label: '🍔 Eating out', value: 'eating-out' },
+    { label: '⛽ Fuel', value: 'fuel' },
+    { label: '🛒 Groceries', value: 'groceries' },
+  ]
 
   beforeEach(() => {
+    vi.clearAllMocks()
     render(
       <TransactionTable
         transactions={mockTransactions}
@@ -21,6 +30,8 @@ describe('TransactionTable', () => {
         shownCount={10}
         search=""
         selectedId="transaction-4"
+        categoryOptions={categoryOptions}
+        onCategoryChange={onCategoryChange}
         onFilterChange={onFilterChange}
         onSearchChange={onSearchChange}
         onSelect={onSelect}
@@ -61,6 +72,36 @@ describe('TransactionTable', () => {
   it('calls onFilterChange when a tab is selected', () => {
     fireEvent.mouseDown(screen.getByRole('tab', { name: /needs review/i }))
     expect(onFilterChange).toHaveBeenCalledWith('review')
+  })
+
+  it('opens the category menu and calls onCategoryChange on select', async () => {
+    const user = userEvent.setup()
+
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Change category for Groceries',
+      }),
+    )
+    await user.click(
+      await screen.findByRole('menuitem', { name: '🍔 Eating out' }),
+    )
+
+    expect(onCategoryChange).toHaveBeenCalledWith('transaction-1', 'eating-out')
+    expect(onSelect).not.toHaveBeenCalled()
+  })
+
+  it('disables the currently selected category in the menu', async () => {
+    const user = userEvent.setup()
+
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Change category for Groceries',
+      }),
+    )
+
+    expect(
+      await screen.findByRole('menuitem', { name: '🛒 Groceries' }),
+    ).toHaveAttribute('data-disabled')
   })
 
   it('calls onSearchChange when searching', () => {

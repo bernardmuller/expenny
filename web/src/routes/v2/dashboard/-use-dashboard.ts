@@ -114,6 +114,26 @@ export function useDashboard() {
     })
   }
 
+  const updateCategory = (transactionId: string, categoryId: string) => {
+    const transaction = transactions.find((t) => t.id === transactionId)
+    if (!transaction) return
+
+    // Table edits reuse the review panel's correction endpoint. Derive the
+    // expense flag the same way `toReviewItem` does.
+    const isExpense =
+      transaction.direction !== 'in' && transaction.counted !== false
+
+    // A correction clears needs_review, so advance the panel when the row
+    // being edited is the one currently under review.
+    if (currentReviewRaw?.id === transactionId) {
+      const nextId = reviewIdAfter(transactionId)
+      setActiveReviewId(nextId)
+      setSelectedId(nextId)
+    }
+
+    correct.mutate({ transactionId, categoryId, isExpense })
+  }
+
   const skipReview = () => {
     if (!currentReviewRaw) return
     const nextId = reviewIdAfter(currentReviewRaw.id)
@@ -284,6 +304,7 @@ export function useDashboard() {
     currentReviewIndex,
     reviewTotal: reviewCount,
     categoryOptions,
+    onCategoryChange: updateCategory,
     confirmReview,
     skipReview,
     onPrevReview: () => moveReview(-1),

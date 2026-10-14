@@ -1,4 +1,4 @@
-import { Search } from 'lucide-react'
+import { Check, Search } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
 
 import { Badge } from '@/components/v2/ui/badge'
@@ -9,6 +9,12 @@ import {
   CardHeader,
 } from '@/components/v2/ui/card'
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/v2/ui/dropdown-menu'
+import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
@@ -18,6 +24,7 @@ import { cn } from '@/lib/utils/cn'
 
 import { categoryTint } from '../shared/categories'
 import { ConfidenceStat } from '../shared/ConfidenceBar'
+import type { CategoryOption } from '../shared/Review.types'
 import type { TransactionFilter } from '../shared/Transaction.types'
 
 export {
@@ -228,6 +235,67 @@ export function CategoryPill({ icon, label, className }: CategoryPillProps) {
       {icon && <span aria-hidden="true">{icon}</span>}
       {label}
     </Badge>
+  )
+}
+
+type CategoryPickerProps = {
+  label: string
+  value: string
+  options: Array<CategoryOption>
+  onChange?: (value: string) => void
+  className?: string
+}
+
+/** Category pill that opens a dropdown to recategorise the transaction. */
+export function CategoryPicker({
+  label,
+  value,
+  options,
+  onChange,
+  className,
+}: CategoryPickerProps) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label={`Change category for ${label}`}
+          // Keep the row from selecting/reviewing when only the category is
+          // being changed.
+          onClick={(event) => event.stopPropagation()}
+          className={cn(
+            `focus-visible:ring-primary/40 cursor-pointer rounded-full
+            transition-transform outline-none focus-visible:ring-[3px]
+            active:translate-y-px`,
+            className,
+          )}
+        >
+          <CategoryPill label={label} />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="start"
+        className="w-52"
+        // Portal events still bubble through the React tree, so keep menu
+        // interactions from selecting the row underneath.
+        onClick={(event) => event.stopPropagation()}
+      >
+        {options.map((option) => {
+          const selected = option.value === value
+
+          return (
+            <DropdownMenuItem
+              key={option.value}
+              disabled={selected}
+              onSelect={() => onChange?.(option.value)}
+            >
+              <Check className={cn('size-4', !selected && 'opacity-0')} />
+              {option.label}
+            </DropdownMenuItem>
+          )
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 

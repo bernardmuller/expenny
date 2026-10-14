@@ -1,5 +1,7 @@
 import type { ComponentType, ReactNode } from 'react'
 
+import type { CategoryOption } from './Review.types'
+
 export type TransactionCategory = {
   id: string
   label: string
@@ -42,4 +44,6 @@ export type TransactionTableProps = TransactionListProps & {
   selectedId?: string
   shownCount?: number
   className?: string
+  categoryOptions?: Array<CategoryOption>
+  onCategoryChange?: (transactionId: string, categoryId: string) => void
 }

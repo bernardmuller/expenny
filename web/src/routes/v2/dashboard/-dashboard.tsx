@@ -165,6 +165,8 @@ function DesktopDashboard({ model }: { model: DashboardModel }) {
               shownCount={model.filteredTransactions.length}
               search={model.search}
               selectedId={model.selectedId ?? undefined}
+              categoryOptions={model.categoryOptions}
+              onCategoryChange={model.onCategoryChange}
               onFilterChange={model.onFilterChange}
               onSearchChange={model.onSearchChange}
               onSelect={model.onSelect}

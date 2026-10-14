@@ -17,6 +17,8 @@ export function TransactionTable({
   selectedId,
   shownCount,
   className,
+  categoryOptions,
+  onCategoryChange,
   onFilterChange,
   onSearchChange,
   onSelect,
@@ -105,9 +107,20 @@ export function TransactionTable({
                     />
                   </TableCell>
                   <TableCell className="px-3">
-                    <TransactionTableCompound.CategoryPill
-                      label={transaction.category.label}
-                    />
+                    {onCategoryChange && categoryOptions ? (
+                      <TransactionTableCompound.CategoryPicker
+                        label={transaction.category.label}
+                        value={transaction.category.id}
+                        options={categoryOptions}
+                        onChange={(categoryId) =>
+                          onCategoryChange(transaction.id, categoryId)
+                        }
+                      />
+                    ) : (
+                      <TransactionTableCompound.CategoryPill
+                        label={transaction.category.label}
+                      />
+                    )}
                   </TableCell>
                   <TableCell className="px-2">
                     {typeof transaction.confidence === 'number' && (
