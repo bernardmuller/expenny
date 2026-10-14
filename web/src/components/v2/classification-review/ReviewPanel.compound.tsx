@@ -3,6 +3,7 @@ import type { ComponentProps, ReactNode } from 'react'
 
 import { Button } from '@/components/v2/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/v2/ui/card'
+import { ScrollArea } from '@/components/v2/ui/scroll-area'
 import { SearchableSelect } from '@/components/v2/ui/searchable-select'
 import { Switch } from '@/components/v2/ui/switch'
 import { cn } from '@/lib/utils/cn'
@@ -121,6 +122,12 @@ function splitOptionLabel(label: string) {
     : { icon: '', label }
 }
 
+// The grid is two columns of 46px tiles with a 10px gap. Keep the first six
+// rows visible and let the rest scroll.
+const CATEGORY_TILE_HEIGHT = 46
+const CATEGORY_GAP = 10
+const CATEGORY_VISIBLE_ROWS = 6
+
 type CategoryGridProps = {
   value: string
   options: Array<CategoryOption>
@@ -134,49 +141,58 @@ export function CategoryGrid({
   onChange,
   className,
 }: CategoryGridProps) {
+  const rows = Math.min(Math.ceil(options.length / 2), CATEGORY_VISIBLE_ROWS)
+  const height =
+    rows > 0
+      ? rows * CATEGORY_TILE_HEIGHT + (rows - 1) * CATEGORY_GAP
+      : undefined
+
   return (
     <CardContent className={cn('px-0', className)}>
-      <div
-        role="group"
-        aria-label="Category"
-        className="grid grid-cols-2 gap-2.5"
-      >
-        {options.map((option) => {
-          const { icon, label } = splitOptionLabel(option.label)
-          const tint = categoryTint(label)
-          const selected = option.value === value
+      <ScrollArea className="pr-1.5" style={height ? { height } : undefined}>
+        <div
+          role="group"
+          aria-label="Category"
+          className="grid grid-cols-2 gap-2.5"
+        >
+          {options.map((option) => {
+            const { icon, label } = splitOptionLabel(option.label)
+            const tint = categoryTint(label)
+            const selected = option.value === value
 
-          return (
-            <button
-              key={option.value}
-              type="button"
-              aria-pressed={selected}
-              onClick={() => onChange?.(option.value)}
-              className={cn(
-                `focus-visible:ring-primary/40 flex h-[46px] items-center gap-2
-                rounded-[14px] border px-3 text-left text-sm font-semibold
-                transition-all outline-none focus-visible:ring-[3px]`,
-                selected
-                  ? 'translate-y-[3px]'
-                  : `bg-raised border-border text-card-foreground
-                    [box-shadow:0_3px_0_var(--lip-sm)]`,
-              )}
-              style={
-                selected
-                  ? {
-                      color: tint.color,
-                      backgroundColor: withAlpha(tint.color, 0.18),
-                      borderColor: withAlpha(tint.color, 0.6),
-                    }
-                  : undefined
-              }
-            >
-              {icon && <span aria-hidden="true">{icon}</span>}
-              {label}
-            </button>
-          )
-        })}
-      </div>
+            return (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => onChange?.(option.value)}
+                className={cn(
+                  `focus-visible:ring-primary/40 flex h-[46px] items-center
+                  gap-2 rounded-[14px] border px-3 text-left text-sm
+                  font-semibold transition-all outline-none
+                  focus-visible:ring-[3px]`,
+                  selected
+                    ? 'translate-y-[3px]'
+                    : `bg-raised border-border text-card-foreground
+                      [box-shadow:0_3px_0_var(--lip-sm)]`,
+                )}
+                style={
+                  selected
+                    ? {
+                        color: tint.color,
+                        backgroundColor: withAlpha(tint.color, 0.18),
+                        borderColor: withAlpha(tint.color, 0.6),
+                      }
+                    : undefined
+                }
+              >
+                {icon && <span aria-hidden="true">{icon}</span>}
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      </ScrollArea>
     </CardContent>
   )
 }

@@ -26,6 +26,7 @@ import { Route as OauthConsentRouteImport } from './routes/oauth.consent'
 import { Route as CategoriesIdRouteImport } from './routes/categories/$id'
 import { Route as BudgetsNewRouteImport } from './routes/budgets/new'
 import { Route as BudgetsIdRouteImport } from './routes/budgets/$id'
+import { Route as V2DashboardIndexRouteImport } from './routes/v2/dashboard/index'
 import { Route as BudgetsIdIndexRouteImport } from './routes/budgets/$id.index'
 import { Route as BudgetsIdExpensesRouteImport } from './routes/budgets/$id.expenses'
 
@@ -115,6 +116,11 @@ const BudgetsIdRoute = BudgetsIdRouteImport.update({
   path: '/budgets/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const V2DashboardIndexRoute = V2DashboardIndexRouteImport.update({
+  id: '/v2/dashboard/',
+  path: '/v2/dashboard/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BudgetsIdIndexRoute = BudgetsIdIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -146,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/v2': typeof V2IndexRoute
   '/budgets/$id/expenses': typeof BudgetsIdExpensesRoute
   '/budgets/$id/': typeof BudgetsIdIndexRoute
+  '/v2/dashboard': typeof V2DashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -165,6 +172,7 @@ export interface FileRoutesByTo {
   '/v2': typeof V2IndexRoute
   '/budgets/$id/expenses': typeof BudgetsIdExpensesRoute
   '/budgets/$id': typeof BudgetsIdIndexRoute
+  '/v2/dashboard': typeof V2DashboardIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -187,6 +195,7 @@ export interface FileRoutesById {
   '/v2/': typeof V2IndexRoute
   '/budgets/$id/expenses': typeof BudgetsIdExpensesRoute
   '/budgets/$id/': typeof BudgetsIdIndexRoute
+  '/v2/dashboard/': typeof V2DashboardIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -210,6 +219,7 @@ export interface FileRouteTypes {
     | '/v2'
     | '/budgets/$id/expenses'
     | '/budgets/$id/'
+    | '/v2/dashboard'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -229,6 +239,7 @@ export interface FileRouteTypes {
     | '/v2'
     | '/budgets/$id/expenses'
     | '/budgets/$id'
+    | '/v2/dashboard'
   id:
     | '__root__'
     | '/'
@@ -250,6 +261,7 @@ export interface FileRouteTypes {
     | '/v2/'
     | '/budgets/$id/expenses'
     | '/budgets/$id/'
+    | '/v2/dashboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -264,6 +276,7 @@ export interface RootRouteChildren {
   CategoriesIdRoute: typeof CategoriesIdRoute
   OauthConsentRoute: typeof OauthConsentRoute
   V2IndexRoute: typeof V2IndexRoute
+  V2DashboardIndexRoute: typeof V2DashboardIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -387,6 +400,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BudgetsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/v2/dashboard/': {
+      id: '/v2/dashboard/'
+      path: '/v2/dashboard'
+      fullPath: '/v2/dashboard'
+      preLoaderRoute: typeof V2DashboardIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/budgets/$id/': {
       id: '/budgets/$id/'
       path: '/'
@@ -451,6 +471,7 @@ const rootRouteChildren: RootRouteChildren = {
   CategoriesIdRoute: CategoriesIdRoute,
   OauthConsentRoute: OauthConsentRoute,
   V2IndexRoute: V2IndexRoute,
+  V2DashboardIndexRoute: V2DashboardIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

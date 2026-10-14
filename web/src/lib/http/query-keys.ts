@@ -43,6 +43,14 @@ export const queryKeys = {
     create: () => ['transactions', 'create'] as const,
     delete: () => ['transactions', 'delete'] as const,
   },
+  statements: {
+    all: ['statements'] as const,
+    transactions: ['statements', 'transactions'] as const,
+    categories: ['statements', 'categories'] as const,
+    ingest: () => ['statements', 'ingest'] as const,
+    correct: () => ['statements', 'correct'] as const,
+  },
+  me: ['v2', 'me'] as const,
   recurringExpenses: {
     all: ['recurring-expenses'] as const,
     byUser: (userId: string) => ['recurring-expenses', 'user', userId] as const,

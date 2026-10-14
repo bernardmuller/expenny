@@ -191,13 +191,11 @@ export function MerchantCell({
       >
         {emoji}
       </div>
-      <div className="min-w-0">
-        <p className="max-w-40 truncate text-[15px] font-semibold">
-          {description}
-        </p>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[15px] font-semibold">{description}</p>
         {originalDescription && (
           <p
-            className="text-muted-foreground font-statement max-w-45 truncate
+            className="text-muted-foreground font-statement truncate
               text-[11.5px]"
           >
             {originalDescription}

@@ -28,6 +28,14 @@ export function ThemeToggle() {
           isDark ? 'rotate-0 opacity-100' : 'rotate-90 opacity-0',
         )}
       />
+      <Moon
+        aria-hidden="true"
+        className={cn(
+          `absolute top-1/2 right-4 size-4.5 -translate-y-1/2 transition-all
+          duration-300 ease-out`,
+          isDark ? 'rotate-0 opacity-0' : '-rotate-90 opacity-100',
+        )}
+      />
       <span
         aria-hidden="true"
         className={cn(

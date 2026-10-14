@@ -38,7 +38,7 @@ export function Root({ className, ...props }: RootProps) {
       collapsible="icon"
       variant="floating"
       className={cn(
-        `bg-background [&>[data-slot=sidebar-inner]]:border-border
+        `bg-background py-6 [&>[data-slot=sidebar-inner]]:border-border
         [&>[data-slot=sidebar-inner]]:bg-card
         [&>[data-slot=sidebar-inner]]:rounded-[28px]
         [&>[data-slot=sidebar-inner]]:shadow-[0_6px_0_var(--lip)]`,
@@ -298,7 +298,7 @@ type RailProps = ComponentProps<typeof SidebarRail>
 export function Rail({ className, ...props }: RailProps) {
   return (
     <SidebarRail
-      className={cn('hover:after:bg-border after:bg-border/40', className)}
+      className={cn('hover:after:bg-border/40', className)}
       {...props}
     />
   )

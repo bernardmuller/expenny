@@ -41,4 +41,5 @@ export type TransactionTableProps = TransactionListProps & {
   onSearchChange?: (value: string) => void
   selectedId?: string
   shownCount?: number
+  className?: string
 }

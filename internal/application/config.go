@@ -9,14 +9,15 @@ import (
 )
 
 const (
-	keyClassifierAPI     = "CLASSIFIER_API_KEY"
-	keyClassifierBaseURL = "CLASSIFIER_BASE_URL"
-	keyClassifierModel   = "CLASSIFIER_MODEL"
-	keyDatabaseURL       = "DATABASE_URL"
-	keyAuthSecret        = "AUTH_SECRET"
+	keyClassifierAPI       = "CLASSIFIER_API_KEY"
+	keyClassifierAPILegacy = "JEV_API_KEY"
+	keyClassifierBaseURL   = "CLASSIFIER_BASE_URL"
+	keyClassifierModel     = "CLASSIFIER_MODEL"
+	keyDatabaseURL         = "DATABASE_URL"
+	keyAuthSecret          = "AUTH_SECRET"
 )
 
-var keys = []string{keyClassifierAPI, keyDatabaseURL, keyAuthSecret}
+var keys = []string{keyDatabaseURL, keyAuthSecret}
 
 func missingEnvs(keys []string) []string {
 	var missing []string
@@ -43,8 +44,18 @@ func CreateConfig() (Config, error) {
 		return Config{}, fmt.Errorf("missing required env vars: %s", strings.Join(missing, ", "))
 	}
 
+	// The decision API key was once wired under JEV_API_KEY; keep accepting it
+	// so existing .env files do not have to be renamed.
+	classifierKey := os.Getenv(keyClassifierAPI)
+	if classifierKey == "" {
+		classifierKey = os.Getenv(keyClassifierAPILegacy)
+	}
+	if classifierKey == "" {
+		return Config{}, fmt.Errorf("missing required env var: %s (or %s)", keyClassifierAPI, keyClassifierAPILegacy)
+	}
+
 	return Config{
-		ClassifierApiKey:  os.Getenv(keyClassifierAPI),
+		ClassifierApiKey:  classifierKey,
 		ClassifierBaseURL: os.Getenv(keyClassifierBaseURL),
 		ClassifierModel:   os.Getenv(keyClassifierModel),
 		DbUrl:             os.Getenv(keyDatabaseURL),

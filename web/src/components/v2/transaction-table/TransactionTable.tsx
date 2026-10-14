@@ -16,13 +16,14 @@ export function TransactionTable({
   search,
   selectedId,
   shownCount,
+  className,
   onFilterChange,
   onSearchChange,
   onSelect,
   linkProvider: LinkProvider,
 }: TransactionTableProps) {
   return (
-    <TransactionTableCompound.Root>
+    <TransactionTableCompound.Root className={cn('h-full min-h-0', className)}>
       <TransactionTableCompound.Toolbar>
         <TransactionTableCompound.FilterTabs
           filters={filters}
@@ -34,28 +35,32 @@ export function TransactionTable({
           onChange={onSearchChange}
         />
       </TransactionTableCompound.Toolbar>
-      <TransactionTableCompound.Content>
+      <TransactionTableCompound.Content
+        className="min-h-0 flex-1 overflow-auto
+          [&>[data-slot=table-container]]:overflow-visible"
+      >
         <TransactionTableCompound.Table
           className="table-fixed border-separate border-spacing-0"
         >
           <TransactionTableCompound.TableHeader>
             <TransactionTableCompound.TableRow
-              className="border-transparent hover:bg-transparent"
+              className="bg-card hover:bg-card sticky top-0 z-10
+                border-transparent"
             >
-              <TableHead className={cn(headClassName, 'w-13 pr-0 pl-3')}>
+              <TableHead className={cn(headClassName, 'w-18 pr-0 pl-3')}>
                 Date
               </TableHead>
               <TableHead className={headClassName}>Description</TableHead>
-              <TableHead className={cn(headClassName, 'w-31')}>
+              <TableHead className={cn(headClassName, 'w-40')}>
                 Category
               </TableHead>
-              <TableHead className={cn(headClassName, 'w-24 px-2')}>
+              <TableHead className={cn(headClassName, 'w-32 px-2')}>
                 Confidence
               </TableHead>
-              <TableHead className={cn(headClassName, 'w-26 text-right')}>
+              <TableHead className={cn(headClassName, 'w-32 text-right')}>
                 Amount
               </TableHead>
-              <TableHead className={cn(headClassName, 'w-26 px-2 text-right')}>
+              <TableHead className={cn(headClassName, 'w-30 px-2 text-right')}>
                 Balance
               </TableHead>
             </TransactionTableCompound.TableRow>
@@ -85,7 +90,10 @@ export function TransactionTable({
                   )}
                   onClick={() => onSelect?.(transaction.id)}
                 >
-                  <TableCell className="text-muted-foreground pr-0 pl-3 text-sm">
+                  <TableCell
+                    className="text-muted-foreground pr-0 pl-3 text-sm
+                      whitespace-nowrap"
+                  >
                     {transaction.date}
                   </TableCell>
                   <TableCell className="pr-3 pl-0">
@@ -110,7 +118,8 @@ export function TransactionTable({
                   </TableCell>
                   <TableCell
                     className={cn(
-                      'font-display px-2 text-right text-base font-semibold',
+                      `font-display px-2 text-right text-base font-semibold
+                      whitespace-nowrap tabular-nums`,
                       isIncome && 'text-primary',
                       isNotCounted && 'text-muted-foreground',
                     )}
@@ -126,8 +135,8 @@ export function TransactionTable({
                     )}
                   </TableCell>
                   <TableCell
-                    className="text-muted-foreground px-3 pr-3 text-right
-                      text-sm"
+                    className="text-muted-foreground px-3 text-right text-sm
+                      whitespace-nowrap tabular-nums"
                   >
                     {transaction.balance ?? '—'}
                   </TableCell>

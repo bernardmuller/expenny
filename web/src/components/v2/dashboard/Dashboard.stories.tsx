@@ -118,7 +118,7 @@ function DesktopDashboard() {
         onUpload={() => {}}
       />
       <main className="min-w-0 flex-1">
-        <div className="mx-auto max-w-[1160px] space-y-6 px-8 pt-8 pb-16">
+        <div className="space-y-6 px-8 pt-8 pb-16">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h1
@@ -152,7 +152,7 @@ function DesktopDashboard() {
 
           <div
             className="grid items-start gap-5
-              lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
+              md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
           >
             <TransactionTable
               transactions={transactions}
