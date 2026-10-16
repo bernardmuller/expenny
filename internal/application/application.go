@@ -16,9 +16,13 @@ import (
 )
 
 type Application struct {
-	Ingestion   *services.IngestionService
-	Review      *services.ReviewService
-	Corrections *services.CorrectionsService
+	Ingestion       *services.IngestionService
+	Classifications *services.ClassificationsService
+	Review          *services.ReviewService
+	Corrections     *services.CorrectionsService
+	Budget          *services.BudgetService
+	Categories      *services.CategoryService
+	CategoryBudgets *services.CategoryBudgetService
 
 	db *sql.DB
 }
@@ -46,10 +50,14 @@ func CreateApplication(cfg Config) (*Application, error) {
 	classifications := services.NewClassificationsService(st, provider)
 
 	return &Application{
-		Ingestion:   services.NewIngestionService(parser, st, classifications),
-		Review:      services.NewReviewService(st),
-		Corrections: services.NewCorrectionsService(st),
-		db:          db,
+		Ingestion:       services.NewIngestionService(parser, st, classifications),
+		Classifications: classifications,
+		Review:          services.NewReviewService(st),
+		Corrections:     services.NewCorrectionsService(st),
+		Budget:          services.NewBudgetService(st),
+		Categories:      services.NewCategoryService(st),
+		CategoryBudgets: services.NewCategoryBudgetService(st),
+		db:              db,
 	}, nil
 }
 

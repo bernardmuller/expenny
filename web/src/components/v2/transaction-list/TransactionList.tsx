@@ -37,7 +37,6 @@ export function TransactionList({
         {transactions.map((transaction) => (
           <TransactionListCompound.Row
             key={transaction.id}
-            dimmed={transaction.counted === false}
             onClick={() => onSelect?.(transaction.id)}
           >
             <TransactionListCompound.RowEmoji
@@ -60,13 +59,8 @@ export function TransactionList({
             </TransactionListCompound.RowContent>
             <TransactionListCompound.RowAmount
               amount={transaction.amount}
-              muted={transaction.counted === false}
               emphasis={transaction.direction === 'in'}
-              meta={
-                transaction.counted === false
-                  ? `Not counted · ${transaction.date}`
-                  : transaction.date
-              }
+              meta={transaction.date}
             />
           </TransactionListCompound.Row>
         ))}

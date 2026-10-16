@@ -1,12 +1,22 @@
+import { ArrowLeftRight } from 'lucide-react'
+import { useEffect, useRef } from 'react'
+import type { UIEventHandler } from 'react'
+
 import { Button } from '@/components/v2/ui/button'
+import { Spinner } from '@/components/v2/ui/spinner'
 import { TableCell, TableHead } from '@/components/v2/ui/table'
 import { cn } from '@/lib/utils/cn'
 
+import { filterCategoryOptionsByDirection } from '../shared/categories'
+import { PanelHeader } from '../shared/PanelHeader'
 import * as TransactionTableCompound from './TransactionTable.compound'
 import type { TransactionTableProps } from '../shared/Transaction.types'
 
 const headClassName =
   'text-muted-foreground h-9 px-3 text-xs font-semibold tracking-[0.06em] uppercase'
+
+/** Distance from the bottom, in pixels, that triggers the next page. */
+const LOAD_MORE_THRESHOLD = 240
 
 export function TransactionTable({
   transactions,
@@ -22,24 +32,55 @@ export function TransactionTable({
   onFilterChange,
   onSearchChange,
   onSelect,
+  hasMore,
+  isLoadingMore,
+  onLoadMore,
   linkProvider: LinkProvider,
 }: TransactionTableProps) {
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  const handleScroll: UIEventHandler<HTMLDivElement> = (event) => {
+    if (!hasMore || isLoadingMore || !onLoadMore) return
+    const element = event.currentTarget
+    const distanceToBottom =
+      element.scrollHeight - element.scrollTop - element.clientHeight
+    if (distanceToBottom <= LOAD_MORE_THRESHOLD) onLoadMore()
+  }
+
+  // A short first page on a tall screen never scrolls, so top it up until the
+  // table overflows or there is nothing left to fetch.
+  useEffect(() => {
+    if (!hasMore || isLoadingMore || !onLoadMore) return
+    const element = contentRef.current
+    if (element && element.scrollHeight <= element.clientHeight) onLoadMore()
+  }, [hasMore, isLoadingMore, onLoadMore, transactions.length])
+
   return (
     <TransactionTableCompound.Root className={cn('h-full min-h-0', className)}>
-      <TransactionTableCompound.Toolbar>
-        <TransactionTableCompound.FilterTabs
-          filters={filters}
-          value={activeFilter}
-          onValueChange={onFilterChange}
-        />
-        <TransactionTableCompound.SearchField
-          value={search}
-          onChange={onSearchChange}
-        />
-      </TransactionTableCompound.Toolbar>
+      <PanelHeader
+        icon={<ArrowLeftRight className="size-4.5 text-[#5bb5ff]" />}
+        title="Transactions"
+        description="Every classified statement row. Select one to see its details."
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            <TransactionTableCompound.SearchField
+              value={search}
+              onChange={onSearchChange}
+            />
+            <TransactionTableCompound.FilterMenu
+              filters={filters}
+              value={activeFilter}
+              onValueChange={onFilterChange}
+            />
+          </div>
+        }
+        className="pb-4"
+      />
       <TransactionTableCompound.Content
+        ref={contentRef}
         className="min-h-0 flex-1 overflow-auto
           [&>[data-slot=table-container]]:overflow-visible"
+        onScroll={handleScroll}
       >
         <TransactionTableCompound.Table
           className="table-fixed border-separate border-spacing-0"
@@ -71,7 +112,6 @@ export function TransactionTable({
             {transactions.map((transaction) => {
               const isSelected = transaction.id === selectedId
               const isIncome = transaction.direction === 'in'
-              const isNotCounted = transaction.counted === false
 
               return (
                 <TransactionTableCompound.TableRow
@@ -111,9 +151,13 @@ export function TransactionTable({
                       <TransactionTableCompound.CategoryPicker
                         label={transaction.category.label}
                         value={transaction.category.id}
-                        options={categoryOptions}
-                        onChange={(categoryId) =>
-                          onCategoryChange(transaction.id, categoryId)
+                        groupKey={transaction.category.group}
+                        options={filterCategoryOptionsByDirection(
+                          categoryOptions,
+                          transaction.direction === 'in',
+                        )}
+                        onChange={(categoryId, groupKey) =>
+                          onCategoryChange(transaction.id, categoryId, groupKey)
                         }
                       />
                     ) : (
@@ -134,18 +178,9 @@ export function TransactionTable({
                       `font-display px-2 text-right text-base font-semibold
                       whitespace-nowrap tabular-nums`,
                       isIncome && 'text-primary',
-                      isNotCounted && 'text-muted-foreground',
                     )}
                   >
                     {transaction.amount}
-                    {isNotCounted && (
-                      <span
-                        className="text-muted-foreground block text-[11.5px]
-                          font-normal"
-                      >
-                        Not counted
-                      </span>
-                    )}
                   </TableCell>
                   <TableCell
                     className="text-muted-foreground px-3 text-right text-sm
@@ -156,6 +191,19 @@ export function TransactionTable({
                 </TransactionTableCompound.TableRow>
               )
             })}
+            {isLoadingMore && (
+              <TransactionTableCompound.TableRow className="hover:bg-transparent">
+                <TableCell
+                  colSpan={6}
+                  className="text-muted-foreground h-14 text-center text-sm"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <Spinner className="size-4" />
+                    Loading more transactions…
+                  </span>
+                </TableCell>
+              </TransactionTableCompound.TableRow>
+            )}
           </TransactionTableCompound.TableBody>
         </TransactionTableCompound.Table>
       </TransactionTableCompound.Content>

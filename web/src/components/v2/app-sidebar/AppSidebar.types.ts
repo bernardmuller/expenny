@@ -20,4 +20,5 @@ export type AppSidebarProps = {
   defaultOpen?: boolean
   onNavigate?: (id: string) => void
   onUpload?: () => void
+  onPaste?: () => void
 }

@@ -8,6 +8,8 @@ export function FlatCurrentBudget({
   spentAmount,
   spentPercentage,
   daysLeft,
+  onEdit,
+  onClick,
   linkProvider: LinkProvider,
 }: FlatCurrentBudgetProps) {
   return (
@@ -28,13 +30,14 @@ export function FlatCurrentBudget({
             </span>
           )}
         </FlatCurrentBudgetCompound.Title>
-        <FlatCurrentBudgetCompound.Period>
+        <FlatCurrentBudgetCompound.Period onEdit={onEdit}>
           {budgetName}
         </FlatCurrentBudgetCompound.Period>
       </FlatCurrentBudgetCompound.Info>
       <FlatCurrentBudgetCompound.Remaining
         amount={currentAmount}
         of={startingAmount}
+        onClick={onClick}
       />
       <FlatCurrentBudgetCompound.Spent
         amount={spentAmount}

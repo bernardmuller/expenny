@@ -24,7 +24,6 @@ const meta = {
     displayName: 'Takealot',
     categoryId: 'shopping',
     categoryOptions: mockCategoryOptions,
-    countsTowardBudget: true,
   },
 } satisfies Meta<typeof ReviewPanel>
 

@@ -7,6 +7,7 @@ export function MobileNav({
   activeId,
   onNavigate,
   onUpload,
+  onPaste,
 }: MobileNavProps) {
   return (
     <>
@@ -16,6 +17,7 @@ export function MobileNav({
         activeId={activeId}
         onNavigate={onNavigate}
         onUpload={onUpload}
+        onPaste={onPaste}
       />
     </>
   )

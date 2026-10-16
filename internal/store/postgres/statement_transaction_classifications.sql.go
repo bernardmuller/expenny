@@ -13,7 +13,7 @@ import (
 )
 
 const getAllClassificationsByUserID = `-- name: GetAllClassificationsByUserID :many
-SELECT c.id, c.statement_transaction_id, c.category_id, c.is_expense, c.expense_prob, c.confidence, c.source, c.classifier_version, c.classified_at, c.created_at, c.updated_at
+SELECT c.id, c.statement_transaction_id, c.category_id, c.is_expense, c.expense_prob, c.confidence, c.source, c.classifier_version, c.classified_at, c.created_at, c.updated_at, c.group_key
 FROM statement_transaction_classifications c
 JOIN statement_transactions st ON st.id = c.statement_transaction_id
 WHERE st.user_id = $1
@@ -40,6 +40,7 @@ func (q *Queries) GetAllClassificationsByUserID(ctx context.Context, userID uuid
 			&i.ClassifiedAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.GroupKey,
 		); err != nil {
 			return nil, err
 		}
@@ -63,6 +64,7 @@ INSERT INTO statement_transaction_classifications (
     expense_prob,
     confidence,
     source,
+    group_key,
     classifier_version,
     classified_at,
     created_at,
@@ -77,6 +79,7 @@ INSERT INTO statement_transaction_classifications (
     $7,
     $8,
     $9,
+    $10,
     now(),
     now()
 )
@@ -86,11 +89,12 @@ ON CONFLICT (statement_transaction_id) DO UPDATE SET
      expense_prob       = EXCLUDED.expense_prob,
      confidence         = EXCLUDED.confidence,
      source             = EXCLUDED.source,
+     group_key          = EXCLUDED.group_key,
      classifier_version = EXCLUDED.classifier_version,
      classified_at      = EXCLUDED.classified_at,
      updated_at         = now()
 WHERE statement_transaction_classifications.source <> 'human'
-RETURNING id, statement_transaction_id, category_id, is_expense, expense_prob, confidence, source, classifier_version, classified_at, created_at, updated_at
+RETURNING id, statement_transaction_id, category_id, is_expense, expense_prob, confidence, source, classifier_version, classified_at, created_at, updated_at, group_key
 `
 
 type UpsertClassificationParams struct {
@@ -101,6 +105,7 @@ type UpsertClassificationParams struct {
 	ExpenseProb            sql.NullString
 	Confidence             sql.NullString
 	Source                 string
+	GroupKey               sql.NullString
 	ClassifierVersion      sql.NullString
 	ClassifiedAt           sql.NullTime
 }
@@ -114,6 +119,7 @@ func (q *Queries) UpsertClassification(ctx context.Context, arg UpsertClassifica
 		arg.ExpenseProb,
 		arg.Confidence,
 		arg.Source,
+		arg.GroupKey,
 		arg.ClassifierVersion,
 		arg.ClassifiedAt,
 	)
@@ -130,6 +136,7 @@ func (q *Queries) UpsertClassification(ctx context.Context, arg UpsertClassifica
 		&i.ClassifiedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.GroupKey,
 	)
 	return i, err
 }
@@ -143,6 +150,7 @@ INSERT INTO statement_transaction_classifications (
     expense_prob,
     confidence,
     source,
+    group_key,
     classifier_version,
     classified_at,
     created_at,
@@ -157,6 +165,7 @@ INSERT INTO statement_transaction_classifications (
     $7,
     $8,
     $9,
+    $10,
     now(),
     now()
 )
@@ -166,10 +175,11 @@ ON CONFLICT (statement_transaction_id) DO UPDATE SET
      expense_prob       = EXCLUDED.expense_prob,
      confidence         = EXCLUDED.confidence,
      source             = EXCLUDED.source,
+     group_key          = EXCLUDED.group_key,
      classifier_version = EXCLUDED.classifier_version,
      classified_at      = EXCLUDED.classified_at,
      updated_at         = now()
-RETURNING id, statement_transaction_id, category_id, is_expense, expense_prob, confidence, source, classifier_version, classified_at, created_at, updated_at
+RETURNING id, statement_transaction_id, category_id, is_expense, expense_prob, confidence, source, classifier_version, classified_at, created_at, updated_at, group_key
 `
 
 type UpsertHumanClassificationParams struct {
@@ -180,6 +190,7 @@ type UpsertHumanClassificationParams struct {
 	ExpenseProb            sql.NullString
 	Confidence             sql.NullString
 	Source                 string
+	GroupKey               sql.NullString
 	ClassifierVersion      sql.NullString
 	ClassifiedAt           sql.NullTime
 }
@@ -193,6 +204,7 @@ func (q *Queries) UpsertHumanClassification(ctx context.Context, arg UpsertHuman
 		arg.ExpenseProb,
 		arg.Confidence,
 		arg.Source,
+		arg.GroupKey,
 		arg.ClassifierVersion,
 		arg.ClassifiedAt,
 	)
@@ -209,6 +221,7 @@ func (q *Queries) UpsertHumanClassification(ctx context.Context, arg UpsertHuman
 		&i.ClassifiedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.GroupKey,
 	)
 	return i, err
 }

@@ -21,4 +21,5 @@ export type MobileNavProps = {
   activeId: string
   onNavigate?: (id: string) => void
   onUpload?: () => void
+  onPaste?: () => void
 }

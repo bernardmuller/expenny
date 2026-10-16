@@ -1,12 +1,21 @@
 include .env
 
+# goose uses pgx, which prepares statements by default. Supabase's pooler
+# (PgBouncer in transaction mode) does not play well with that, so migrations
+# force the simple protocol. The app does the equivalent with
+# binary_parameters=yes in poolerSafeURL.
+GOOSE_DATABASE_URL = $(if $(findstring ?,$(DATABASE_URL)),$(DATABASE_URL)&default_query_exec_mode=simple_protocol,$(DATABASE_URL)?default_query_exec_mode=simple_protocol)
+
 db_migrate_up:
 	@echo "Migrating up..."
-	@cd ./internal/store/postgres/schema &&	goose postgres ${DATABASE_URL} up
+	@cd ./internal/store/postgres/schema && goose postgres "$(GOOSE_DATABASE_URL)" up
 
 db_migrate_down:
 	@echo "Migrating down..."
-	@cd ./internal/store/postgres/schema &&	goose postgres ${DATABASE_URL} down
+	@cd ./internal/store/postgres/schema && goose postgres "$(GOOSE_DATABASE_URL)" down
+
+db_status:
+	@cd ./internal/store/postgres/schema && goose postgres "$(GOOSE_DATABASE_URL)" status
 
 db_generate_queries:
 	@echo "Generating queries..."

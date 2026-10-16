@@ -3,7 +3,7 @@ import { Moon, Sun } from 'lucide-react'
 import { useTheme } from '@/components/providers/ThemeProvider'
 import { cn } from '@/lib/utils/cn'
 
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme()
   const isDark = theme === 'dark'
 
@@ -14,11 +14,14 @@ export function ThemeToggle() {
       aria-checked={isDark}
       aria-label="Dark mode"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      className="bg-input border-border text-muted-foreground
-        focus-visible:ring-primary/40 relative h-12 w-full overflow-hidden
-        rounded-full border
+      className={cn(
+        `bg-input border-border text-muted-foreground
+        focus-visible:ring-primary/40 relative h-12 w-full min-w-22
+        overflow-hidden rounded-full border
         [box-shadow:var(--input-groove),0_4px_0_var(--lip-sm)] transition-colors
-        duration-300 outline-none focus-visible:ring-[3px]"
+        duration-300 outline-none focus-visible:ring-[3px]`,
+        className,
+      )}
     >
       <Sun
         aria-hidden="true"

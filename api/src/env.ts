@@ -36,6 +36,9 @@ const EnvSchema = z.object({
 	GOOGLE_CLIENT_SECRET: z.string().optional(),
 	GOOGLE_REDIRECT_URI: z.url().optional(),
 	MCP_RESOURCE_URL: z.string().url().optional(),
+	// The single account this private deployment serves. Falls back to the
+	// built-in address when unset.
+	ALLOWED_EMAIL: z.string().optional(),
 });
 
 export type env = z.infer<typeof EnvSchema>;

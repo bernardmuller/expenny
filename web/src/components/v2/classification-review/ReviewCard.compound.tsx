@@ -12,6 +12,7 @@ import {
 import { cn } from '@/lib/utils/cn'
 
 import { categoryTint } from '../shared/categories'
+import { useCategoryColor } from '../shared/CategoryColors'
 import { ConfidenceStat } from '../shared/ConfidenceBar'
 
 type RootProps = ComponentProps<typeof Card>
@@ -108,7 +109,7 @@ export function Merchant({
   size = 'sm',
   className,
 }: MerchantProps) {
-  const tint = categoryTint(category)
+  const tint = categoryTint(category, useCategoryColor(category))
   const isMedium = size === 'md'
 
   return (
@@ -271,7 +272,7 @@ type CategoryPillProps = {
 }
 
 export function CategoryPill({ icon, label, className }: CategoryPillProps) {
-  const tint = categoryTint(label)
+  const tint = categoryTint(label, useCategoryColor(label))
 
   return (
     <span

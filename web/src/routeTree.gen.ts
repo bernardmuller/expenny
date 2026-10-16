@@ -9,50 +9,29 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as RegisterRouteImport } from './routes/register'
-import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as V2IndexRouteImport } from './routes/v2/index'
-import { Route as ProfileIndexRouteImport } from './routes/profile.index'
-import { Route as ProfileRecurringExpensesRouteImport } from './routes/profile.recurring-expenses'
-import { Route as ProfilePreferencesRouteImport } from './routes/profile.preferences'
-import { Route as ProfilePennyBotRouteImport } from './routes/profile.penny-bot'
-import { Route as ProfileNotificationsRouteImport } from './routes/profile.notifications'
-import { Route as ProfileMcpTokenRouteImport } from './routes/profile.mcp-token'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as OauthConsentRouteImport } from './routes/oauth.consent'
-import { Route as CategoriesIdRouteImport } from './routes/categories/$id'
-import { Route as BudgetsNewRouteImport } from './routes/budgets/new'
-import { Route as BudgetsIdRouteImport } from './routes/budgets/$id'
-import { Route as V2DashboardIndexRouteImport } from './routes/v2/dashboard/index'
-import { Route as BudgetsIdIndexRouteImport } from './routes/budgets/$id.index'
-import { Route as BudgetsIdExpensesRouteImport } from './routes/budgets/$id.expenses'
+import { Route as ArchiveRegisterRouteImport } from './routes/archive/register'
+import { Route as ArchiveProfileRouteImport } from './routes/archive/profile'
+import { Route as ArchiveOnboardingRouteImport } from './routes/archive/onboarding'
+import { Route as ArchiveDashboardRouteImport } from './routes/archive/dashboard'
+import { Route as ArchiveProfileIndexRouteImport } from './routes/archive/profile.index'
+import { Route as ArchiveProfileRecurringExpensesRouteImport } from './routes/archive/profile.recurring-expenses'
+import { Route as ArchiveProfilePreferencesRouteImport } from './routes/archive/profile.preferences'
+import { Route as ArchiveProfilePennyBotRouteImport } from './routes/archive/profile.penny-bot'
+import { Route as ArchiveProfileNotificationsRouteImport } from './routes/archive/profile.notifications'
+import { Route as ArchiveProfileMcpTokenRouteImport } from './routes/archive/profile.mcp-token'
+import { Route as ArchiveCategoriesIdRouteImport } from './routes/archive/categories/$id'
+import { Route as ArchiveBudgetsNewRouteImport } from './routes/archive/budgets/new'
+import { Route as ArchiveBudgetsIdRouteImport } from './routes/archive/budgets/$id'
+import { Route as ArchiveBudgetsIdIndexRouteImport } from './routes/archive/budgets/$id.index'
+import { Route as ArchiveBudgetsIdExpensesRouteImport } from './routes/archive/budgets/$id.expenses'
 
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OnboardingRoute = OnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -60,260 +39,243 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const V2IndexRoute = V2IndexRouteImport.update({
-  id: '/v2/',
-  path: '/v2/',
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/dashboard/',
+  path: '/dashboard/',
   getParentRoute: () => rootRouteImport,
-} as any)
-const ProfileIndexRoute = ProfileIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => ProfileRoute,
-} as any)
-const ProfileRecurringExpensesRoute =
-  ProfileRecurringExpensesRouteImport.update({
-    id: '/recurring-expenses',
-    path: '/recurring-expenses',
-    getParentRoute: () => ProfileRoute,
-  } as any)
-const ProfilePreferencesRoute = ProfilePreferencesRouteImport.update({
-  id: '/preferences',
-  path: '/preferences',
-  getParentRoute: () => ProfileRoute,
-} as any)
-const ProfilePennyBotRoute = ProfilePennyBotRouteImport.update({
-  id: '/penny-bot',
-  path: '/penny-bot',
-  getParentRoute: () => ProfileRoute,
-} as any)
-const ProfileNotificationsRoute = ProfileNotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
-  getParentRoute: () => ProfileRoute,
-} as any)
-const ProfileMcpTokenRoute = ProfileMcpTokenRouteImport.update({
-  id: '/mcp-token',
-  path: '/mcp-token',
-  getParentRoute: () => ProfileRoute,
 } as any)
 const OauthConsentRoute = OauthConsentRouteImport.update({
   id: '/oauth/consent',
   path: '/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CategoriesIdRoute = CategoriesIdRouteImport.update({
-  id: '/categories/$id',
-  path: '/categories/$id',
+const ArchiveRegisterRoute = ArchiveRegisterRouteImport.update({
+  id: '/archive/register',
+  path: '/archive/register',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BudgetsNewRoute = BudgetsNewRouteImport.update({
-  id: '/budgets/new',
-  path: '/budgets/new',
+const ArchiveProfileRoute = ArchiveProfileRouteImport.update({
+  id: '/archive/profile',
+  path: '/archive/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BudgetsIdRoute = BudgetsIdRouteImport.update({
-  id: '/budgets/$id',
-  path: '/budgets/$id',
+const ArchiveOnboardingRoute = ArchiveOnboardingRouteImport.update({
+  id: '/archive/onboarding',
+  path: '/archive/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
-const V2DashboardIndexRoute = V2DashboardIndexRouteImport.update({
-  id: '/v2/dashboard/',
-  path: '/v2/dashboard/',
+const ArchiveDashboardRoute = ArchiveDashboardRouteImport.update({
+  id: '/archive/dashboard',
+  path: '/archive/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BudgetsIdIndexRoute = BudgetsIdIndexRouteImport.update({
+const ArchiveProfileIndexRoute = ArchiveProfileIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => BudgetsIdRoute,
+  getParentRoute: () => ArchiveProfileRoute,
 } as any)
-const BudgetsIdExpensesRoute = BudgetsIdExpensesRouteImport.update({
-  id: '/expenses',
-  path: '/expenses',
-  getParentRoute: () => BudgetsIdRoute,
+const ArchiveProfileRecurringExpensesRoute =
+  ArchiveProfileRecurringExpensesRouteImport.update({
+    id: '/recurring-expenses',
+    path: '/recurring-expenses',
+    getParentRoute: () => ArchiveProfileRoute,
+  } as any)
+const ArchiveProfilePreferencesRoute =
+  ArchiveProfilePreferencesRouteImport.update({
+    id: '/preferences',
+    path: '/preferences',
+    getParentRoute: () => ArchiveProfileRoute,
+  } as any)
+const ArchiveProfilePennyBotRoute = ArchiveProfilePennyBotRouteImport.update({
+  id: '/penny-bot',
+  path: '/penny-bot',
+  getParentRoute: () => ArchiveProfileRoute,
 } as any)
+const ArchiveProfileNotificationsRoute =
+  ArchiveProfileNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => ArchiveProfileRoute,
+  } as any)
+const ArchiveProfileMcpTokenRoute = ArchiveProfileMcpTokenRouteImport.update({
+  id: '/mcp-token',
+  path: '/mcp-token',
+  getParentRoute: () => ArchiveProfileRoute,
+} as any)
+const ArchiveCategoriesIdRoute = ArchiveCategoriesIdRouteImport.update({
+  id: '/archive/categories/$id',
+  path: '/archive/categories/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArchiveBudgetsNewRoute = ArchiveBudgetsNewRouteImport.update({
+  id: '/archive/budgets/new',
+  path: '/archive/budgets/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArchiveBudgetsIdRoute = ArchiveBudgetsIdRouteImport.update({
+  id: '/archive/budgets/$id',
+  path: '/archive/budgets/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArchiveBudgetsIdIndexRoute = ArchiveBudgetsIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ArchiveBudgetsIdRoute,
+} as any)
+const ArchiveBudgetsIdExpensesRoute =
+  ArchiveBudgetsIdExpensesRouteImport.update({
+    id: '/expenses',
+    path: '/expenses',
+    getParentRoute: () => ArchiveBudgetsIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
-  '/onboarding': typeof OnboardingRoute
-  '/profile': typeof ProfileRouteWithChildren
-  '/register': typeof RegisterRoute
-  '/budgets/$id': typeof BudgetsIdRouteWithChildren
-  '/budgets/new': typeof BudgetsNewRoute
-  '/categories/$id': typeof CategoriesIdRoute
+  '/archive/dashboard': typeof ArchiveDashboardRoute
+  '/archive/onboarding': typeof ArchiveOnboardingRoute
+  '/archive/profile': typeof ArchiveProfileRouteWithChildren
+  '/archive/register': typeof ArchiveRegisterRoute
   '/oauth/consent': typeof OauthConsentRoute
-  '/profile/mcp-token': typeof ProfileMcpTokenRoute
-  '/profile/notifications': typeof ProfileNotificationsRoute
-  '/profile/penny-bot': typeof ProfilePennyBotRoute
-  '/profile/preferences': typeof ProfilePreferencesRoute
-  '/profile/recurring-expenses': typeof ProfileRecurringExpensesRoute
-  '/profile/': typeof ProfileIndexRoute
-  '/v2': typeof V2IndexRoute
-  '/budgets/$id/expenses': typeof BudgetsIdExpensesRoute
-  '/budgets/$id/': typeof BudgetsIdIndexRoute
-  '/v2/dashboard': typeof V2DashboardIndexRoute
+  '/dashboard': typeof DashboardIndexRoute
+  '/archive/budgets/$id': typeof ArchiveBudgetsIdRouteWithChildren
+  '/archive/budgets/new': typeof ArchiveBudgetsNewRoute
+  '/archive/categories/$id': typeof ArchiveCategoriesIdRoute
+  '/archive/profile/mcp-token': typeof ArchiveProfileMcpTokenRoute
+  '/archive/profile/notifications': typeof ArchiveProfileNotificationsRoute
+  '/archive/profile/penny-bot': typeof ArchiveProfilePennyBotRoute
+  '/archive/profile/preferences': typeof ArchiveProfilePreferencesRoute
+  '/archive/profile/recurring-expenses': typeof ArchiveProfileRecurringExpensesRoute
+  '/archive/profile/': typeof ArchiveProfileIndexRoute
+  '/archive/budgets/$id/expenses': typeof ArchiveBudgetsIdExpensesRoute
+  '/archive/budgets/$id/': typeof ArchiveBudgetsIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
-  '/onboarding': typeof OnboardingRoute
-  '/register': typeof RegisterRoute
-  '/budgets/new': typeof BudgetsNewRoute
-  '/categories/$id': typeof CategoriesIdRoute
+  '/archive/dashboard': typeof ArchiveDashboardRoute
+  '/archive/onboarding': typeof ArchiveOnboardingRoute
+  '/archive/register': typeof ArchiveRegisterRoute
   '/oauth/consent': typeof OauthConsentRoute
-  '/profile/mcp-token': typeof ProfileMcpTokenRoute
-  '/profile/notifications': typeof ProfileNotificationsRoute
-  '/profile/penny-bot': typeof ProfilePennyBotRoute
-  '/profile/preferences': typeof ProfilePreferencesRoute
-  '/profile/recurring-expenses': typeof ProfileRecurringExpensesRoute
-  '/profile': typeof ProfileIndexRoute
-  '/v2': typeof V2IndexRoute
-  '/budgets/$id/expenses': typeof BudgetsIdExpensesRoute
-  '/budgets/$id': typeof BudgetsIdIndexRoute
-  '/v2/dashboard': typeof V2DashboardIndexRoute
+  '/dashboard': typeof DashboardIndexRoute
+  '/archive/budgets/new': typeof ArchiveBudgetsNewRoute
+  '/archive/categories/$id': typeof ArchiveCategoriesIdRoute
+  '/archive/profile/mcp-token': typeof ArchiveProfileMcpTokenRoute
+  '/archive/profile/notifications': typeof ArchiveProfileNotificationsRoute
+  '/archive/profile/penny-bot': typeof ArchiveProfilePennyBotRoute
+  '/archive/profile/preferences': typeof ArchiveProfilePreferencesRoute
+  '/archive/profile/recurring-expenses': typeof ArchiveProfileRecurringExpensesRoute
+  '/archive/profile': typeof ArchiveProfileIndexRoute
+  '/archive/budgets/$id/expenses': typeof ArchiveBudgetsIdExpensesRoute
+  '/archive/budgets/$id': typeof ArchiveBudgetsIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
-  '/onboarding': typeof OnboardingRoute
-  '/profile': typeof ProfileRouteWithChildren
-  '/register': typeof RegisterRoute
-  '/budgets/$id': typeof BudgetsIdRouteWithChildren
-  '/budgets/new': typeof BudgetsNewRoute
-  '/categories/$id': typeof CategoriesIdRoute
+  '/archive/dashboard': typeof ArchiveDashboardRoute
+  '/archive/onboarding': typeof ArchiveOnboardingRoute
+  '/archive/profile': typeof ArchiveProfileRouteWithChildren
+  '/archive/register': typeof ArchiveRegisterRoute
   '/oauth/consent': typeof OauthConsentRoute
-  '/profile/mcp-token': typeof ProfileMcpTokenRoute
-  '/profile/notifications': typeof ProfileNotificationsRoute
-  '/profile/penny-bot': typeof ProfilePennyBotRoute
-  '/profile/preferences': typeof ProfilePreferencesRoute
-  '/profile/recurring-expenses': typeof ProfileRecurringExpensesRoute
-  '/profile/': typeof ProfileIndexRoute
-  '/v2/': typeof V2IndexRoute
-  '/budgets/$id/expenses': typeof BudgetsIdExpensesRoute
-  '/budgets/$id/': typeof BudgetsIdIndexRoute
-  '/v2/dashboard/': typeof V2DashboardIndexRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/archive/budgets/$id': typeof ArchiveBudgetsIdRouteWithChildren
+  '/archive/budgets/new': typeof ArchiveBudgetsNewRoute
+  '/archive/categories/$id': typeof ArchiveCategoriesIdRoute
+  '/archive/profile/mcp-token': typeof ArchiveProfileMcpTokenRoute
+  '/archive/profile/notifications': typeof ArchiveProfileNotificationsRoute
+  '/archive/profile/penny-bot': typeof ArchiveProfilePennyBotRoute
+  '/archive/profile/preferences': typeof ArchiveProfilePreferencesRoute
+  '/archive/profile/recurring-expenses': typeof ArchiveProfileRecurringExpensesRoute
+  '/archive/profile/': typeof ArchiveProfileIndexRoute
+  '/archive/budgets/$id/expenses': typeof ArchiveBudgetsIdExpensesRoute
+  '/archive/budgets/$id/': typeof ArchiveBudgetsIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/dashboard'
     | '/login'
-    | '/onboarding'
-    | '/profile'
-    | '/register'
-    | '/budgets/$id'
-    | '/budgets/new'
-    | '/categories/$id'
+    | '/archive/dashboard'
+    | '/archive/onboarding'
+    | '/archive/profile'
+    | '/archive/register'
     | '/oauth/consent'
-    | '/profile/mcp-token'
-    | '/profile/notifications'
-    | '/profile/penny-bot'
-    | '/profile/preferences'
-    | '/profile/recurring-expenses'
-    | '/profile/'
-    | '/v2'
-    | '/budgets/$id/expenses'
-    | '/budgets/$id/'
-    | '/v2/dashboard'
+    | '/dashboard'
+    | '/archive/budgets/$id'
+    | '/archive/budgets/new'
+    | '/archive/categories/$id'
+    | '/archive/profile/mcp-token'
+    | '/archive/profile/notifications'
+    | '/archive/profile/penny-bot'
+    | '/archive/profile/preferences'
+    | '/archive/profile/recurring-expenses'
+    | '/archive/profile/'
+    | '/archive/budgets/$id/expenses'
+    | '/archive/budgets/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/dashboard'
     | '/login'
-    | '/onboarding'
-    | '/register'
-    | '/budgets/new'
-    | '/categories/$id'
+    | '/archive/dashboard'
+    | '/archive/onboarding'
+    | '/archive/register'
     | '/oauth/consent'
-    | '/profile/mcp-token'
-    | '/profile/notifications'
-    | '/profile/penny-bot'
-    | '/profile/preferences'
-    | '/profile/recurring-expenses'
-    | '/profile'
-    | '/v2'
-    | '/budgets/$id/expenses'
-    | '/budgets/$id'
-    | '/v2/dashboard'
+    | '/dashboard'
+    | '/archive/budgets/new'
+    | '/archive/categories/$id'
+    | '/archive/profile/mcp-token'
+    | '/archive/profile/notifications'
+    | '/archive/profile/penny-bot'
+    | '/archive/profile/preferences'
+    | '/archive/profile/recurring-expenses'
+    | '/archive/profile'
+    | '/archive/budgets/$id/expenses'
+    | '/archive/budgets/$id'
   id:
     | '__root__'
     | '/'
-    | '/dashboard'
     | '/login'
-    | '/onboarding'
-    | '/profile'
-    | '/register'
-    | '/budgets/$id'
-    | '/budgets/new'
-    | '/categories/$id'
+    | '/archive/dashboard'
+    | '/archive/onboarding'
+    | '/archive/profile'
+    | '/archive/register'
     | '/oauth/consent'
-    | '/profile/mcp-token'
-    | '/profile/notifications'
-    | '/profile/penny-bot'
-    | '/profile/preferences'
-    | '/profile/recurring-expenses'
-    | '/profile/'
-    | '/v2/'
-    | '/budgets/$id/expenses'
-    | '/budgets/$id/'
-    | '/v2/dashboard/'
+    | '/dashboard/'
+    | '/archive/budgets/$id'
+    | '/archive/budgets/new'
+    | '/archive/categories/$id'
+    | '/archive/profile/mcp-token'
+    | '/archive/profile/notifications'
+    | '/archive/profile/penny-bot'
+    | '/archive/profile/preferences'
+    | '/archive/profile/recurring-expenses'
+    | '/archive/profile/'
+    | '/archive/budgets/$id/expenses'
+    | '/archive/budgets/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
-  OnboardingRoute: typeof OnboardingRoute
-  ProfileRoute: typeof ProfileRouteWithChildren
-  RegisterRoute: typeof RegisterRoute
-  BudgetsIdRoute: typeof BudgetsIdRouteWithChildren
-  BudgetsNewRoute: typeof BudgetsNewRoute
-  CategoriesIdRoute: typeof CategoriesIdRoute
+  ArchiveDashboardRoute: typeof ArchiveDashboardRoute
+  ArchiveOnboardingRoute: typeof ArchiveOnboardingRoute
+  ArchiveProfileRoute: typeof ArchiveProfileRouteWithChildren
+  ArchiveRegisterRoute: typeof ArchiveRegisterRoute
   OauthConsentRoute: typeof OauthConsentRoute
-  V2IndexRoute: typeof V2IndexRoute
-  V2DashboardIndexRoute: typeof V2DashboardIndexRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
+  ArchiveBudgetsIdRoute: typeof ArchiveBudgetsIdRouteWithChildren
+  ArchiveBudgetsNewRoute: typeof ArchiveBudgetsNewRoute
+  ArchiveCategoriesIdRoute: typeof ArchiveCategoriesIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/onboarding': {
-      id: '/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -323,54 +285,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/v2/': {
-      id: '/v2/'
-      path: '/v2'
-      fullPath: '/v2'
-      preLoaderRoute: typeof V2IndexRouteImport
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/profile/': {
-      id: '/profile/'
-      path: '/'
-      fullPath: '/profile/'
-      preLoaderRoute: typeof ProfileIndexRouteImport
-      parentRoute: typeof ProfileRoute
-    }
-    '/profile/recurring-expenses': {
-      id: '/profile/recurring-expenses'
-      path: '/recurring-expenses'
-      fullPath: '/profile/recurring-expenses'
-      preLoaderRoute: typeof ProfileRecurringExpensesRouteImport
-      parentRoute: typeof ProfileRoute
-    }
-    '/profile/preferences': {
-      id: '/profile/preferences'
-      path: '/preferences'
-      fullPath: '/profile/preferences'
-      preLoaderRoute: typeof ProfilePreferencesRouteImport
-      parentRoute: typeof ProfileRoute
-    }
-    '/profile/penny-bot': {
-      id: '/profile/penny-bot'
-      path: '/penny-bot'
-      fullPath: '/profile/penny-bot'
-      preLoaderRoute: typeof ProfilePennyBotRouteImport
-      parentRoute: typeof ProfileRoute
-    }
-    '/profile/notifications': {
-      id: '/profile/notifications'
-      path: '/notifications'
-      fullPath: '/profile/notifications'
-      preLoaderRoute: typeof ProfileNotificationsRouteImport
-      parentRoute: typeof ProfileRoute
-    }
-    '/profile/mcp-token': {
-      id: '/profile/mcp-token'
-      path: '/mcp-token'
-      fullPath: '/profile/mcp-token'
-      preLoaderRoute: typeof ProfileMcpTokenRouteImport
-      parentRoute: typeof ProfileRoute
     }
     '/oauth/consent': {
       id: '/oauth/consent'
@@ -379,99 +299,161 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/categories/$id': {
-      id: '/categories/$id'
-      path: '/categories/$id'
-      fullPath: '/categories/$id'
-      preLoaderRoute: typeof CategoriesIdRouteImport
+    '/archive/register': {
+      id: '/archive/register'
+      path: '/archive/register'
+      fullPath: '/archive/register'
+      preLoaderRoute: typeof ArchiveRegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/budgets/new': {
-      id: '/budgets/new'
-      path: '/budgets/new'
-      fullPath: '/budgets/new'
-      preLoaderRoute: typeof BudgetsNewRouteImport
+    '/archive/profile': {
+      id: '/archive/profile'
+      path: '/archive/profile'
+      fullPath: '/archive/profile'
+      preLoaderRoute: typeof ArchiveProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/budgets/$id': {
-      id: '/budgets/$id'
-      path: '/budgets/$id'
-      fullPath: '/budgets/$id'
-      preLoaderRoute: typeof BudgetsIdRouteImport
+    '/archive/onboarding': {
+      id: '/archive/onboarding'
+      path: '/archive/onboarding'
+      fullPath: '/archive/onboarding'
+      preLoaderRoute: typeof ArchiveOnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/v2/dashboard/': {
-      id: '/v2/dashboard/'
-      path: '/v2/dashboard'
-      fullPath: '/v2/dashboard'
-      preLoaderRoute: typeof V2DashboardIndexRouteImport
+    '/archive/dashboard': {
+      id: '/archive/dashboard'
+      path: '/archive/dashboard'
+      fullPath: '/archive/dashboard'
+      preLoaderRoute: typeof ArchiveDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/budgets/$id/': {
-      id: '/budgets/$id/'
+    '/archive/profile/': {
+      id: '/archive/profile/'
       path: '/'
-      fullPath: '/budgets/$id/'
-      preLoaderRoute: typeof BudgetsIdIndexRouteImport
-      parentRoute: typeof BudgetsIdRoute
+      fullPath: '/archive/profile/'
+      preLoaderRoute: typeof ArchiveProfileIndexRouteImport
+      parentRoute: typeof ArchiveProfileRoute
     }
-    '/budgets/$id/expenses': {
-      id: '/budgets/$id/expenses'
+    '/archive/profile/recurring-expenses': {
+      id: '/archive/profile/recurring-expenses'
+      path: '/recurring-expenses'
+      fullPath: '/archive/profile/recurring-expenses'
+      preLoaderRoute: typeof ArchiveProfileRecurringExpensesRouteImport
+      parentRoute: typeof ArchiveProfileRoute
+    }
+    '/archive/profile/preferences': {
+      id: '/archive/profile/preferences'
+      path: '/preferences'
+      fullPath: '/archive/profile/preferences'
+      preLoaderRoute: typeof ArchiveProfilePreferencesRouteImport
+      parentRoute: typeof ArchiveProfileRoute
+    }
+    '/archive/profile/penny-bot': {
+      id: '/archive/profile/penny-bot'
+      path: '/penny-bot'
+      fullPath: '/archive/profile/penny-bot'
+      preLoaderRoute: typeof ArchiveProfilePennyBotRouteImport
+      parentRoute: typeof ArchiveProfileRoute
+    }
+    '/archive/profile/notifications': {
+      id: '/archive/profile/notifications'
+      path: '/notifications'
+      fullPath: '/archive/profile/notifications'
+      preLoaderRoute: typeof ArchiveProfileNotificationsRouteImport
+      parentRoute: typeof ArchiveProfileRoute
+    }
+    '/archive/profile/mcp-token': {
+      id: '/archive/profile/mcp-token'
+      path: '/mcp-token'
+      fullPath: '/archive/profile/mcp-token'
+      preLoaderRoute: typeof ArchiveProfileMcpTokenRouteImport
+      parentRoute: typeof ArchiveProfileRoute
+    }
+    '/archive/categories/$id': {
+      id: '/archive/categories/$id'
+      path: '/archive/categories/$id'
+      fullPath: '/archive/categories/$id'
+      preLoaderRoute: typeof ArchiveCategoriesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/archive/budgets/new': {
+      id: '/archive/budgets/new'
+      path: '/archive/budgets/new'
+      fullPath: '/archive/budgets/new'
+      preLoaderRoute: typeof ArchiveBudgetsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/archive/budgets/$id': {
+      id: '/archive/budgets/$id'
+      path: '/archive/budgets/$id'
+      fullPath: '/archive/budgets/$id'
+      preLoaderRoute: typeof ArchiveBudgetsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/archive/budgets/$id/': {
+      id: '/archive/budgets/$id/'
+      path: '/'
+      fullPath: '/archive/budgets/$id/'
+      preLoaderRoute: typeof ArchiveBudgetsIdIndexRouteImport
+      parentRoute: typeof ArchiveBudgetsIdRoute
+    }
+    '/archive/budgets/$id/expenses': {
+      id: '/archive/budgets/$id/expenses'
       path: '/expenses'
-      fullPath: '/budgets/$id/expenses'
-      preLoaderRoute: typeof BudgetsIdExpensesRouteImport
-      parentRoute: typeof BudgetsIdRoute
+      fullPath: '/archive/budgets/$id/expenses'
+      preLoaderRoute: typeof ArchiveBudgetsIdExpensesRouteImport
+      parentRoute: typeof ArchiveBudgetsIdRoute
     }
   }
 }
 
-interface ProfileRouteChildren {
-  ProfileMcpTokenRoute: typeof ProfileMcpTokenRoute
-  ProfileNotificationsRoute: typeof ProfileNotificationsRoute
-  ProfilePennyBotRoute: typeof ProfilePennyBotRoute
-  ProfilePreferencesRoute: typeof ProfilePreferencesRoute
-  ProfileRecurringExpensesRoute: typeof ProfileRecurringExpensesRoute
-  ProfileIndexRoute: typeof ProfileIndexRoute
+interface ArchiveProfileRouteChildren {
+  ArchiveProfileMcpTokenRoute: typeof ArchiveProfileMcpTokenRoute
+  ArchiveProfileNotificationsRoute: typeof ArchiveProfileNotificationsRoute
+  ArchiveProfilePennyBotRoute: typeof ArchiveProfilePennyBotRoute
+  ArchiveProfilePreferencesRoute: typeof ArchiveProfilePreferencesRoute
+  ArchiveProfileRecurringExpensesRoute: typeof ArchiveProfileRecurringExpensesRoute
+  ArchiveProfileIndexRoute: typeof ArchiveProfileIndexRoute
 }
 
-const ProfileRouteChildren: ProfileRouteChildren = {
-  ProfileMcpTokenRoute: ProfileMcpTokenRoute,
-  ProfileNotificationsRoute: ProfileNotificationsRoute,
-  ProfilePennyBotRoute: ProfilePennyBotRoute,
-  ProfilePreferencesRoute: ProfilePreferencesRoute,
-  ProfileRecurringExpensesRoute: ProfileRecurringExpensesRoute,
-  ProfileIndexRoute: ProfileIndexRoute,
+const ArchiveProfileRouteChildren: ArchiveProfileRouteChildren = {
+  ArchiveProfileMcpTokenRoute: ArchiveProfileMcpTokenRoute,
+  ArchiveProfileNotificationsRoute: ArchiveProfileNotificationsRoute,
+  ArchiveProfilePennyBotRoute: ArchiveProfilePennyBotRoute,
+  ArchiveProfilePreferencesRoute: ArchiveProfilePreferencesRoute,
+  ArchiveProfileRecurringExpensesRoute: ArchiveProfileRecurringExpensesRoute,
+  ArchiveProfileIndexRoute: ArchiveProfileIndexRoute,
 }
 
-const ProfileRouteWithChildren =
-  ProfileRoute._addFileChildren(ProfileRouteChildren)
-
-interface BudgetsIdRouteChildren {
-  BudgetsIdExpensesRoute: typeof BudgetsIdExpensesRoute
-  BudgetsIdIndexRoute: typeof BudgetsIdIndexRoute
-}
-
-const BudgetsIdRouteChildren: BudgetsIdRouteChildren = {
-  BudgetsIdExpensesRoute: BudgetsIdExpensesRoute,
-  BudgetsIdIndexRoute: BudgetsIdIndexRoute,
-}
-
-const BudgetsIdRouteWithChildren = BudgetsIdRoute._addFileChildren(
-  BudgetsIdRouteChildren,
+const ArchiveProfileRouteWithChildren = ArchiveProfileRoute._addFileChildren(
+  ArchiveProfileRouteChildren,
 )
+
+interface ArchiveBudgetsIdRouteChildren {
+  ArchiveBudgetsIdExpensesRoute: typeof ArchiveBudgetsIdExpensesRoute
+  ArchiveBudgetsIdIndexRoute: typeof ArchiveBudgetsIdIndexRoute
+}
+
+const ArchiveBudgetsIdRouteChildren: ArchiveBudgetsIdRouteChildren = {
+  ArchiveBudgetsIdExpensesRoute: ArchiveBudgetsIdExpensesRoute,
+  ArchiveBudgetsIdIndexRoute: ArchiveBudgetsIdIndexRoute,
+}
+
+const ArchiveBudgetsIdRouteWithChildren =
+  ArchiveBudgetsIdRoute._addFileChildren(ArchiveBudgetsIdRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
-  OnboardingRoute: OnboardingRoute,
-  ProfileRoute: ProfileRouteWithChildren,
-  RegisterRoute: RegisterRoute,
-  BudgetsIdRoute: BudgetsIdRouteWithChildren,
-  BudgetsNewRoute: BudgetsNewRoute,
-  CategoriesIdRoute: CategoriesIdRoute,
+  ArchiveDashboardRoute: ArchiveDashboardRoute,
+  ArchiveOnboardingRoute: ArchiveOnboardingRoute,
+  ArchiveProfileRoute: ArchiveProfileRouteWithChildren,
+  ArchiveRegisterRoute: ArchiveRegisterRoute,
   OauthConsentRoute: OauthConsentRoute,
-  V2IndexRoute: V2IndexRoute,
-  V2DashboardIndexRoute: V2DashboardIndexRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
+  ArchiveBudgetsIdRoute: ArchiveBudgetsIdRouteWithChildren,
+  ArchiveBudgetsNewRoute: ArchiveBudgetsNewRoute,
+  ArchiveCategoriesIdRoute: ArchiveCategoriesIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

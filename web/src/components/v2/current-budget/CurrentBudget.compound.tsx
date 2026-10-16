@@ -103,14 +103,33 @@ export function Content({ className, ...props }: ContentProps) {
   return <CardContent className={cn('px-0', className)} {...props} />
 }
 
-type PeriodProps = ComponentProps<typeof CardDescription>
+type PeriodProps = ComponentProps<typeof CardDescription> & {
+  onEdit?: () => void
+}
 
-export function Period({ className, ...props }: PeriodProps) {
+export function Period({ className, onEdit, children, ...props }: PeriodProps) {
+  const classes = cn('text-muted-foreground text-sm', className)
+
+  if (!onEdit) {
+    return (
+      <CardDescription className={classes} {...props}>
+        {children}
+      </CardDescription>
+    )
+  }
+
   return (
-    <CardDescription
-      className={cn('text-muted-foreground text-sm', className)}
-      {...props}
-    />
+    <button
+      type="button"
+      onClick={onEdit}
+      className={cn(
+        classes,
+        `hover:text-foreground w-fit underline decoration-dotted
+        underline-offset-4 transition-colors`,
+      )}
+    >
+      {children}
+    </button>
   )
 }
 

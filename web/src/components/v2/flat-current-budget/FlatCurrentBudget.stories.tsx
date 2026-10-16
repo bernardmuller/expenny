@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { FlatCurrentBudget } from './FlatCurrentBudget'
@@ -27,4 +28,20 @@ export const Default: Story = {}
 
 export const WithoutDaysLeft: Story = {
   args: { daysLeft: undefined },
+}
+
+export const Toggleable: Story = {
+  render: (args) => {
+    const [hidden, setHidden] = useState(false)
+
+    return (
+      <FlatCurrentBudget
+        {...args}
+        currentAmount={hidden ? '✱✱✱✱✱✱✱✱' : args.currentAmount}
+        startingAmount={hidden ? '✱✱✱✱✱✱✱✱' : args.startingAmount}
+        spentAmount={hidden ? '✱✱✱✱✱✱✱✱' : args.spentAmount}
+        onClick={() => setHidden((value) => !value)}
+      />
+    )
+  },
 }

@@ -1,4 +1,4 @@
-import { Upload, Wallet } from 'lucide-react'
+import { ClipboardPaste, Upload, Wallet } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
 
 import { Avatar, AvatarFallback } from '@/components/v2/ui/avatar'
@@ -38,8 +38,8 @@ export function Root({ className, ...props }: RootProps) {
       collapsible="icon"
       variant="floating"
       className={cn(
-        `bg-background py-6 [&>[data-slot=sidebar-inner]]:border-border
-        [&>[data-slot=sidebar-inner]]:bg-card
+        `bg-background [&>[data-slot=sidebar-inner]]:border-border
+        [&>[data-slot=sidebar-inner]]:bg-card py-6
         [&>[data-slot=sidebar-inner]]:rounded-[28px]
         [&>[data-slot=sidebar-inner]]:shadow-[0_6px_0_var(--lip)]`,
         className,
@@ -116,6 +116,26 @@ export function UploadAction({ className, ...props }: UploadActionProps) {
     >
       <Upload className="size-5" />
       <span className="group-data-[collapsible=icon]:hidden">Upload CSV</span>
+    </Button>
+  )
+}
+
+type PasteActionProps = ComponentProps<typeof Button>
+
+export function PasteAction({ className, ...props }: PasteActionProps) {
+  return (
+    <Button
+      size="lg"
+      variant="outline"
+      className={cn(
+        `h-14 gap-2.5 rounded-[18px] text-base
+        group-data-[collapsible=icon]:size-12 group-data-[collapsible=icon]:p-0`,
+        className,
+      )}
+      {...props}
+    >
+      <ClipboardPaste className="size-5" />
+      <span className="group-data-[collapsible=icon]:hidden">Paste CSV</span>
     </Button>
   )
 }

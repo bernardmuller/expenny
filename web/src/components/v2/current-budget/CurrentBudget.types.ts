@@ -8,6 +8,7 @@ export type CurrentBudgetBaseProps = {
   spentPercentage: number
   daysLeft?: number
   onClick?: () => void
+  onEdit?: () => void
 }
 
 export type CurrentBudgetProps = CurrentBudgetBaseProps & {

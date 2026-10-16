@@ -1,7 +1,14 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react'
 
 import { ReviewPanel } from '../ReviewPanel'
 import {
+  createReviewItem,
   mockCategoryOptions,
   mockReviewItems,
 } from '../../shared/__mocks__/review.mock'
@@ -9,10 +16,11 @@ import {
 describe('ReviewPanel', () => {
   const onConfirm = vi.fn()
   const onSkip = vi.fn()
-  const onCountsTowardBudgetChange = vi.fn()
+  const onCategoryChange = vi.fn()
   const item = mockReviewItems[1]
 
   beforeEach(() => {
+    vi.clearAllMocks()
     render(
       <ReviewPanel
         item={item}
@@ -20,11 +28,11 @@ describe('ReviewPanel', () => {
         total={3}
         displayName="Takealot"
         categoryId="shopping"
+        groupKey="expenses"
         categoryOptions={mockCategoryOptions}
-        countsTowardBudget
         onConfirm={onConfirm}
         onSkip={onSkip}
-        onCountsTowardBudgetChange={onCountsTowardBudgetChange}
+        onCategoryChange={onCategoryChange}
       />,
     )
   })
@@ -44,24 +52,65 @@ describe('ReviewPanel', () => {
     )
   })
 
-  it('renders the confidence hint', () => {
-    expect(screen.getByText('62% sure')).toBeInTheDocument()
+  it('sections a spending row into expenses, recurring and transfers', () => {
+    expect(screen.queryByText('Income')).not.toBeInTheDocument()
+    expect(screen.getByText('Recurring')).toBeInTheDocument()
+    expect(screen.getByText('Expenses')).toBeInTheDocument()
+    expect(screen.getByText('Transfers')).toBeInTheDocument()
+    expect(screen.getByText('Other')).toBeInTheDocument()
   })
 
-  it('renders the expense probability subtitle', () => {
+  it('selects a (category, group) pair from the section it was clicked in', () => {
+    const recurring = screen.getByRole('group', { name: 'Recurring' })
+    fireEvent.click(
+      within(recurring).getByRole('button', { name: 'Eating out' }),
+    )
+
+    expect(onCategoryChange).toHaveBeenCalledWith('eating-out', 'recurring')
+  })
+
+  it('shows income and mirrored spending categories for an income row', () => {
+    cleanup()
+
+    const incomeItem = createReviewItem({
+      id: 'income-1',
+      merchant: 'Split bill repayment',
+      category: { id: 'salary', label: 'Salary', icon: '💼' },
+      group: 'income',
+      isIncome: true,
+    })
+
+    render(
+      <ReviewPanel
+        item={incomeItem}
+        index={0}
+        total={1}
+        displayName="Split bill repayment"
+        categoryId="salary"
+        groupKey="income"
+        categoryOptions={mockCategoryOptions}
+      />,
+    )
+
+    const income = screen.getByRole('group', { name: 'Income' })
     expect(
-      screen.getByText('Model says 93% likely an expense'),
+      within(income).getByRole('button', { name: 'Salary' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    expect(
+      within(income).getByRole('button', { name: 'Eating out' }),
     ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('group', { name: 'Expenses' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('renders the confidence hint', () => {
+    expect(screen.getByText('62% sure')).toBeInTheDocument()
   })
 
   it('calls onConfirm when confirming', () => {
     fireEvent.click(screen.getByRole('button', { name: /confirm and next/i }))
     expect(onConfirm).toHaveBeenCalled()
-  })
-
-  it('toggles counts toward budget', () => {
-    fireEvent.click(screen.getByRole('switch'))
-    expect(onCountsTowardBudgetChange).toHaveBeenCalledWith(false)
   })
 
   it('calls onSkip', () => {

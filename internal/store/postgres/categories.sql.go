@@ -7,9 +7,103 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/google/uuid"
 )
+
+const addCategoryGroupMember = `-- name: AddCategoryGroupMember :exec
+INSERT INTO category_group_members (id, category_id, group_id, created_at, updated_at)
+VALUES ($1, $2, $3, now(), now())
+ON CONFLICT (category_id, group_id) DO NOTHING
+`
+
+type AddCategoryGroupMemberParams struct {
+	ID         uuid.UUID
+	CategoryID uuid.UUID
+	GroupID    uuid.UUID
+}
+
+func (q *Queries) AddCategoryGroupMember(ctx context.Context, arg AddCategoryGroupMemberParams) error {
+	_, err := q.db.ExecContext(ctx, addCategoryGroupMember, arg.ID, arg.CategoryID, arg.GroupID)
+	return err
+}
+
+const createCategory = `-- name: CreateCategory :one
+INSERT INTO categories (id, key, label, icon, created_at, updated_at)
+VALUES ($1, $2, $3, $4, now(), now())
+RETURNING id, key, label, icon, created_at, updated_at, deleted_at
+`
+
+type CreateCategoryParams struct {
+	ID    uuid.UUID
+	Key   string
+	Label string
+	Icon  string
+}
+
+func (q *Queries) CreateCategory(ctx context.Context, arg CreateCategoryParams) (Category, error) {
+	row := q.db.QueryRowContext(ctx, createCategory,
+		arg.ID,
+		arg.Key,
+		arg.Label,
+		arg.Icon,
+	)
+	var i Category
+	err := row.Scan(
+		&i.ID,
+		&i.Key,
+		&i.Label,
+		&i.Icon,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const createCategoryGroup = `-- name: CreateCategoryGroup :one
+INSERT INTO category_groups (id, key, label, created_at, updated_at)
+VALUES ($1, $2, $3, now(), now())
+RETURNING id, key, label, created_at, updated_at
+`
+
+type CreateCategoryGroupParams struct {
+	ID    uuid.UUID
+	Key   string
+	Label string
+}
+
+func (q *Queries) CreateCategoryGroup(ctx context.Context, arg CreateCategoryGroupParams) (CategoryGroup, error) {
+	row := q.db.QueryRowContext(ctx, createCategoryGroup, arg.ID, arg.Key, arg.Label)
+	var i CategoryGroup
+	err := row.Scan(
+		&i.ID,
+		&i.Key,
+		&i.Label,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const deleteCategoryGroup = `-- name: DeleteCategoryGroup :exec
+DELETE FROM category_groups WHERE id = $1
+`
+
+func (q *Queries) DeleteCategoryGroup(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteCategoryGroup, id)
+	return err
+}
+
+const deleteCategoryGroupMembers = `-- name: DeleteCategoryGroupMembers :exec
+DELETE FROM category_group_members WHERE category_id = $1
+`
+
+func (q *Queries) DeleteCategoryGroupMembers(ctx context.Context, categoryID uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteCategoryGroupMembers, categoryID)
+	return err
+}
 
 const getAllCategories = `-- name: GetAllCategories :many
 select id, key, label, icon, created_at, updated_at, deleted_at from "categories"
@@ -46,6 +140,63 @@ func (q *Queries) GetAllCategories(ctx context.Context) ([]Category, error) {
 	return items, nil
 }
 
+const getCategoriesWithGroups = `-- name: GetCategoriesWithGroups :many
+SELECT
+  c.id,
+  c.key,
+  c.label,
+  c.icon,
+  g.id AS group_id,
+  g.key AS group_key,
+  g.label AS group_label
+FROM categories c
+LEFT JOIN category_group_members m ON m.category_id = c.id
+LEFT JOIN category_groups g ON g.id = m.group_id
+WHERE c.deleted_at IS NULL
+ORDER BY c.label, c.id, g.label
+`
+
+type GetCategoriesWithGroupsRow struct {
+	ID         uuid.UUID
+	Key        string
+	Label      string
+	Icon       string
+	GroupID    uuid.NullUUID
+	GroupKey   sql.NullString
+	GroupLabel sql.NullString
+}
+
+func (q *Queries) GetCategoriesWithGroups(ctx context.Context) ([]GetCategoriesWithGroupsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getCategoriesWithGroups)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetCategoriesWithGroupsRow
+	for rows.Next() {
+		var i GetCategoriesWithGroupsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Key,
+			&i.Label,
+			&i.Icon,
+			&i.GroupID,
+			&i.GroupKey,
+			&i.GroupLabel,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getCategoryById = `-- name: GetCategoryById :one
 select id, key, label, icon, created_at, updated_at, deleted_at from "categories" where id = $1
 `
@@ -61,6 +212,255 @@ func (q *Queries) GetCategoryById(ctx context.Context, id uuid.UUID) (Category, 
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const getCategoryByKey = `-- name: GetCategoryByKey :one
+select id, key, label, icon, created_at, updated_at, deleted_at from "categories" where key = $1
+`
+
+func (q *Queries) GetCategoryByKey(ctx context.Context, key string) (Category, error) {
+	row := q.db.QueryRowContext(ctx, getCategoryByKey, key)
+	var i Category
+	err := row.Scan(
+		&i.ID,
+		&i.Key,
+		&i.Label,
+		&i.Icon,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const getCategoryGroupById = `-- name: GetCategoryGroupById :one
+SELECT id, key, label, created_at, updated_at FROM category_groups WHERE id = $1
+`
+
+func (q *Queries) GetCategoryGroupById(ctx context.Context, id uuid.UUID) (CategoryGroup, error) {
+	row := q.db.QueryRowContext(ctx, getCategoryGroupById, id)
+	var i CategoryGroup
+	err := row.Scan(
+		&i.ID,
+		&i.Key,
+		&i.Label,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getCategoryGroupKeys = `-- name: GetCategoryGroupKeys :many
+SELECT g.key AS group_key
+FROM category_group_members m
+JOIN category_groups g ON g.id = m.group_id
+WHERE m.category_id = $1
+ORDER BY g.label
+`
+
+func (q *Queries) GetCategoryGroupKeys(ctx context.Context, categoryID uuid.UUID) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, getCategoryGroupKeys, categoryID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var group_key string
+		if err := rows.Scan(&group_key); err != nil {
+			return nil, err
+		}
+		items = append(items, group_key)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCategoryGroupMembers = `-- name: GetCategoryGroupMembers :many
+SELECT m.category_id, g.key AS group_key
+FROM category_group_members m
+JOIN category_groups g ON g.id = m.group_id
+ORDER BY g.label
+`
+
+type GetCategoryGroupMembersRow struct {
+	CategoryID uuid.UUID
+	GroupKey   string
+}
+
+func (q *Queries) GetCategoryGroupMembers(ctx context.Context) ([]GetCategoryGroupMembersRow, error) {
+	rows, err := q.db.QueryContext(ctx, getCategoryGroupMembers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetCategoryGroupMembersRow
+	for rows.Next() {
+		var i GetCategoryGroupMembersRow
+		if err := rows.Scan(&i.CategoryID, &i.GroupKey); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCategoryGroups = `-- name: GetCategoryGroups :many
+SELECT id, key, label, created_at, updated_at FROM category_groups ORDER BY label
+`
+
+func (q *Queries) GetCategoryGroups(ctx context.Context) ([]CategoryGroup, error) {
+	rows, err := q.db.QueryContext(ctx, getCategoryGroups)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CategoryGroup
+	for rows.Next() {
+		var i CategoryGroup
+		if err := rows.Scan(
+			&i.ID,
+			&i.Key,
+			&i.Label,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const restoreCategory = `-- name: RestoreCategory :one
+UPDATE categories
+SET key = $1,
+    label = $2,
+    icon = $3,
+    deleted_at = NULL,
+    updated_at = now()
+WHERE id = $4
+RETURNING id, key, label, icon, created_at, updated_at, deleted_at
+`
+
+type RestoreCategoryParams struct {
+	Key   string
+	Label string
+	Icon  string
+	ID    uuid.UUID
+}
+
+func (q *Queries) RestoreCategory(ctx context.Context, arg RestoreCategoryParams) (Category, error) {
+	row := q.db.QueryRowContext(ctx, restoreCategory,
+		arg.Key,
+		arg.Label,
+		arg.Icon,
+		arg.ID,
+	)
+	var i Category
+	err := row.Scan(
+		&i.ID,
+		&i.Key,
+		&i.Label,
+		&i.Icon,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const softDeleteCategory = `-- name: SoftDeleteCategory :exec
+UPDATE categories
+SET deleted_at = now(), updated_at = now()
+WHERE id = $1
+`
+
+func (q *Queries) SoftDeleteCategory(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, softDeleteCategory, id)
+	return err
+}
+
+const updateCategory = `-- name: UpdateCategory :one
+UPDATE categories
+SET key = $1,
+    label = $2,
+    icon = $3,
+    updated_at = now()
+WHERE id = $4
+RETURNING id, key, label, icon, created_at, updated_at, deleted_at
+`
+
+type UpdateCategoryParams struct {
+	Key   string
+	Label string
+	Icon  string
+	ID    uuid.UUID
+}
+
+func (q *Queries) UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (Category, error) {
+	row := q.db.QueryRowContext(ctx, updateCategory,
+		arg.Key,
+		arg.Label,
+		arg.Icon,
+		arg.ID,
+	)
+	var i Category
+	err := row.Scan(
+		&i.ID,
+		&i.Key,
+		&i.Label,
+		&i.Icon,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const updateCategoryGroup = `-- name: UpdateCategoryGroup :one
+UPDATE category_groups
+SET key = $1,
+    label = $2,
+    updated_at = now()
+WHERE id = $3
+RETURNING id, key, label, created_at, updated_at
+`
+
+type UpdateCategoryGroupParams struct {
+	Key   string
+	Label string
+	ID    uuid.UUID
+}
+
+func (q *Queries) UpdateCategoryGroup(ctx context.Context, arg UpdateCategoryGroupParams) (CategoryGroup, error) {
+	row := q.db.QueryRowContext(ctx, updateCategoryGroup, arg.Key, arg.Label, arg.ID)
+	var i CategoryGroup
+	err := row.Scan(
+		&i.ID,
+		&i.Key,
+		&i.Label,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }

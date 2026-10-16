@@ -11,9 +11,9 @@ export function createReviewItem(
     amount: 'R 874.00',
     originalDescription: 'POS PURCHASE ENGEN 1STOP N1 CITY',
     category: { id: 'fuel', label: 'Fuel', icon: '⛽' },
+    group: 'expenses',
+    isIncome: false,
     confidence: 76,
-    isExpense: true,
-    expenseProbability: 93,
     balanceAfter: 'R 31 689.40',
     ...overrides,
   }
@@ -46,9 +46,47 @@ export const mockReviewItems: Array<ReviewItem> = [
 ]
 
 export const mockCategoryOptions: Array<CategoryOption> = [
-  { label: '⛽ Fuel', value: 'fuel' },
-  { label: '📦 Shopping', value: 'shopping' },
-  { label: '🥡 Eating out', value: 'eating-out' },
-  { label: '🛒 Groceries', value: 'groceries' },
-  { label: '❔ Uncategorised', value: 'uncategorised' },
+  // Expenses (alphabetical by name)
+  { label: '⛽ Fuel', value: 'fuel', group: 'Expenses', groupKey: 'expenses' },
+  {
+    label: '🛒 Groceries',
+    value: 'groceries',
+    group: 'Expenses',
+    groupKey: 'expenses',
+  },
+  {
+    label: '📦 Shopping',
+    value: 'shopping',
+    group: 'Expenses',
+    groupKey: 'expenses',
+  },
+  // Income
+  {
+    label: '🥡 Eating out',
+    value: 'eating-out',
+    group: 'Income',
+    groupKey: 'income',
+  },
+  { label: '💼 Salary', value: 'salary', group: 'Income', groupKey: 'income' },
+  // Other
+  {
+    label: '❔ Uncategorised',
+    value: 'uncategorised',
+    group: 'Other',
+    groupKey: 'other',
+  },
+  // Recurring
+  {
+    label: '🥡 Eating out',
+    value: 'eating-out',
+    group: 'Recurring',
+    groupKey: 'recurring',
+  },
+  // Transfers
+  {
+    label: '🔄 Transfer',
+    value: 'transfer',
+    group: 'Transfers',
+    groupKey: 'transfers',
+  },
 ]

@@ -67,9 +67,29 @@ func newHandler(app *application.Application, secret string) http.Handler {
 	mux.HandleFunc("GET /v2/hello", handleHello)
 	mux.Handle("GET /v2/me", verifier.RequireUser(http.HandlerFunc(handleMe)))
 	mux.Handle("POST /v2/statements", verifier.RequireUser(http.HandlerFunc(api.ingestStatement)))
+	mux.Handle("POST /v2/statements/classify", verifier.RequireUser(http.HandlerFunc(api.classifyTransactions)))
 	mux.Handle("GET /v2/statements/transactions", verifier.RequireUser(http.HandlerFunc(api.listTransactions)))
 	mux.Handle("POST /v2/statements/transactions/{id}/correction", verifier.RequireUser(http.HandlerFunc(api.correctTransaction)))
+	mux.Handle("PATCH /v2/statements/transactions/{id}/category", verifier.RequireUser(http.HandlerFunc(api.updateTransactionCategory)))
 	mux.Handle("GET /v2/categories", verifier.RequireUser(http.HandlerFunc(api.listCategories)))
+	mux.Handle("POST /v2/categories", verifier.RequireUser(http.HandlerFunc(api.createCategory)))
+	mux.Handle("PATCH /v2/categories/{id}", verifier.RequireUser(http.HandlerFunc(api.updateCategory)))
+	mux.Handle("DELETE /v2/categories/{id}", verifier.RequireUser(http.HandlerFunc(api.deleteCategory)))
+	mux.Handle("GET /v2/category-budgets", verifier.RequireUser(http.HandlerFunc(api.getCategoryBudgets)))
+	mux.Handle("GET /v2/category-budgets/{id}/transactions", verifier.RequireUser(http.HandlerFunc(api.listCategoryTransactions)))
+	mux.Handle("POST /v2/category-budgets", verifier.RequireUser(http.HandlerFunc(api.setCategoryBudget)))
+	mux.Handle("PATCH /v2/category-budgets/{id}", verifier.RequireUser(http.HandlerFunc(api.updateCategoryBudget)))
+	mux.Handle("DELETE /v2/category-budgets/{id}", verifier.RequireUser(http.HandlerFunc(api.deleteCategoryBudget)))
+	mux.Handle("GET /v2/category-groups", verifier.RequireUser(http.HandlerFunc(api.listCategoryGroups)))
+	mux.Handle("POST /v2/category-groups", verifier.RequireUser(http.HandlerFunc(api.createCategoryGroup)))
+	mux.Handle("PATCH /v2/category-groups/{id}", verifier.RequireUser(http.HandlerFunc(api.updateCategoryGroup)))
+	mux.Handle("DELETE /v2/category-groups/{id}", verifier.RequireUser(http.HandlerFunc(api.deleteCategoryGroup)))
+	mux.Handle("GET /v2/corrections", verifier.RequireUser(http.HandlerFunc(api.listCorrections)))
+	mux.Handle("POST /v2/corrections", verifier.RequireUser(http.HandlerFunc(api.createCorrection)))
+	mux.Handle("PATCH /v2/corrections/{id}", verifier.RequireUser(http.HandlerFunc(api.updateCorrection)))
+	mux.Handle("DELETE /v2/corrections/{id}", verifier.RequireUser(http.HandlerFunc(api.deleteCorrection)))
+	mux.Handle("GET /v2/budget", verifier.RequireUser(http.HandlerFunc(api.getBudget)))
+	mux.Handle("PUT /v2/budget/preferences", verifier.RequireUser(http.HandlerFunc(api.updateBudgetPreferences)))
 
 	return logRequests(withCORS(mux))
 }
@@ -83,7 +103,7 @@ func withCORS(next http.Handler) http.Handler {
 		}
 
 		if r.Method == http.MethodOptions {
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 			w.Header().Set("Access-Control-Max-Age", "600")
 			w.WriteHeader(http.StatusNoContent)

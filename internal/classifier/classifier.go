@@ -18,11 +18,11 @@ const (
 )
 
 const FeeCategory = "bank-fees"
-const IncomeCategory = "income"
 
 const (
 	qExpense  = "is_expense"
 	qCategory = "category"
+	qGroup    = "group"
 )
 
 const DefaultWorkers = 6
@@ -34,15 +34,22 @@ type Provider interface {
 type Config struct {
 	Provider   Provider
 	Categories map[string]string
-	Known      corrections.Set
-	Workers    int
+	// Groups is the group dictionary (key -> label) the provider chooses from.
+	Groups map[string]string
+	// Memberships maps a category key to the group keys it may be tagged
+	// with, and is passed to the provider as state so it picks a legal pair.
+	Memberships map[string][]string
+	Known       corrections.Set
+	Workers     int
 }
 
 type Classifier struct {
-	provider   Provider
-	categories map[string]string
-	known      corrections.Set
-	workers    int
+	provider    Provider
+	categories  map[string]string
+	groups      map[string]string
+	memberships map[string][]string
+	known       corrections.Set
+	workers     int
 }
 
 func New(cfg Config) *Classifier {
@@ -51,10 +58,12 @@ func New(cfg Config) *Classifier {
 		workers = DefaultWorkers
 	}
 	return &Classifier{
-		provider:   cfg.Provider,
-		categories: cfg.Categories,
-		known:      cfg.Known,
-		workers:    workers,
+		provider:    cfg.Provider,
+		categories:  cfg.Categories,
+		groups:      cfg.Groups,
+		memberships: cfg.Memberships,
+		known:       cfg.Known,
+		workers:     workers,
 	}
 }
 
@@ -62,9 +71,13 @@ type Result struct {
 	Transaction statements.Transaction
 	Expense     float64 // probability the row is an expense
 	Category    string
-	Confidence  float64
-	Source      Source
-	Err         error
+	// Group is the group the provider tagged the row with. The service
+	// validates it against the category's memberships and falls back to a
+	// legal group when the pair is not allowed.
+	Group      string
+	Confidence float64
+	Source     Source
+	Err        error
 }
 
 func (c *Classifier) Classify(ctx context.Context, txns []statements.Transaction) []Result {
@@ -103,14 +116,9 @@ func (c *Classifier) classifyRow(ctx context.Context, t statements.Transaction) 
 		return res
 	}
 
-	if t.MoneyIn != 0 {
-		res.Category = IncomeCategory
-		res.Confidence = 1
-		res.Expense = 0
-		res.Source = SourceRule
-		return res
-	}
-
+	// Credits are not shortcut to an "income" category: the provider decides
+	// whether a row is salary, interest, a refund, or a transfer in, which is
+	// what lets the budget find the salary row by its category.
 	res.Source = SourceProvider
 
 	state := map[string]any{
@@ -129,16 +137,29 @@ func (c *Classifier) classifyRow(ctx context.Context, t statements.Transaction) 
 		categoryInstructions += " The state includes past_corrections, a map of previously human-confirmed descriptions to category keys, keyed by a normalised form of the description with card and reference numbers removed. Where this row's merchant matches one of those entries, follow it."
 	}
 
+	if len(c.memberships) > 0 {
+		state["category_groups"] = c.memberships
+	}
+
+	questions := map[string]systemone.Question{
+		qExpense: systemone.NoulWithCriteria(
+			"This row is an expense: money left the account.",
+			"The money_out field holds a non-zero amount.",
+			"money_out is zero — the row is income or a transfer in.",
+		),
+		qCategory: systemone.Choice(categoryInstructions, c.categories),
+	}
+
+	if len(c.groups) > 0 {
+		questions[qGroup] = systemone.Choice(
+			"Which group does this transaction belong to? The state carries category_groups, a map from category key to the groups that category may be tagged with; choose one of the groups allowed for the category you picked. Use income when money came back against a spending category, for example a friend repaying their share of a bill.",
+			c.groups,
+		)
+	}
+
 	resp, err := c.provider.Decide(ctx, systemone.Request{
-		State: state,
-		Questions: map[string]systemone.Question{
-			qExpense: systemone.NoulWithCriteria(
-				"This row is an expense: money left the account.",
-				"The money_out field holds a non-zero amount.",
-				"money_out is zero — the row is income or a transfer in.",
-			),
-			qCategory: systemone.Choice(categoryInstructions, c.categories),
-		},
+		State:     state,
+		Questions: questions,
 	})
 	if err != nil {
 		res.Err = err
@@ -153,6 +174,9 @@ func (c *Classifier) classifyRow(ctx context.Context, t statements.Transaction) 
 		if a.Confidence != nil {
 			res.Confidence = *a.Confidence
 		}
+	}
+	if a, ok := resp.Answers[qGroup]; ok {
+		res.Group = a.Choice
 	}
 	return res
 }

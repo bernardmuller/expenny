@@ -6,7 +6,6 @@ import { mockReviewItems } from '../../shared/__mocks__/review.mock'
 describe('ReviewCard', () => {
   const onLooksRight = vi.fn()
   const onChange = vi.fn()
-  const onNotExpense = vi.fn()
   const onSkip = vi.fn()
   const item = mockReviewItems[0]
 
@@ -18,7 +17,6 @@ describe('ReviewCard', () => {
         total={3}
         onLooksRight={onLooksRight}
         onChange={onChange}
-        onNotExpense={onNotExpense}
         onSkip={onSkip}
       />,
     )
@@ -56,10 +54,8 @@ describe('ReviewCard', () => {
     expect(onChange).toHaveBeenCalled()
   })
 
-  it('calls onNotExpense and onSkip from the footer actions', () => {
-    fireEvent.click(screen.getByRole('button', { name: /not an expense/i }))
+  it('calls onSkip from the footer action', () => {
     fireEvent.click(screen.getByRole('button', { name: /skip for now/i }))
-    expect(onNotExpense).toHaveBeenCalled()
     expect(onSkip).toHaveBeenCalled()
   })
 })

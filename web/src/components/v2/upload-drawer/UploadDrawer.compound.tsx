@@ -1,4 +1,4 @@
-import { Check, FileText, X } from 'lucide-react'
+import { Check, FileText, Upload, X } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
 
 import { Button } from '@/components/v2/ui/button'
@@ -14,10 +14,12 @@ import {
 import { Progress } from '@/components/v2/ui/progress'
 import { Separator } from '@/components/v2/ui/separator'
 import { Spinner } from '@/components/v2/ui/spinner'
+import { Textarea } from '@/components/v2/ui/textarea'
 import { cn } from '@/lib/utils/cn'
 
 import { categoryTint } from '../shared/categories'
-import type { UploadStepStatus } from './UploadDrawer.types'
+import { useCategoryColor } from '../shared/CategoryColors'
+import type { UploadStepStatus, UploadSummary } from './UploadDrawer.types'
 
 type RootProps = ComponentProps<typeof Drawer>
 
@@ -32,7 +34,18 @@ export function Content({
 }: ComponentProps<typeof DrawerContent>) {
   return (
     <DrawerContent
-      className={cn('mx-auto w-full max-w-lg', className)}
+      className={cn(
+        `data-[vaul-drawer-direction=bottom]:mx-auto
+        data-[vaul-drawer-direction=bottom]:w-full
+        data-[vaul-drawer-direction=bottom]:max-w-lg
+        data-[vaul-drawer-direction=right]:h-full
+        data-[vaul-drawer-direction=right]:w-full
+        data-[vaul-drawer-direction=right]:max-w-md
+        data-[vaul-drawer-direction=right]:rounded-none
+        data-[vaul-drawer-direction=right]:border-l
+        data-[vaul-drawer-direction=right]:sm:max-w-md`,
+        className,
+      )}
       {...props}
     >
       {children}
@@ -199,7 +212,12 @@ export function Step({
             {title}
           </p>
           {count && (
-            <span className="text-foreground shrink-0 text-sm font-semibold">
+            <span
+              key={count}
+              className="text-foreground animate-in fade-in
+                slide-in-from-bottom-1 shrink-0 text-sm font-semibold
+                duration-300"
+            >
               {count}
             </span>
           )}
@@ -256,7 +274,7 @@ export function SortedRow({
   category,
   className,
 }: SortedRowProps) {
-  const tint = categoryTint(category)
+  const tint = categoryTint(category, useCategoryColor(category))
 
   return (
     <div className={cn('flex items-center gap-3 py-3', className)}>
@@ -295,4 +313,154 @@ type FooterProps = {
 
 export function Footer({ children, className }: FooterProps) {
   return <DrawerFooter className={className}>{children}</DrawerFooter>
+}
+
+type StartProps = {
+  value: string
+  onPickFile?: () => void
+  onChange?: (value: string) => void
+  onSubmit?: () => void
+  className?: string
+}
+
+/** The idle state: pick a CSV file or paste one in. */
+export function Start({
+  value,
+  onPickFile,
+  onChange,
+  onSubmit,
+  className,
+}: StartProps) {
+  return (
+    <div className={cn('space-y-5', className)}>
+      <button
+        type="button"
+        onClick={onPickFile}
+        className="border-border bg-muted hover:border-primary/50
+          focus-visible:ring-primary/40 flex w-full flex-col items-center
+          gap-2.5 rounded-2xl border border-dashed p-6 text-center
+          transition-colors outline-none focus-visible:ring-[3px]"
+      >
+        <span
+          className="bg-raised text-card-foreground flex size-12 items-center
+            justify-center rounded-xl"
+        >
+          <Upload className="size-5" />
+        </span>
+        <span className="font-display text-lg font-semibold">
+          Choose a CSV file
+        </span>
+        <span className="text-muted-foreground text-sm">
+          Use the statement export from your bank.
+        </span>
+      </button>
+      <div className="flex items-center gap-3">
+        <Separator className="bg-border flex-1" />
+        <span
+          className="text-muted-foreground text-xs font-semibold
+            tracking-[0.06em] uppercase"
+        >
+          or paste it
+        </span>
+        <Separator className="bg-border flex-1" />
+      </div>
+      <Paste value={value} onChange={onChange} onSubmit={onSubmit} />
+    </div>
+  )
+}
+
+type PasteProps = {
+  value: string
+  onChange?: (value: string) => void
+  onSubmit?: () => void
+  className?: string
+}
+
+/** Text area for pasting a statement straight from the clipboard. */
+export function Paste({ value, onChange, onSubmit, className }: PasteProps) {
+  return (
+    <div className={cn('space-y-3', className)}>
+      <Textarea
+        autoFocus
+        spellCheck={false}
+        value={value}
+        aria-label="Statement CSV"
+        placeholder={'Date,Description,Amount\n2026-10-01,Checkers,-452.90'}
+        className="font-statement min-h-64 resize-y text-xs leading-relaxed"
+        onChange={(event) => onChange?.(event.target.value)}
+        onKeyDown={(event) => {
+          if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+            onSubmit?.()
+          }
+        }}
+      />
+      <p className="text-muted-foreground text-sm">
+        Paste the CSV from your bank, including the header row.
+      </p>
+    </div>
+  )
+}
+
+type SuccessProps = {
+  summary?: UploadSummary
+  className?: string
+}
+
+/** The completed state: a big confirmation plus the counters. */
+export function Success({ summary, className }: SuccessProps) {
+  return (
+    <div
+      className={cn(
+        `animate-in fade-in zoom-in-95 flex flex-col items-center gap-4 py-6
+        text-center duration-300`,
+        className,
+      )}
+    >
+      <span
+        className="bg-primary text-primary-foreground flex size-16 shrink-0
+          items-center justify-center rounded-full
+          [box-shadow:0_5px_0_color-mix(in_srgb,var(--color-primary)_72%,black)]"
+      >
+        <Check className="size-8" />
+      </span>
+      <div className="space-y-1">
+        <p className="font-display text-xl font-semibold">
+          All transactions imported
+        </p>
+        <p className="text-muted-foreground text-sm">
+          {summary
+            ? `${summary.processed} transaction${
+                summary.processed === 1 ? '' : 's'
+              } processed`
+            : 'Your statement is ready to review.'}
+        </p>
+      </div>
+      {summary && (
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <SummaryStat label="Categorised" value={summary.classified} />
+          {summary.needsReview > 0 && (
+            <SummaryStat label="To review" value={summary.needsReview} />
+          )}
+          {summary.failed > 0 && (
+            <SummaryStat label="Failed" value={summary.failed} />
+          )}
+          {summary.parseSkipped > 0 && (
+            <SummaryStat label="Skipped" value={summary.parseSkipped} />
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function SummaryStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div
+      className="border-border bg-muted flex items-baseline gap-2 rounded-full
+        border px-4 py-2"
+    >
+      <span className="font-display text-lg font-semibold">{value}</span>
+      <span className="text-muted-foreground text-sm">{label}</span>
+    </div>
+  )
 }

@@ -20,6 +20,7 @@ import { Toggle } from '@/components/v2/ui/toggle'
 import { cn } from '@/lib/utils/cn'
 
 import { categoryTint } from '../shared/categories'
+import { useCategoryColor } from '../shared/CategoryColors'
 
 type RootProps = ComponentProps<typeof Card>
 
@@ -131,7 +132,7 @@ type RowEmojiProps = ComponentProps<typeof ItemMedia> & {
 }
 
 export function RowEmoji({ category, className, ...props }: RowEmojiProps) {
-  const tint = categoryTint(category)
+  const tint = categoryTint(category, useCategoryColor(category))
 
   return (
     <ItemMedia
@@ -187,7 +188,7 @@ type RowCategoryProps = {
 }
 
 export function RowCategory({ label, className }: RowCategoryProps) {
-  const tint = categoryTint(label)
+  const tint = categoryTint(label, useCategoryColor(label))
 
   return (
     <span

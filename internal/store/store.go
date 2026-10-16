@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 
+	"expenny.co.za/internal/budget"
 	"expenny.co.za/internal/categories"
 	"expenny.co.za/internal/classifications"
 	"expenny.co.za/internal/corrections"
@@ -18,6 +19,8 @@ type Repositories struct {
 	Classifications *classifications.ClassificationsRepository
 	Corrections     *corrections.CorrectionsRepository
 	Transactions    *transactions.TransactionsRepository
+	Budget          *budget.BudgetRepository
+	CategoryBudgets *budget.CategoryBudgetRepository
 }
 
 func newRepositories(q *postgres.Queries) *Repositories {
@@ -27,6 +30,8 @@ func newRepositories(q *postgres.Queries) *Repositories {
 		Classifications: classifications.NewClassificationsRepository(q),
 		Corrections:     corrections.NewCorrectionsRepository(q),
 		Transactions:    transactions.NewTransactionsRepository(q),
+		Budget:          budget.NewBudgetRepository(q),
+		CategoryBudgets: budget.NewCategoryBudgetRepository(q),
 	}
 }
 

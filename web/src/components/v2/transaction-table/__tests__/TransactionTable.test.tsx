@@ -14,9 +14,30 @@ describe('TransactionTable', () => {
   const onCategoryChange = vi.fn()
 
   const categoryOptions = [
-    { label: '🍔 Eating out', value: 'eating-out' },
-    { label: '⛽ Fuel', value: 'fuel' },
-    { label: '🛒 Groceries', value: 'groceries' },
+    {
+      label: '🍔 Eating out',
+      value: 'eating-out',
+      group: 'Recurring',
+      groupKey: 'recurring',
+    },
+    {
+      label: '⛽ Fuel',
+      value: 'fuel',
+      group: 'Expenses',
+      groupKey: 'expenses',
+    },
+    {
+      label: '🛒 Groceries',
+      value: 'groceries',
+      group: 'Expenses',
+      groupKey: 'expenses',
+    },
+    {
+      label: '💼 Salary',
+      value: 'salary',
+      group: 'Income',
+      groupKey: 'income',
+    },
   ]
 
   beforeEach(() => {
@@ -69,8 +90,14 @@ describe('TransactionTable', () => {
     expect(onSelect).toHaveBeenCalledWith('transaction-7')
   })
 
-  it('calls onFilterChange when a tab is selected', () => {
-    fireEvent.mouseDown(screen.getByRole('tab', { name: /needs review/i }))
+  it('changes the view filter from the menu', async () => {
+    const user = userEvent.setup()
+
+    await user.click(screen.getByRole('button', { name: /^all/i }))
+    await user.click(
+      await screen.findByRole('menuitem', { name: /needs review/i }),
+    )
+
     expect(onFilterChange).toHaveBeenCalledWith('review')
   })
 
@@ -86,8 +113,25 @@ describe('TransactionTable', () => {
       await screen.findByRole('menuitem', { name: '🍔 Eating out' }),
     )
 
-    expect(onCategoryChange).toHaveBeenCalledWith('transaction-1', 'eating-out')
+    expect(onCategoryChange).toHaveBeenCalledWith(
+      'transaction-1',
+      'eating-out',
+      'recurring',
+    )
     expect(onSelect).not.toHaveBeenCalled()
+  })
+
+  it('groups the category menu by category group', async () => {
+    const user = userEvent.setup()
+
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Change category for Groceries',
+      }),
+    )
+
+    expect(await screen.findByText('Recurring')).toBeInTheDocument()
+    expect(screen.getByText('Expenses')).toBeInTheDocument()
   })
 
   it('disables the currently selected category in the menu', async () => {
@@ -102,6 +146,24 @@ describe('TransactionTable', () => {
     expect(
       await screen.findByRole('menuitem', { name: '🛒 Groceries' }),
     ).toHaveAttribute('data-disabled')
+  })
+
+  it('shows only income categories for a money-in row', async () => {
+    const user = userEvent.setup()
+
+    await user.click(
+      screen.getByRole('button', { name: 'Change category for Income' }),
+    )
+
+    expect(
+      await screen.findByRole('menuitem', { name: '💼 Salary' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('menuitem', { name: '⛽ Fuel' }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('menuitem', { name: '🍔 Eating out' }),
+    ).not.toBeInTheDocument()
   })
 
   it('calls onSearchChange when searching', () => {

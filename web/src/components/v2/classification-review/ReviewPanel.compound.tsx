@@ -3,12 +3,15 @@ import type { ComponentProps, ReactNode } from 'react'
 
 import { Button } from '@/components/v2/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/v2/ui/card'
-import { ScrollArea } from '@/components/v2/ui/scroll-area'
 import { SearchableSelect } from '@/components/v2/ui/searchable-select'
-import { Switch } from '@/components/v2/ui/switch'
 import { cn } from '@/lib/utils/cn'
 
-import { categoryTint, withAlpha } from '../shared/categories'
+import {
+  categoryTint,
+  groupCategoryOptions,
+  withAlpha,
+} from '../shared/categories'
+import { useCategoryColor } from '../shared/CategoryColors'
 import type { CategoryOption } from '../shared/Review.types'
 
 export {
@@ -122,113 +125,101 @@ function splitOptionLabel(label: string) {
     : { icon: '', label }
 }
 
-// The grid is two columns of 46px tiles with a 10px gap. Keep the first six
-// rows visible and let the rest scroll.
-const CATEGORY_TILE_HEIGHT = 46
-const CATEGORY_GAP = 10
-const CATEGORY_VISIBLE_ROWS = 6
-
 type CategoryGridProps = {
   value: string
+  groupKey?: string
   options: Array<CategoryOption>
-  onChange?: (value: string) => void
+  onChange?: (categoryId: string, groupKey: string) => void
   className?: string
 }
 
 export function CategoryGrid({
   value,
+  groupKey,
   options,
   onChange,
   className,
 }: CategoryGridProps) {
-  const rows = Math.min(Math.ceil(options.length / 2), CATEGORY_VISIBLE_ROWS)
-  const height =
-    rows > 0
-      ? rows * CATEGORY_TILE_HEIGHT + (rows - 1) * CATEGORY_GAP
-      : undefined
+  const groups = groupCategoryOptions(options)
 
   return (
     <CardContent className={cn('px-0', className)}>
-      <ScrollArea className="pr-1.5" style={height ? { height } : undefined}>
-        <div
-          role="group"
-          aria-label="Category"
-          className="grid grid-cols-2 gap-2.5"
-        >
-          {options.map((option) => {
-            const { icon, label } = splitOptionLabel(option.label)
-            const tint = categoryTint(label)
-            const selected = option.value === value
-
-            return (
-              <button
-                key={option.value}
-                type="button"
-                aria-pressed={selected}
-                onClick={() => onChange?.(option.value)}
-                className={cn(
-                  `focus-visible:ring-primary/40 flex h-[46px] items-center
-                  gap-2 rounded-[14px] border px-3 text-left text-sm
-                  font-semibold transition-all outline-none
-                  focus-visible:ring-[3px]`,
-                  selected
-                    ? 'translate-y-[3px]'
-                    : `bg-raised border-border text-card-foreground
-                      [box-shadow:0_3px_0_var(--lip-sm)]`,
-                )}
-                style={
-                  selected
-                    ? {
-                        color: tint.color,
-                        backgroundColor: withAlpha(tint.color, 0.18),
-                        borderColor: withAlpha(tint.color, 0.6),
-                      }
-                    : undefined
-                }
+      <div className="max-h-80 overflow-y-auto pr-1.5">
+        <div className="space-y-4">
+          {groups.map((group) => (
+            <div
+              key={group.key}
+              role="group"
+              aria-label={group.label}
+              className="space-y-2"
+            >
+              <p
+                className="text-muted-foreground text-xs font-semibold
+                  tracking-[0.06em] uppercase"
               >
-                {icon && <span aria-hidden="true">{icon}</span>}
-                {label}
-              </button>
-            )
-          })}
+                {group.label}
+              </p>
+              <div className="grid grid-cols-2 gap-2.5">
+                {group.options.map((option) => (
+                  <CategoryOptionButton
+                    key={option.value}
+                    option={option}
+                    selected={
+                      option.value === value && option.groupKey === groupKey
+                    }
+                    onChange={onChange}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
-      </ScrollArea>
+      </div>
     </CardContent>
   )
 }
 
-type CountsTowardBudgetProps = {
-  checked: boolean
-  modelProbability: number
-  onCheckedChange?: (checked: boolean) => void
-  className?: string
+type CategoryOptionButtonProps = {
+  option: CategoryOption
+  selected: boolean
+  onChange?: (categoryId: string, groupKey: string) => void
 }
 
-export function CountsTowardBudget({
-  checked,
-  modelProbability,
-  onCheckedChange,
-  className,
-}: CountsTowardBudgetProps) {
+function CategoryOptionButton({
+  option,
+  selected,
+  onChange,
+}: CategoryOptionButtonProps) {
+  const { icon, label } = splitOptionLabel(option.label)
+  const tint = categoryTint(label, useCategoryColor(label))
+
   return (
-    <CardContent className={cn('px-0', className)}>
-      <div
-        className="border-border bg-muted flex items-center justify-between
-          gap-4 rounded-2xl border px-3.5 py-3"
-      >
-        <div className="space-y-0.5">
-          <p className="text-[15px] font-semibold">Counts toward budget</p>
-          <p className="text-muted-foreground text-[13px]">
-            Model says {modelProbability}% likely an expense
-          </p>
-        </div>
-        <Switch
-          checked={checked}
-          onCheckedChange={onCheckedChange}
-          aria-label="Counts toward budget"
-        />
-      </div>
-    </CardContent>
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={() => onChange?.(option.value, option.groupKey ?? '')}
+      className={cn(
+        `focus-visible:ring-primary/40 flex h-[46px] items-center gap-2
+        rounded-[14px] border px-3 text-left text-sm font-semibold
+        transition-all outline-none focus-visible:ring-[3px]`,
+        selected
+          ? 'translate-y-[3px]'
+          : `bg-raised border-border text-card-foreground
+            [box-shadow:0_3px_0_var(--lip-sm)]`,
+      )}
+      style={
+        selected
+          ? {
+              color: tint.color,
+              backgroundColor: withAlpha(tint.color, 0.18),
+              borderColor: withAlpha(tint.color, 0.6),
+            }
+          : undefined
+      }
+    >
+      {icon && <span aria-hidden="true">{icon}</span>}
+      {label}
+    </button>
   )
 }
 

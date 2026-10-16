@@ -1,9 +1,12 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 
 import { FlatCurrentBudget } from '../FlatCurrentBudget'
 
 describe('FlatCurrentBudget', () => {
+  const onClick = vi.fn()
+
   beforeEach(() => {
+    vi.clearAllMocks()
     render(
       <FlatCurrentBudget
         budgetName="October 2026"
@@ -12,6 +15,7 @@ describe('FlatCurrentBudget', () => {
         spentAmount="R 19 368"
         spentPercentage={80.7}
         daysLeft={11}
+        onClick={onClick}
         linkProvider={({ children }) => <a href="/">{children}</a>}
       />,
     )
@@ -36,5 +40,14 @@ describe('FlatCurrentBudget', () => {
     expect(
       screen.getByRole('link', { name: /current budget/i }),
     ).toBeInTheDocument()
+  })
+
+  it('toggles visibility when the amount is clicked', () => {
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Toggle remaining amount visibility',
+      }),
+    )
+    expect(onClick).toHaveBeenCalled()
   })
 })

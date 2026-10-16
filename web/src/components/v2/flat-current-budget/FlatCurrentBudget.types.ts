@@ -8,4 +8,6 @@ export type FlatCurrentBudgetProps = {
   spentPercentage: number
   daysLeft?: number
   linkProvider?: ComponentType<{ children: ReactNode }>
+  onEdit?: () => void
+  onClick?: () => void
 }

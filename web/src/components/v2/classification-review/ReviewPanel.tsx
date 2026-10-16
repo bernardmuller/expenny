@@ -3,6 +3,7 @@ import { Check } from 'lucide-react'
 import { Button } from '@/components/v2/ui/button'
 import { Input } from '@/components/v2/ui/input'
 
+import { filterCategoryOptionsByDirection } from '../shared/categories'
 import * as ReviewPanelCompound from './ReviewPanel.compound'
 import type { ReviewPanelProps } from '../shared/Review.types'
 
@@ -12,16 +13,20 @@ export function ReviewPanel({
   total,
   displayName,
   categoryId,
+  groupKey,
   categoryOptions,
-  countsTowardBudget,
   onDisplayNameChange,
   onCategoryChange,
-  onCountsTowardBudgetChange,
   onPrev,
   onNext,
   onConfirm,
   onSkip,
 }: ReviewPanelProps) {
+  const options = filterCategoryOptionsByDirection(
+    categoryOptions,
+    item.isIncome,
+  )
+
   return (
     <ReviewPanelCompound.Root>
       <ReviewPanelCompound.Header>
@@ -57,13 +62,9 @@ export function ReviewPanel({
       </ReviewPanelCompound.Classification>
       <ReviewPanelCompound.CategoryGrid
         value={categoryId}
-        options={categoryOptions}
+        groupKey={groupKey}
+        options={options}
         onChange={onCategoryChange}
-      />
-      <ReviewPanelCompound.CountsTowardBudget
-        checked={countsTowardBudget}
-        modelProbability={item.expenseProbability}
-        onCheckedChange={onCountsTowardBudgetChange}
       />
       <ReviewPanelCompound.Actions>
         <Button size="lg" className="w-full text-[17px]" onClick={onConfirm}>

@@ -1,6 +1,7 @@
 import { ChevronRight } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
 
+import { Button } from '@/components/v2/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/v2/ui/card'
 import { Progress } from '@/components/v2/ui/progress'
 import { cn } from '@/lib/utils/cn'
@@ -64,24 +65,44 @@ export function Title({ children, className }: TitleProps) {
 export function Period({
   children,
   className,
+  onEdit,
 }: {
   children: ReactNode
   className?: string
+  onEdit?: () => void
 }) {
+  const classes = cn('text-muted-foreground text-sm', className)
+
+  if (!onEdit) {
+    return <CardDescription className={classes}>{children}</CardDescription>
+  }
+
   return (
-    <CardDescription className={cn('text-muted-foreground text-sm', className)}>
+    <button
+      type="button"
+      onClick={onEdit}
+      className={cn(
+        classes,
+        `hover:text-foreground w-fit underline decoration-dotted
+        underline-offset-4 transition-colors`,
+      )}
+    >
       {children}
-    </CardDescription>
+    </button>
   )
 }
 
 type RemainingProps = {
   amount: string
   of: string
+  onClick?: () => void
   className?: string
 }
 
-export function Remaining({ amount, of, className }: RemainingProps) {
+export function Remaining({ amount, of, onClick, className }: RemainingProps) {
+  const amountClass =
+    'text-primary font-display text-[50px] leading-none font-semibold tracking-[2px]'
+
   return (
     <div
       className={cn(
@@ -89,12 +110,18 @@ export function Remaining({ amount, of, className }: RemainingProps) {
         className,
       )}
     >
-      <span
-        className="text-primary font-display text-[50px] leading-none
-          font-semibold tracking-[2px]"
-      >
-        {amount}
-      </span>
+      {onClick ? (
+        <Button
+          variant="ghost"
+          onClick={onClick}
+          aria-label="Toggle remaining amount visibility"
+          className="h-auto rounded-none p-0 hover:bg-transparent"
+        >
+          <span className={amountClass}>{amount}</span>
+        </Button>
+      ) : (
+        <span className={amountClass}>{amount}</span>
+      )}
       <span className="text-muted-foreground text-[15px]">
         remaining of {of}
       </span>

@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"expenny.co.za/internal/store/postgres"
@@ -115,6 +116,20 @@ func (v *SessionVerifier) User(ctx context.Context, r *http.Request) (postgres.U
 	return user, nil
 }
 
+// AllowedEmail is the only account this private deployment serves. Anyone
+// else who manages to hold a session is signed out instead of being given an
+// empty app. ALLOWED_EMAIL overrides it.
+func AllowedEmail() string {
+	if email := strings.TrimSpace(os.Getenv("ALLOWED_EMAIL")); email != "" {
+		return email
+	}
+	return "b.mullerjnr@gmail.com"
+}
+
+func isAllowedEmail(email string) bool {
+	return strings.EqualFold(email, AllowedEmail())
+}
+
 type contextKey string
 
 const userContextKey contextKey = "auth-user"
@@ -134,6 +149,12 @@ func (v *SessionVerifier) RequireUser(next http.Handler) http.Handler {
 				log.Printf("auth: session lookup failed: %v", err)
 				writeJSONError(w, http.StatusInternalServerError, "internal error")
 			}
+			return
+		}
+
+		if !isAllowedEmail(user.Email) {
+			log.Printf("auth: rejecting %s: not the allowed account", user.Email)
+			writeJSONError(w, http.StatusUnauthorized, "not an allowed account")
 			return
 		}
 

@@ -47,10 +47,18 @@ export const queryKeys = {
     all: ['statements'] as const,
     transactions: ['statements', 'transactions'] as const,
     categories: ['statements', 'categories'] as const,
+    /** Snapshot of a row opened from a list the paginated cache does not
+     * hold (e.g. an expanded category), used to back the details panel. */
+    selection: ['statements', 'selection'] as const,
     ingest: () => ['statements', 'ingest'] as const,
     correct: () => ['statements', 'correct'] as const,
+    updateCategory: () => ['statements', 'update-category'] as const,
   },
   me: ['v2', 'me'] as const,
+  budget: ['v2', 'budget'] as const,
+  categoryGroups: ['v2', 'category-groups'] as const,
+  categoryBudgets: ['v2', 'category-budgets'] as const,
+  corrections: ['v2', 'corrections'] as const,
   recurringExpenses: {
     all: ['recurring-expenses'] as const,
     byUser: (userId: string) => ['recurring-expenses', 'user', userId] as const,

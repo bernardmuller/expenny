@@ -19,10 +19,12 @@ import { ReviewCard } from '../classification-review/ReviewCard'
 import { ReviewPanel } from '../classification-review/ReviewPanel'
 import { MobileNav } from '../mobile-nav/MobileNav'
 import type { MobileNavItem } from '../mobile-nav/MobileNav.types'
+import { TransactionDetails } from '../transaction-details/TransactionDetails'
 import { TransactionList } from '../transaction-list/TransactionList'
 import { TransactionTable } from '../transaction-table/TransactionTable'
 import { UploadDrawer } from '../upload-drawer/UploadDrawer'
 import {
+  createReviewItem,
   mockCategoryOptions,
   mockReviewItems,
 } from '../shared/__mocks__/review.mock'
@@ -70,6 +72,18 @@ const mobileNavItems: Array<MobileNavItem> = [
 
 const MASK = '✱✱✱✱✱✱✱✱'
 
+const selectedTransactionDetails = createReviewItem({
+  id: 'details-1',
+  merchant: 'Checkers Hyper',
+  emoji: '🛒',
+  date: 'Wed 8 Oct 2026',
+  amount: 'R 452.90',
+  originalDescription: 'CARD PURCHASE CHECKERS HYPER 4529',
+  category: { id: 'groceries', label: 'Groceries', icon: '🛒' },
+  confidence: 96,
+  balanceAfter: 'R 12 341.10',
+})
+
 function filterTransactions(
   transactions: Array<StatementTransaction>,
   activeFilter: string,
@@ -81,8 +95,8 @@ function filterTransactions(
         return transaction.needsReview
       case 'money-in':
         return transaction.direction === 'in'
-      case 'not-counted':
-        return transaction.counted === false
+      case 'excl-fees':
+        return !transaction.isFee
       default:
         return true
     }
@@ -95,13 +109,13 @@ function filterTransactions(
   )
 }
 
-function DesktopDashboard() {
+function DesktopDashboard({ details = false }: { details?: boolean }) {
   const [activeFilter, setActiveFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState('transaction-4')
   const [displayName, setDisplayName] = useState('Takealot')
   const [categoryId, setCategoryId] = useState('shopping')
-  const [countsTowardBudget, setCountsTowardBudget] = useState(true)
+  const [groupKey, setGroupKey] = useState('expenses')
 
   const transactions = useMemo(
     () => filterTransactions(mockTransactions, activeFilter, search),
@@ -167,20 +181,26 @@ function DesktopDashboard() {
               onSelect={setSelectedId}
               linkProvider={({ children }) => <a href="/">{children}</a>}
             />
-            <ReviewPanel
-              item={mockReviewItems[1]}
-              index={1}
-              total={3}
-              displayName={displayName}
-              categoryId={categoryId}
-              categoryOptions={mockCategoryOptions}
-              countsTowardBudget={countsTowardBudget}
-              onDisplayNameChange={setDisplayName}
-              onCategoryChange={setCategoryId}
-              onCountsTowardBudgetChange={setCountsTowardBudget}
-              onConfirm={() => {}}
-              onSkip={() => {}}
-            />
+            {details ? (
+              <TransactionDetails item={selectedTransactionDetails} />
+            ) : (
+              <ReviewPanel
+                item={mockReviewItems[1]}
+                index={1}
+                total={3}
+                displayName={displayName}
+                categoryId={categoryId}
+                groupKey={groupKey}
+                categoryOptions={mockCategoryOptions}
+                onDisplayNameChange={setDisplayName}
+                onCategoryChange={(nextCategoryId, nextGroupKey) => {
+                  setCategoryId(nextCategoryId)
+                  setGroupKey(nextGroupKey)
+                }}
+                onConfirm={() => {}}
+                onSkip={() => {}}
+              />
+            )}
           </div>
         </div>
       </main>
@@ -281,6 +301,13 @@ export const Desktop: Story = {
     viewport: { value: 'desktop-1440' },
   },
   render: () => <DesktopDashboard />,
+}
+
+export const DesktopSelected: Story = {
+  globals: {
+    viewport: { value: 'desktop-1440' },
+  },
+  render: () => <DesktopDashboard details />,
 }
 
 export const Mobile: Story = {

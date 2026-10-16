@@ -9,6 +9,7 @@ export function CurrentBudget({
   spentPercentage,
   daysLeft,
   onClick,
+  onEdit,
   linkProvider: LinkProvider,
 }: CurrentBudgetProps) {
   return (
@@ -22,7 +23,7 @@ export function CurrentBudget({
               'Current Budget'
             )}
           </CurrentBudgetCompound.Title>
-          <CurrentBudgetCompound.Period>
+          <CurrentBudgetCompound.Period onEdit={onEdit}>
             {budgetName}
           </CurrentBudgetCompound.Period>
         </div>

@@ -30,6 +30,12 @@ type IngestResult struct {
 	ClassifyError error
 }
 
+// StoreResult is a stored statement that has not been classified yet.
+type StoreResult struct {
+	Rows      []postgres.StatementTransaction
+	RowErrors []error
+}
+
 func NewIngestionService(parser *statements.Parser, store *store.Store, classifications *ClassificationsService) *IngestionService {
 	return &IngestionService{parser: parser, store: store, classifications: classifications}
 }
@@ -39,9 +45,50 @@ func NewIngestionService(parser *statements.Parser, store *store.Store, classifi
 // statement is a faithful copy of the CSV even if the classifier is down, and
 // re-ingesting the same file is safe because rows upsert on their dedup hash.
 func (s *IngestionService) Ingest(ctx context.Context, userID uuid.UUID, r io.Reader) (IngestResult, error) {
-	txns, rowErrs, err := s.parser.Parse(r)
+	parsed, err := s.parseAndStore(ctx, userID, r)
 	if err != nil {
 		return IngestResult{}, err
+	}
+
+	results, err := s.classifications.Classify(ctx, userID, parsed.txns, parsed.rows)
+	if err != nil {
+		return IngestResult{Rows: parsed.rows, RowErrors: parsed.rowErrors, ClassifyError: err}, nil
+	}
+
+	classified := 0
+	for _, result := range results {
+		if result.Err != nil {
+			parsed.rowErrors = append(parsed.rowErrors, fmt.Errorf("row %d: %w", result.Transaction.Nr, result.Err))
+			continue
+		}
+		classified++
+	}
+
+	return IngestResult{Rows: parsed.rows, Classified: classified, RowErrors: parsed.rowErrors}, nil
+}
+
+// Store parses a statement CSV and stores every row it can without
+// classifying anything. The caller can classify the returned rows separately,
+// which lets an HTTP client drive classification in batches and observe
+// progress between them.
+func (s *IngestionService) Store(ctx context.Context, userID uuid.UUID, r io.Reader) (StoreResult, error) {
+	parsed, err := s.parseAndStore(ctx, userID, r)
+	if err != nil {
+		return StoreResult{}, err
+	}
+	return StoreResult{Rows: parsed.rows, RowErrors: parsed.rowErrors}, nil
+}
+
+type parsedStatement struct {
+	txns      []statements.Transaction
+	rows      []postgres.StatementTransaction
+	rowErrors []error
+}
+
+func (s *IngestionService) parseAndStore(ctx context.Context, userID uuid.UUID, r io.Reader) (parsedStatement, error) {
+	txns, rowErrs, err := s.parser.Parse(r)
+	if err != nil {
+		return parsedStatement{}, err
 	}
 
 	rows := make([]postgres.StatementTransaction, 0, len(txns))
@@ -56,24 +103,10 @@ func (s *IngestionService) Ingest(ctx context.Context, userID uuid.UUID, r io.Re
 		return nil
 	})
 	if err != nil {
-		return IngestResult{}, err
+		return parsedStatement{}, err
 	}
 
-	results, err := s.classifications.Classify(ctx, userID, txns, rows)
-	if err != nil {
-		return IngestResult{Rows: rows, RowErrors: rowErrs, ClassifyError: err}, nil
-	}
-
-	classified := 0
-	for _, result := range results {
-		if result.Err != nil {
-			rowErrs = append(rowErrs, fmt.Errorf("row %d: %w", result.Transaction.Nr, result.Err))
-			continue
-		}
-		classified++
-	}
-
-	return IngestResult{Rows: rows, Classified: classified, RowErrors: rowErrs}, nil
+	return parsedStatement{txns: txns, rows: rows, rowErrors: rowErrs}, nil
 }
 
 func toStatementTransactionDTO(t statements.Transaction) statementtransactions.CreateStatementTransactionDTO {

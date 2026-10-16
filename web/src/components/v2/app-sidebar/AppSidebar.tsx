@@ -8,6 +8,7 @@ export function AppSidebar({
   defaultOpen,
   onNavigate,
   onUpload,
+  onPaste,
 }: AppSidebarProps) {
   return (
     <AppSidebarCompound.Provider defaultOpen={defaultOpen}>
@@ -15,6 +16,7 @@ export function AppSidebar({
         <AppSidebarCompound.Header>
           <AppSidebarCompound.Logo name="Expenny" />
           {onUpload && <AppSidebarCompound.UploadAction onClick={onUpload} />}
+          {onPaste && <AppSidebarCompound.PasteAction onClick={onPaste} />}
         </AppSidebarCompound.Header>
         <AppSidebarCompound.Content>
           <AppSidebarCompound.Nav>

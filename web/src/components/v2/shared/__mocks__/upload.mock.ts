@@ -1,12 +1,13 @@
 import type {
   SortedTransaction,
   UploadStep,
+  UploadSummary,
 } from '../../upload-drawer/UploadDrawer.types'
 
 export const mockUploadSteps: Array<UploadStep> = [
   {
     id: 'read',
-    title: 'Read file',
+    title: 'Read statement',
     description: '48 transactions found',
     status: 'done',
   },
@@ -36,3 +37,11 @@ export const mockSortedTransactions: Array<SortedTransaction> = [
     category: 'Investments',
   },
 ]
+
+export const mockUploadSummary: UploadSummary = {
+  processed: 48,
+  classified: 41,
+  needsReview: 7,
+  failed: 0,
+  parseSkipped: 0,
+}

@@ -53,6 +53,16 @@ type Budget struct {
 	EndDate       sql.NullTime
 }
 
+type BudgetPreference struct {
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	Account   sql.NullString
+	StartDate time.Time
+	EndDate   time.Time
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
 type BudgetRecurringExpense struct {
 	ID          uuid.UUID
 	BudgetID    uuid.UUID
@@ -86,6 +96,22 @@ type CategoryBudget struct {
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 	DeletedAt       sql.NullTime
+}
+
+type CategoryGroup struct {
+	ID        uuid.UUID
+	Key       string
+	Label     string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+type CategoryGroupMember struct {
+	ID         uuid.UUID
+	CategoryID uuid.UUID
+	GroupID    uuid.UUID
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 type Chat struct {
@@ -241,6 +267,7 @@ type StatementTransactionClassification struct {
 	ClassifiedAt           sql.NullTime
 	CreatedAt              time.Time
 	UpdatedAt              time.Time
+	GroupKey               sql.NullString
 }
 
 type Transaction struct {

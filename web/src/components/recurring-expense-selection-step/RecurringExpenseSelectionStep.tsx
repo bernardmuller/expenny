@@ -49,7 +49,7 @@ export default function RecurringExpenseSelectionStep({
           You don't have any recurring expenses yet.
         </p>
         <Button variant="outline" asChild>
-          <Link to="/profile/recurring-expenses">Add recurring expenses</Link>
+          <Link to="/archive/profile/recurring-expenses">Add recurring expenses</Link>
         </Button>
       </div>
     )

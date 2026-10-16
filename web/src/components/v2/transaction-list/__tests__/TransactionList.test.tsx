@@ -60,10 +60,6 @@ describe('TransactionList', () => {
     expect(screen.getAllByText('Review')).toHaveLength(3)
   })
 
-  it('marks uncounted transactions', () => {
-    expect(screen.getByText('Not counted · 7 Oct')).toBeInTheDocument()
-  })
-
   it('calls onSelect when a row is clicked', () => {
     fireEvent.click(screen.getByText('Woolworths Food'))
     expect(onSelect).toHaveBeenCalledWith('transaction-1')

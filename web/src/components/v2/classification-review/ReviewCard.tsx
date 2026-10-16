@@ -11,7 +11,6 @@ export function ReviewCard({
   total,
   onLooksRight,
   onChange,
-  onNotExpense,
   onSkip,
 }: ReviewCardProps) {
   return (
@@ -61,9 +60,6 @@ export function ReviewCard({
         </Button>
       </ReviewCardCompound.Actions>
       <ReviewCardCompound.Footer>
-        <ReviewCardCompound.LinkAction onClick={onNotExpense}>
-          Not an expense
-        </ReviewCardCompound.LinkAction>
         <ReviewCardCompound.LinkAction onClick={onSkip}>
           Skip for now
         </ReviewCardCompound.LinkAction>

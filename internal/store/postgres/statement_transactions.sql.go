@@ -11,7 +11,47 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
+
+const countStatementTransactionsByUser = `-- name: CountStatementTransactionsByUser :one
+SELECT count(*)
+FROM statement_transactions st
+WHERE st.user_id = $1
+`
+
+func (q *Queries) CountStatementTransactionsByUser(ctx context.Context, userID uuid.UUID) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countStatementTransactionsByUser, userID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countStatementTransactionsNeedingReview = `-- name: CountStatementTransactionsNeedingReview :one
+SELECT count(*)
+FROM statement_transactions st
+LEFT JOIN statement_transaction_classifications stc ON stc.statement_transaction_id = st.id
+WHERE st.user_id = $1
+  AND (
+    stc.id IS NULL
+    OR (
+      stc.source <> 'human'
+      AND (stc.confidence IS NULL OR stc.confidence::float8 < $2::float8)
+    )
+  )
+`
+
+type CountStatementTransactionsNeedingReviewParams struct {
+	UserID    uuid.UUID
+	Threshold float64
+}
+
+func (q *Queries) CountStatementTransactionsNeedingReview(ctx context.Context, arg CountStatementTransactionsNeedingReviewParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countStatementTransactionsNeedingReview, arg.UserID, arg.Threshold)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
 
 const getALlStatementTransactionsByUserID = `-- name: GetALlStatementTransactionsByUserID :many
 SELECT st.id, st.user_id, st.account, st.nr, st.posting_date, st.transaction_date, st.description, st.original_description, st.parent_category, st.category, st.money_in, st.money_out, st.fee, st.balance, st.dedup_hash, st.created_at, st.updated_at
@@ -60,7 +100,7 @@ func (q *Queries) GetALlStatementTransactionsByUserID(ctx context.Context, userI
 	return items, nil
 }
 
-const getClassifiedStatementTransactionsByUserId = `-- name: GetClassifiedStatementTransactionsByUserId :many
+const getClassifiedStatementTransactionsByUserIdPage = `-- name: GetClassifiedStatementTransactionsByUserIdPage :many
 SELECT
   st.id,
   st.nr,
@@ -80,6 +120,7 @@ SELECT
   stc.expense_prob,
   stc.confidence,
   stc.source,
+  stc.group_key AS classification_group,
   stc.classifier_version,
   stc.classified_at,
   c.id AS category_id,
@@ -90,10 +131,23 @@ FROM statement_transactions st
 LEFT JOIN statement_transaction_classifications stc ON stc.statement_transaction_id = st.id
 LEFT JOIN categories c ON stc.category_id = c.id
 WHERE st.user_id = $1
+  AND ($2::uuid IS NULL OR stc.category_id = $2::uuid)
+  AND ($3::timestamp IS NULL OR st.transaction_date >= $3::timestamp)
+  AND ($4::timestamp IS NULL OR st.transaction_date <= $4::timestamp)
 ORDER BY st.transaction_date DESC, st.nr DESC
+LIMIT $6 OFFSET $5
 `
 
-type GetClassifiedStatementTransactionsByUserIdRow struct {
+type GetClassifiedStatementTransactionsByUserIdPageParams struct {
+	UserID      uuid.UUID
+	CategoryID  uuid.NullUUID
+	WindowStart sql.NullTime
+	WindowEnd   sql.NullTime
+	PageOffset  int32
+	PageLimit   int32
+}
+
+type GetClassifiedStatementTransactionsByUserIdPageRow struct {
 	ID                  uuid.UUID
 	Nr                  int32
 	Account             string
@@ -112,6 +166,7 @@ type GetClassifiedStatementTransactionsByUserIdRow struct {
 	ExpenseProb         sql.NullString
 	Confidence          sql.NullString
 	Source              sql.NullString
+	ClassificationGroup sql.NullString
 	ClassifierVersion   sql.NullString
 	ClassifiedAt        sql.NullTime
 	CategoryID          uuid.NullUUID
@@ -120,15 +175,22 @@ type GetClassifiedStatementTransactionsByUserIdRow struct {
 	CategoryIcon        sql.NullString
 }
 
-func (q *Queries) GetClassifiedStatementTransactionsByUserId(ctx context.Context, userID uuid.UUID) ([]GetClassifiedStatementTransactionsByUserIdRow, error) {
-	rows, err := q.db.QueryContext(ctx, getClassifiedStatementTransactionsByUserId, userID)
+func (q *Queries) GetClassifiedStatementTransactionsByUserIdPage(ctx context.Context, arg GetClassifiedStatementTransactionsByUserIdPageParams) ([]GetClassifiedStatementTransactionsByUserIdPageRow, error) {
+	rows, err := q.db.QueryContext(ctx, getClassifiedStatementTransactionsByUserIdPage,
+		arg.UserID,
+		arg.CategoryID,
+		arg.WindowStart,
+		arg.WindowEnd,
+		arg.PageOffset,
+		arg.PageLimit,
+	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetClassifiedStatementTransactionsByUserIdRow
+	var items []GetClassifiedStatementTransactionsByUserIdPageRow
 	for rows.Next() {
-		var i GetClassifiedStatementTransactionsByUserIdRow
+		var i GetClassifiedStatementTransactionsByUserIdPageRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Nr,
@@ -148,6 +210,7 @@ func (q *Queries) GetClassifiedStatementTransactionsByUserId(ctx context.Context
 			&i.ExpenseProb,
 			&i.Confidence,
 			&i.Source,
+			&i.ClassificationGroup,
 			&i.ClassifierVersion,
 			&i.ClassifiedAt,
 			&i.CategoryID,
@@ -166,6 +229,80 @@ func (q *Queries) GetClassifiedStatementTransactionsByUserId(ctx context.Context
 		return nil, err
 	}
 	return items, nil
+}
+
+const getLatestSalaryTransaction = `-- name: GetLatestSalaryTransaction :one
+SELECT
+  st.id,
+  st.description,
+  st.original_description,
+  st.transaction_date,
+  st.money_in
+FROM statement_transactions st
+JOIN statement_transaction_classifications stc ON stc.statement_transaction_id = st.id
+JOIN categories c ON stc.category_id = c.id
+WHERE st.user_id = $1
+  AND st.transaction_date >= $2
+  AND st.transaction_date < $3
+  AND ($4::text = '' OR st.account = $4)
+  AND c.key = 'salary'
+ORDER BY st.transaction_date DESC, st.nr DESC
+LIMIT 1
+`
+
+type GetLatestSalaryTransactionParams struct {
+	UserID       uuid.UUID
+	StartDate    time.Time
+	EndExclusive time.Time
+	Account      string
+}
+
+type GetLatestSalaryTransactionRow struct {
+	ID                  uuid.UUID
+	Description         string
+	OriginalDescription string
+	TransactionDate     time.Time
+	MoneyIn             string
+}
+
+func (q *Queries) GetLatestSalaryTransaction(ctx context.Context, arg GetLatestSalaryTransactionParams) (GetLatestSalaryTransactionRow, error) {
+	row := q.db.QueryRowContext(ctx, getLatestSalaryTransaction,
+		arg.UserID,
+		arg.StartDate,
+		arg.EndExclusive,
+		arg.Account,
+	)
+	var i GetLatestSalaryTransactionRow
+	err := row.Scan(
+		&i.ID,
+		&i.Description,
+		&i.OriginalDescription,
+		&i.TransactionDate,
+		&i.MoneyIn,
+	)
+	return i, err
+}
+
+const getLatestStatementBalance = `-- name: GetLatestStatementBalance :one
+SELECT st.balance
+FROM statement_transactions st
+WHERE st.user_id = $1
+  AND st.balance IS NOT NULL
+  AND ($2::text = '' OR st.account = $2)
+ORDER BY st.transaction_date DESC, st.nr DESC
+LIMIT 1
+`
+
+type GetLatestStatementBalanceParams struct {
+	UserID  uuid.UUID
+	Account string
+}
+
+func (q *Queries) GetLatestStatementBalance(ctx context.Context, arg GetLatestStatementBalanceParams) (sql.NullString, error) {
+	row := q.db.QueryRowContext(ctx, getLatestStatementBalance, arg.UserID, arg.Account)
+	var balance sql.NullString
+	err := row.Scan(&balance)
+	return balance, err
 }
 
 const getStatementTransactionById = `-- name: GetStatementTransactionById :one
@@ -202,6 +339,89 @@ func (q *Queries) GetStatementTransactionById(ctx context.Context, arg GetStatem
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const getUnclassifiedStatementTransactionsByIds = `-- name: GetUnclassifiedStatementTransactionsByIds :many
+SELECT st.id, st.user_id, st.account, st.nr, st.posting_date, st.transaction_date, st.description, st.original_description, st.parent_category, st.category, st.money_in, st.money_out, st.fee, st.balance, st.dedup_hash, st.created_at, st.updated_at
+FROM statement_transactions st
+LEFT JOIN statement_transaction_classifications stc ON stc.statement_transaction_id = st.id
+WHERE st.user_id = $1 AND st.id = ANY($2::uuid[]) AND stc.id IS NULL
+`
+
+type GetUnclassifiedStatementTransactionsByIdsParams struct {
+	UserID uuid.UUID
+	Ids    []uuid.UUID
+}
+
+func (q *Queries) GetUnclassifiedStatementTransactionsByIds(ctx context.Context, arg GetUnclassifiedStatementTransactionsByIdsParams) ([]StatementTransaction, error) {
+	rows, err := q.db.QueryContext(ctx, getUnclassifiedStatementTransactionsByIds, arg.UserID, pq.Array(arg.Ids))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []StatementTransaction
+	for rows.Next() {
+		var i StatementTransaction
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Account,
+			&i.Nr,
+			&i.PostingDate,
+			&i.TransactionDate,
+			&i.Description,
+			&i.OriginalDescription,
+			&i.ParentCategory,
+			&i.Category,
+			&i.MoneyIn,
+			&i.MoneyOut,
+			&i.Fee,
+			&i.Balance,
+			&i.DedupHash,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listStatementAccounts = `-- name: ListStatementAccounts :many
+SELECT DISTINCT st.account
+FROM statement_transactions st
+WHERE st.user_id = $1
+ORDER BY st.account
+`
+
+func (q *Queries) ListStatementAccounts(ctx context.Context, userID uuid.UUID) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, listStatementAccounts, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var account string
+		if err := rows.Scan(&account); err != nil {
+			return nil, err
+		}
+		items = append(items, account)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const upsertStatementTransaction = `-- name: UpsertStatementTransaction :one

@@ -7,9 +7,26 @@ package postgres
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
+
+const deleteCorrection = `-- name: DeleteCorrection :exec
+DELETE FROM corrections
+WHERE id = $1
+  AND user_id = $2
+`
+
+type DeleteCorrectionParams struct {
+	ID     uuid.UUID
+	UserID uuid.UUID
+}
+
+func (q *Queries) DeleteCorrection(ctx context.Context, arg DeleteCorrectionParams) error {
+	_, err := q.db.ExecContext(ctx, deleteCorrection, arg.ID, arg.UserID)
+	return err
+}
 
 const getAllCorrectionsByUserId = `-- name: GetAllCorrectionsByUserId :many
 SELECT c.id, c.user_id, c.normalised_description, c.category_id, c.created_at, c.updated_at
@@ -45,6 +62,126 @@ func (q *Queries) GetAllCorrectionsByUserId(ctx context.Context, userID uuid.UUI
 		return nil, err
 	}
 	return items, nil
+}
+
+const getCorrectionByDescription = `-- name: GetCorrectionByDescription :one
+SELECT id, user_id, normalised_description, category_id, created_at, updated_at FROM corrections
+WHERE user_id = $1
+  AND normalised_description = $2
+`
+
+type GetCorrectionByDescriptionParams struct {
+	UserID                uuid.UUID
+	NormalisedDescription string
+}
+
+func (q *Queries) GetCorrectionByDescription(ctx context.Context, arg GetCorrectionByDescriptionParams) (Correction, error) {
+	row := q.db.QueryRowContext(ctx, getCorrectionByDescription, arg.UserID, arg.NormalisedDescription)
+	var i Correction
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.NormalisedDescription,
+		&i.CategoryID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getCorrectionsByUser = `-- name: GetCorrectionsByUser :many
+SELECT
+    c.id,
+    c.normalised_description,
+    c.category_id,
+    c.created_at,
+    c.updated_at,
+    cat.key   AS category_key,
+    cat.label AS category_label,
+    cat.icon  AS category_icon
+FROM corrections c
+JOIN categories cat ON cat.id = c.category_id
+WHERE c.user_id = $1
+ORDER BY c.normalised_description
+`
+
+type GetCorrectionsByUserRow struct {
+	ID                    uuid.UUID
+	NormalisedDescription string
+	CategoryID            uuid.UUID
+	CreatedAt             time.Time
+	UpdatedAt             time.Time
+	CategoryKey           string
+	CategoryLabel         string
+	CategoryIcon          string
+}
+
+func (q *Queries) GetCorrectionsByUser(ctx context.Context, userID uuid.UUID) ([]GetCorrectionsByUserRow, error) {
+	rows, err := q.db.QueryContext(ctx, getCorrectionsByUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetCorrectionsByUserRow
+	for rows.Next() {
+		var i GetCorrectionsByUserRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.NormalisedDescription,
+			&i.CategoryID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CategoryKey,
+			&i.CategoryLabel,
+			&i.CategoryIcon,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateCorrection = `-- name: UpdateCorrection :one
+UPDATE corrections
+SET normalised_description = $1,
+    category_id = $2,
+    updated_at = now()
+WHERE id = $3
+  AND user_id = $4
+RETURNING id, user_id, normalised_description, category_id, created_at, updated_at
+`
+
+type UpdateCorrectionParams struct {
+	NormalisedDescription string
+	CategoryID            uuid.UUID
+	ID                    uuid.UUID
+	UserID                uuid.UUID
+}
+
+func (q *Queries) UpdateCorrection(ctx context.Context, arg UpdateCorrectionParams) (Correction, error) {
+	row := q.db.QueryRowContext(ctx, updateCorrection,
+		arg.NormalisedDescription,
+		arg.CategoryID,
+		arg.ID,
+		arg.UserID,
+	)
+	var i Correction
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.NormalisedDescription,
+		&i.CategoryID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const upsertCorrection = `-- name: UpsertCorrection :one

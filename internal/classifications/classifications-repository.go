@@ -23,6 +23,7 @@ type UpsertClassificationDTO struct {
 	ExpenseProb            *float64
 	Confidence             *float64
 	Source                 string
+	GroupKey               string
 	ClassifierVersion      *string
 	ClassifiedAt           *time.Time
 }
@@ -47,6 +48,7 @@ func (r *ClassificationsRepository) Upsert(ctx context.Context, dto UpsertClassi
 		ExpenseProb:            utils.NullRatio(dto.ExpenseProb),
 		Confidence:             utils.NullRatio(dto.Confidence),
 		Source:                 dto.Source,
+		GroupKey:               utils.NullString(utils.OptionalString(dto.GroupKey)),
 		ClassifierVersion:      utils.NullString(dto.ClassifierVersion),
 		ClassifiedAt:           utils.NullTime(dto.ClassifiedAt),
 	})
@@ -67,6 +69,7 @@ func (r *ClassificationsRepository) UpsertHuman(ctx context.Context, dto UpsertC
 		ExpenseProb:            utils.NullRatio(dto.ExpenseProb),
 		Confidence:             utils.NullRatio(dto.Confidence),
 		Source:                 dto.Source,
+		GroupKey:               utils.NullString(utils.OptionalString(dto.GroupKey)),
 		ClassifierVersion:      utils.NullString(dto.ClassifierVersion),
 		ClassifiedAt:           utils.NullTime(dto.ClassifiedAt),
 	})

@@ -1,17 +1,14 @@
-import { Check, Search } from 'lucide-react'
-import type { ComponentProps, ReactNode } from 'react'
+import { Check, ChevronDown, Search } from 'lucide-react'
+import type { ComponentProps } from 'react'
 
 import { Badge } from '@/components/v2/ui/badge'
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from '@/components/v2/ui/card'
+import { Button } from '@/components/v2/ui/button'
+import { Card, CardContent, CardFooter } from '@/components/v2/ui/card'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/v2/ui/dropdown-menu'
 import {
@@ -19,10 +16,11 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from '@/components/v2/ui/input-group'
-import { Tabs, TabsList, TabsTrigger } from '@/components/v2/ui/tabs'
 import { cn } from '@/lib/utils/cn'
 
 import { categoryTint } from '../shared/categories'
+import { useCategoryColor } from '../shared/CategoryColors'
+import { CategoryPicker as SharedCategoryPicker } from '../shared/CategoryPicker'
 import { ConfidenceStat } from '../shared/ConfidenceBar'
 import type { CategoryOption } from '../shared/Review.types'
 import type { TransactionFilter } from '../shared/Transaction.types'
@@ -39,86 +37,74 @@ type RootProps = ComponentProps<typeof Card>
 export function Root({ className, ...props }: RootProps) {
   return (
     <Card
-      className={cn('gap-0 overflow-hidden px-4 pt-5 pb-3', className)}
+      className={cn('gap-0 overflow-hidden px-5 pt-5 pb-3', className)}
       {...props}
     />
   )
 }
 
-type ToolbarProps = {
-  children: ReactNode
-  className?: string
-}
-
-export function Toolbar({ children, className }: ToolbarProps) {
-  return (
-    <CardHeader
-      className={cn(
-        'flex flex-row flex-wrap items-center justify-between gap-3 px-3',
-        className,
-      )}
-    >
-      {children}
-    </CardHeader>
-  )
-}
-
-type FilterTabsProps = {
+type FilterMenuProps = {
   filters: Array<TransactionFilter>
   value: string
   onValueChange?: (value: string) => void
   className?: string
 }
 
-export function FilterTabs({
+/** The view selector that used to be a row of chips, now next to search. */
+export function FilterMenu({
   filters,
   value,
   onValueChange,
   className,
-}: FilterTabsProps) {
+}: FilterMenuProps) {
+  const active = filters.find((filter) => filter.id === value) ?? filters.at(0)
+
   return (
-    <Tabs
-      value={value}
-      onValueChange={onValueChange}
-      className={cn('w-fit', className)}
-    >
-      <TabsList className="h-auto gap-2.5 bg-transparent p-0">
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          className={cn('h-10 gap-2 rounded-full px-4', className)}
+        >
+          {active?.label}
+          {typeof active?.count === 'number' && (
+            <span className="text-muted-foreground text-[13px]">
+              · {active.count}
+            </span>
+          )}
+          <ChevronDown className="size-4 opacity-60" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-52">
+        <DropdownMenuLabel
+          className="text-muted-foreground text-xs font-semibold
+            tracking-[0.06em] uppercase"
+        >
+          Show
+        </DropdownMenuLabel>
         {filters.map((filter) => {
-          const isReview = filter.id === 'review'
+          const selected = filter.id === value
 
           return (
-            <TabsTrigger
+            <DropdownMenuItem
               key={filter.id}
-              value={filter.id}
+              onSelect={() => onValueChange?.(filter.id)}
               className={cn(
-                'h-10 flex-none rounded-full border px-4.5 text-sm',
-                isReview
-                  ? `border-chart-3/45 bg-chart-3/12 text-chart-3
-                    hover:bg-chart-3/12 data-[state=active]:border-chart-3/45
-                    data-[state=active]:bg-chart-3/12
-                    data-[state=active]:text-chart-3 font-bold
-                    [box-shadow:0_3px_0_color-mix(in_srgb,var(--color-chart-3)_18%,var(--color-card))]
-                    data-[state=active]:font-bold
-                    data-[state=active]:[box-shadow:0_3px_0_color-mix(in_srgb,var(--color-chart-3)_18%,var(--color-card))]`
-                  : `border-border bg-raised text-card-foreground
-                    hover:bg-raised hover:text-foreground
-                    data-[state=active]:border-primary
-                    data-[state=active]:bg-primary
-                    data-[state=active]:text-primary-foreground font-semibold
-                    [box-shadow:0_3px_0_var(--lip-sm)]
-                    data-[state=active]:font-bold
-                    data-[state=active]:[box-shadow:0_3px_0_color-mix(in_srgb,var(--color-primary)_72%,black)]`,
+                filter.id === 'review' && 'text-chart-3 font-semibold',
               )}
             >
+              <Check className={cn('size-4', !selected && 'opacity-0')} />
               {filter.label}
               {typeof filter.count === 'number' && (
-                <span>· {filter.count}</span>
+                <span className="text-muted-foreground ml-auto text-[13px]">
+                  · {filter.count}
+                </span>
               )}
-            </TabsTrigger>
+            </DropdownMenuItem>
           )
         })}
-      </TabsList>
-    </Tabs>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
@@ -149,7 +135,9 @@ export function Content({
   className,
   ...props
 }: ComponentProps<typeof CardContent>) {
-  return <CardContent className={cn('px-0 pt-3', className)} {...props} />
+  // No top padding: the sticky table header has to sit flush with the scroll
+  // port, otherwise rows scroll up through the gap above it.
+  return <CardContent className={cn('px-0', className)} {...props} />
 }
 
 type FooterProps = ComponentProps<typeof CardFooter>
@@ -182,7 +170,7 @@ export function MerchantCell({
   category,
   className,
 }: MerchantCellProps) {
-  const tint = categoryTint(category)
+  const tint = categoryTint(category, useCategoryColor(category))
 
   return (
     <div className={cn('flex items-center gap-3', className)}>
@@ -220,7 +208,7 @@ type CategoryPillProps = {
 }
 
 export function CategoryPill({ icon, label, className }: CategoryPillProps) {
-  const tint = categoryTint(label)
+  const tint = categoryTint(label, useCategoryColor(label))
 
   return (
     <Badge
@@ -241,8 +229,9 @@ export function CategoryPill({ icon, label, className }: CategoryPillProps) {
 type CategoryPickerProps = {
   label: string
   value: string
+  groupKey?: string
   options: Array<CategoryOption>
-  onChange?: (value: string) => void
+  onChange?: (categoryId: string, groupKey: string) => void
   className?: string
 }
 
@@ -250,52 +239,21 @@ type CategoryPickerProps = {
 export function CategoryPicker({
   label,
   value,
+  groupKey,
   options,
   onChange,
   className,
 }: CategoryPickerProps) {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          aria-label={`Change category for ${label}`}
-          // Keep the row from selecting/reviewing when only the category is
-          // being changed.
-          onClick={(event) => event.stopPropagation()}
-          className={cn(
-            `focus-visible:ring-primary/40 cursor-pointer rounded-full
-            transition-transform outline-none focus-visible:ring-[3px]
-            active:translate-y-px`,
-            className,
-          )}
-        >
-          <CategoryPill label={label} />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="start"
-        className="w-52"
-        // Portal events still bubble through the React tree, so keep menu
-        // interactions from selecting the row underneath.
-        onClick={(event) => event.stopPropagation()}
-      >
-        {options.map((option) => {
-          const selected = option.value === value
-
-          return (
-            <DropdownMenuItem
-              key={option.value}
-              disabled={selected}
-              onSelect={() => onChange?.(option.value)}
-            >
-              <Check className={cn('size-4', !selected && 'opacity-0')} />
-              {option.label}
-            </DropdownMenuItem>
-          )
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <SharedCategoryPicker
+      label={label}
+      value={value}
+      groupKey={groupKey}
+      options={options}
+      onChange={onChange}
+      className={className}
+      trigger={<CategoryPill label={label} />}
+    />
   )
 }
 

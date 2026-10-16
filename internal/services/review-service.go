@@ -2,9 +2,11 @@ package services
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 
+	statementtransactions "expenny.co.za/internal/statement-transactions"
 	"expenny.co.za/internal/store"
 	"expenny.co.za/internal/store/postgres"
 )
@@ -13,8 +15,24 @@ import (
 // handed to a human. Rows that were never classified also need a human.
 const NeedsReviewThreshold = 0.8
 
-// ReviewService serves the dashboard view: every statement row joined with its
-// classification and category, plus the category options a review needs.
+// Statement page sizes served by the API. The default keeps the dashboard's
+// first payload small; the max stops a caller from asking for everything.
+const (
+	DefaultTransactionPageSize = 20
+	MaxTransactionPageSize     = 100
+)
+
+// TransactionPage is one slice of the user's statement rows plus the totals
+// the dashboard needs for counters that span every page.
+type TransactionPage struct {
+	Rows        []postgres.GetClassifiedStatementTransactionsByUserIdPageRow
+	Total       int
+	ReviewCount int
+}
+
+// ReviewService serves the dashboard view: a page of statement rows joined
+// with their classification and category, plus the category options a review
+// needs.
 type ReviewService struct {
 	store *store.Store
 }
@@ -23,14 +41,66 @@ func NewReviewService(st *store.Store) *ReviewService {
 	return &ReviewService{store: st}
 }
 
-// ListTransactions returns every statement transaction for the user, joined
-// with its classification and category. Rows that were never classified come
-// back with the classification fields empty.
-func (s *ReviewService) ListTransactions(ctx context.Context, userID uuid.UUID) ([]postgres.GetClassifiedStatementTransactionsByUserIdRow, error) {
-	return s.store.Repos().Statements.ListClassifiedByUser(ctx, userID)
+// ListTransactions returns a page of statement transactions for the user,
+// newest first, joined with their classification and category. Rows that were
+// never classified come back with the classification fields empty. Total and
+// ReviewCount cover the whole statement, not just the page.
+func (s *ReviewService) ListTransactions(ctx context.Context, userID uuid.UUID, limit, offset int) (TransactionPage, error) {
+	limit = clampPageSize(limit)
+	if offset < 0 {
+		offset = 0
+	}
+
+	rows, err := s.store.Repos().Statements.ListClassifiedByUser(ctx, userID, statementtransactions.ClassifiedListFilter{
+		Limit:  limit,
+		Offset: offset,
+	})
+	if err != nil {
+		return TransactionPage{}, err
+	}
+
+	total, err := s.store.Repos().Statements.CountByUser(ctx, userID)
+	if err != nil {
+		return TransactionPage{}, err
+	}
+
+	reviewCount, err := s.store.Repos().Statements.CountNeedingReview(ctx, userID, NeedsReviewThreshold)
+	if err != nil {
+		return TransactionPage{}, err
+	}
+
+	return TransactionPage{
+		Rows:        rows,
+		Total:       int(total),
+		ReviewCount: int(reviewCount),
+	}, nil
 }
 
-// ListCategories returns the categories a human can correct a row to.
-func (s *ReviewService) ListCategories(ctx context.Context) ([]postgres.Category, error) {
-	return s.store.Repos().Categories.ListActive(ctx)
+// CategoryTransactions returns the user's classified rows for one category
+// inside a window, newest first, capped at limit.
+func (s *ReviewService) CategoryTransactions(ctx context.Context, userID, categoryID uuid.UUID, start, end *time.Time, limit int) ([]postgres.GetClassifiedStatementTransactionsByUserIdPageRow, error) {
+	return s.store.Repos().Statements.ListClassifiedByUser(ctx, userID, statementtransactions.ClassifiedListFilter{
+		Limit:       limit,
+		CategoryID:  &categoryID,
+		WindowStart: start,
+		WindowEnd:   end,
+	})
+}
+
+// UnclassifiedTransactions returns the user's rows from the given id set that
+// still need a classification. Ids that are unknown, owned by somebody else,
+// or already classified are omitted, which lets the classify endpoint treat
+// them as skipped work.
+func (s *ReviewService) UnclassifiedTransactions(ctx context.Context, userID uuid.UUID, ids []uuid.UUID) ([]postgres.StatementTransaction, error) {
+	return s.store.Repos().Statements.ListUnclassifiedByIDs(ctx, userID, ids)
+}
+
+func clampPageSize(limit int) int {
+	if limit <= 0 {
+		return DefaultTransactionPageSize
+	}
+	if limit > MaxTransactionPageSize {
+		return MaxTransactionPageSize
+	}
+	return limit
 }

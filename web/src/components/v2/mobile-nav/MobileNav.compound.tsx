@@ -1,4 +1,4 @@
-import { Upload, User, Wallet } from 'lucide-react'
+import { ClipboardPaste, Upload, User, Wallet } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
 
 import { cn } from '@/lib/utils/cn'
@@ -116,6 +116,7 @@ type BarProps = {
   activeId: string
   onNavigate?: (id: string) => void
   onUpload?: () => void
+  onPaste?: () => void
   className?: string
   children?: ReactNode
 }
@@ -125,6 +126,7 @@ export function Bar({
   activeId,
   onNavigate,
   onUpload,
+  onPaste,
   className,
   children,
 }: BarProps) {
@@ -152,7 +154,28 @@ export function Bar({
       )}
     >
       {leading.map(renderItem)}
-      {children ?? <UploadAction onClick={onUpload} />}
+      {children ??
+        (onUpload ? (
+          <div className="relative mb-[22px]">
+            <UploadAction onClick={onUpload} />
+            {onPaste && (
+              <button
+                type="button"
+                aria-label="Paste CSV"
+                onClick={onPaste}
+                className="bg-card text-card-foreground border-border
+                  focus-visible:ring-primary/40 absolute -top-1 -left-1
+                  inline-flex size-9 -rotate-4 items-center justify-center
+                  rounded-full border [box-shadow:0_3px_0_var(--lip-sm)]
+                  outline-none focus-visible:ring-[3px]"
+              >
+                <ClipboardPaste className="size-4" />
+              </button>
+            )}
+          </div>
+        ) : (
+          <div aria-hidden="true" className="mb-[22px] size-17 shrink-0" />
+        ))}
       {trailing.map(renderItem)}
     </nav>
   )

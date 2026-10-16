@@ -16,12 +16,30 @@ export type SortedTransaction = {
   category: string
 }
 
+/** Where the import is in its lifecycle. `idle` is the start screen. */
+export type UploadDrawerStatus = 'idle' | 'importing' | 'success'
+
+export type UploadSummary = {
+  processed: number
+  classified: number
+  needsReview: number
+  failed: number
+  parseSkipped: number
+}
+
 export type UploadDrawerProps = {
   open: boolean
   onOpenChange?: (open: boolean) => void
+  status?: UploadDrawerStatus
   fileName: string
   fileRange: string
+  csvText?: string
+  onCsvTextChange?: (value: string) => void
+  onPasteSubmit?: () => void
+  onFile?: (file: File) => void
   steps: Array<UploadStep>
   sorted: Array<SortedTransaction>
+  summary?: UploadSummary
   onCancel?: () => void
+  onDone?: () => void
 }
