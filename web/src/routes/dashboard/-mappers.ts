@@ -129,6 +129,10 @@ export function toStatementTransaction(
       : undefined,
     confidence: transactionConfidence(transaction),
     needsReview: transaction.needs_review,
+    // Rows without a classification cannot be marked seen yet.
+    seen: transaction.classification
+      ? transaction.classification.seen_at != null
+      : undefined,
     isFee,
     direction,
   }

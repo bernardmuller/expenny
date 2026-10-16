@@ -268,6 +268,7 @@ type StatementTransactionClassification struct {
 	CreatedAt              time.Time
 	UpdatedAt              time.Time
 	GroupKey               sql.NullString
+	SeenAt                 sql.NullTime
 }
 
 type Transaction struct {

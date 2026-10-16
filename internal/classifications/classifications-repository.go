@@ -78,3 +78,17 @@ func (r *ClassificationsRepository) UpsertHuman(ctx context.Context, dto UpsertC
 func (r *ClassificationsRepository) ListByUser(ctx context.Context, userID uuid.UUID) ([]postgres.StatementTransactionClassification, error) {
 	return r.queries.GetAllClassificationsByUserID(ctx, userID)
 }
+
+// MarkSeen records that a human looked at a row's classification and returns
+// when it happened. Rows with no classification, or rows owned by somebody
+// else, come back as sql.ErrNoRows.
+func (r *ClassificationsRepository) MarkSeen(ctx context.Context, userID, transactionID uuid.UUID) (time.Time, error) {
+	seenAt, err := r.queries.MarkStatementTransactionSeen(ctx, postgres.MarkStatementTransactionSeenParams{
+		StatementTransactionID: transactionID,
+		UserID:                 userID,
+	})
+	if err != nil {
+		return time.Time{}, err
+	}
+	return seenAt.Time, nil
+}

@@ -72,6 +72,7 @@ SELECT
   stc.group_key AS classification_group,
   stc.classifier_version,
   stc.classified_at,
+  stc.seen_at AS classification_seen_at,
   c.id AS category_id,
   c.key AS category_key,
   c.label AS category_label,
@@ -156,3 +157,17 @@ SELECT count(*)
 FROM statement_transactions st
 LEFT JOIN statement_transaction_classifications stc ON stc.statement_transaction_id = st.id
 WHERE st.user_id = @user_id AND stc.id IS NULL;
+
+-- name: GetPendingStatementTransactionsByUser :many
+-- Card payments show up tagged "(Pending)" until they clear. A cleared copy
+-- replaces the pending row, so ingestion looks up the user's pending rows and
+-- deletes the ones that have just cleared.
+SELECT st.*
+FROM statement_transactions st
+WHERE st.user_id = @user_id
+  AND st.description ILIKE '%(pending)%';
+
+-- name: DeleteStatementTransactionsByIDs :exec
+DELETE FROM statement_transactions
+WHERE user_id = @user_id
+  AND id = ANY(@ids::uuid[]);

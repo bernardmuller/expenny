@@ -122,6 +122,22 @@ func (r *StatementTransactionsRepository) CountUnclassifiedByUser(ctx context.Co
 	return r.DB.CountUnclassifiedStatementTransactionsByUser(ctx, userID)
 }
 
+// ListPendingByUser returns the user's rows whose description carries the
+// "(Pending)" tag. The exact tag check is repeated in Go because the bank
+// decides the casing and position.
+func (r *StatementTransactionsRepository) ListPendingByUser(ctx context.Context, userID uuid.UUID) ([]postgres.StatementTransaction, error) {
+	return r.DB.GetPendingStatementTransactionsByUser(ctx, userID)
+}
+
+// DeleteByIDs removes rows the user owns. Their classifications and any
+// derived transactions go with them through the foreign keys.
+func (r *StatementTransactionsRepository) DeleteByIDs(ctx context.Context, userID uuid.UUID, ids []uuid.UUID) error {
+	return r.DB.DeleteStatementTransactionsByIDs(ctx, postgres.DeleteStatementTransactionsByIDsParams{
+		UserID: userID,
+		Ids:    ids,
+	})
+}
+
 // LatestBalance returns the balance of the most recent statement row that has
 // one. An empty account means every account. It returns sql.ErrNoRows when no
 // row carries a balance yet.

@@ -72,6 +72,7 @@ func newHandler(app *application.Application, secret string) http.Handler {
 	mux.Handle("GET /v2/statements/transactions", verifier.RequireUser(http.HandlerFunc(api.listTransactions)))
 	mux.Handle("POST /v2/statements/transactions/{id}/correction", verifier.RequireUser(http.HandlerFunc(api.correctTransaction)))
 	mux.Handle("PATCH /v2/statements/transactions/{id}/category", verifier.RequireUser(http.HandlerFunc(api.updateTransactionCategory)))
+	mux.Handle("PATCH /v2/statements/transactions/{id}/seen", verifier.RequireUser(http.HandlerFunc(api.markTransactionSeen)))
 	mux.Handle("GET /v2/categories", verifier.RequireUser(http.HandlerFunc(api.listCategories)))
 	mux.Handle("POST /v2/categories", verifier.RequireUser(http.HandlerFunc(api.createCategory)))
 	mux.Handle("PATCH /v2/categories/{id}", verifier.RequireUser(http.HandlerFunc(api.updateCategory)))

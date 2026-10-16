@@ -13,7 +13,7 @@ import (
 )
 
 const getAllClassificationsByUserID = `-- name: GetAllClassificationsByUserID :many
-SELECT c.id, c.statement_transaction_id, c.category_id, c.is_expense, c.expense_prob, c.confidence, c.source, c.classifier_version, c.classified_at, c.created_at, c.updated_at, c.group_key
+SELECT c.id, c.statement_transaction_id, c.category_id, c.is_expense, c.expense_prob, c.confidence, c.source, c.classifier_version, c.classified_at, c.created_at, c.updated_at, c.group_key, c.seen_at
 FROM statement_transaction_classifications c
 JOIN statement_transactions st ON st.id = c.statement_transaction_id
 WHERE st.user_id = $1
@@ -41,6 +41,7 @@ func (q *Queries) GetAllClassificationsByUserID(ctx context.Context, userID uuid
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.GroupKey,
+			&i.SeenAt,
 		); err != nil {
 			return nil, err
 		}
@@ -53,6 +54,29 @@ func (q *Queries) GetAllClassificationsByUserID(ctx context.Context, userID uuid
 		return nil, err
 	}
 	return items, nil
+}
+
+const markStatementTransactionSeen = `-- name: MarkStatementTransactionSeen :one
+UPDATE statement_transaction_classifications stc
+SET seen_at = now(),
+    updated_at = now()
+FROM statement_transactions st
+WHERE st.id = stc.statement_transaction_id
+  AND stc.statement_transaction_id = $1
+  AND st.user_id = $2
+RETURNING stc.seen_at
+`
+
+type MarkStatementTransactionSeenParams struct {
+	StatementTransactionID uuid.UUID
+	UserID                 uuid.UUID
+}
+
+func (q *Queries) MarkStatementTransactionSeen(ctx context.Context, arg MarkStatementTransactionSeenParams) (sql.NullTime, error) {
+	row := q.db.QueryRowContext(ctx, markStatementTransactionSeen, arg.StatementTransactionID, arg.UserID)
+	var seen_at sql.NullTime
+	err := row.Scan(&seen_at)
+	return seen_at, err
 }
 
 const upsertClassification = `-- name: UpsertClassification :one
@@ -94,7 +118,7 @@ ON CONFLICT (statement_transaction_id) DO UPDATE SET
      classified_at      = EXCLUDED.classified_at,
      updated_at         = now()
 WHERE statement_transaction_classifications.source <> 'human'
-RETURNING id, statement_transaction_id, category_id, is_expense, expense_prob, confidence, source, classifier_version, classified_at, created_at, updated_at, group_key
+RETURNING id, statement_transaction_id, category_id, is_expense, expense_prob, confidence, source, classifier_version, classified_at, created_at, updated_at, group_key, seen_at
 `
 
 type UpsertClassificationParams struct {
@@ -137,6 +161,7 @@ func (q *Queries) UpsertClassification(ctx context.Context, arg UpsertClassifica
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.GroupKey,
+		&i.SeenAt,
 	)
 	return i, err
 }
@@ -179,7 +204,7 @@ ON CONFLICT (statement_transaction_id) DO UPDATE SET
      classifier_version = EXCLUDED.classifier_version,
      classified_at      = EXCLUDED.classified_at,
      updated_at         = now()
-RETURNING id, statement_transaction_id, category_id, is_expense, expense_prob, confidence, source, classifier_version, classified_at, created_at, updated_at, group_key
+RETURNING id, statement_transaction_id, category_id, is_expense, expense_prob, confidence, source, classifier_version, classified_at, created_at, updated_at, group_key, seen_at
 `
 
 type UpsertHumanClassificationParams struct {
@@ -222,6 +247,7 @@ func (q *Queries) UpsertHumanClassification(ctx context.Context, arg UpsertHuman
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.GroupKey,
+		&i.SeenAt,
 	)
 	return i, err
 }

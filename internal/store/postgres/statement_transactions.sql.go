@@ -67,6 +67,22 @@ func (q *Queries) CountUnclassifiedStatementTransactionsByUser(ctx context.Conte
 	return count, err
 }
 
+const deleteStatementTransactionsByIDs = `-- name: DeleteStatementTransactionsByIDs :exec
+DELETE FROM statement_transactions
+WHERE user_id = $1
+  AND id = ANY($2::uuid[])
+`
+
+type DeleteStatementTransactionsByIDsParams struct {
+	UserID uuid.UUID
+	Ids    []uuid.UUID
+}
+
+func (q *Queries) DeleteStatementTransactionsByIDs(ctx context.Context, arg DeleteStatementTransactionsByIDsParams) error {
+	_, err := q.db.ExecContext(ctx, deleteStatementTransactionsByIDs, arg.UserID, pq.Array(arg.Ids))
+	return err
+}
+
 const getALlStatementTransactionsByUserID = `-- name: GetALlStatementTransactionsByUserID :many
 SELECT st.id, st.user_id, st.account, st.nr, st.posting_date, st.transaction_date, st.description, st.original_description, st.parent_category, st.category, st.money_in, st.money_out, st.fee, st.balance, st.dedup_hash, st.created_at, st.updated_at
 FROM statement_transactions st
@@ -137,6 +153,7 @@ SELECT
   stc.group_key AS classification_group,
   stc.classifier_version,
   stc.classified_at,
+  stc.seen_at AS classification_seen_at,
   c.id AS category_id,
   c.key AS category_key,
   c.label AS category_label,
@@ -162,31 +179,32 @@ type GetClassifiedStatementTransactionsByUserIdPageParams struct {
 }
 
 type GetClassifiedStatementTransactionsByUserIdPageRow struct {
-	ID                  uuid.UUID
-	Nr                  int32
-	Account             string
-	PostingDate         time.Time
-	TransactionDate     time.Time
-	Description         string
-	OriginalDescription string
-	ParentCategory      sql.NullString
-	Category            sql.NullString
-	MoneyIn             string
-	MoneyOut            string
-	Fee                 string
-	Balance             sql.NullString
-	ClassificationID    uuid.NullUUID
-	IsExpense           sql.NullBool
-	ExpenseProb         sql.NullString
-	Confidence          sql.NullString
-	Source              sql.NullString
-	ClassificationGroup sql.NullString
-	ClassifierVersion   sql.NullString
-	ClassifiedAt        sql.NullTime
-	CategoryID          uuid.NullUUID
-	CategoryKey         sql.NullString
-	CategoryLabel       sql.NullString
-	CategoryIcon        sql.NullString
+	ID                   uuid.UUID
+	Nr                   int32
+	Account              string
+	PostingDate          time.Time
+	TransactionDate      time.Time
+	Description          string
+	OriginalDescription  string
+	ParentCategory       sql.NullString
+	Category             sql.NullString
+	MoneyIn              string
+	MoneyOut             string
+	Fee                  string
+	Balance              sql.NullString
+	ClassificationID     uuid.NullUUID
+	IsExpense            sql.NullBool
+	ExpenseProb          sql.NullString
+	Confidence           sql.NullString
+	Source               sql.NullString
+	ClassificationGroup  sql.NullString
+	ClassifierVersion    sql.NullString
+	ClassifiedAt         sql.NullTime
+	ClassificationSeenAt sql.NullTime
+	CategoryID           uuid.NullUUID
+	CategoryKey          sql.NullString
+	CategoryLabel        sql.NullString
+	CategoryIcon         sql.NullString
 }
 
 func (q *Queries) GetClassifiedStatementTransactionsByUserIdPage(ctx context.Context, arg GetClassifiedStatementTransactionsByUserIdPageParams) ([]GetClassifiedStatementTransactionsByUserIdPageRow, error) {
@@ -227,6 +245,7 @@ func (q *Queries) GetClassifiedStatementTransactionsByUserIdPage(ctx context.Con
 			&i.ClassificationGroup,
 			&i.ClassifierVersion,
 			&i.ClassifiedAt,
+			&i.ClassificationSeenAt,
 			&i.CategoryID,
 			&i.CategoryKey,
 			&i.CategoryLabel,
@@ -317,6 +336,57 @@ func (q *Queries) GetLatestStatementBalance(ctx context.Context, arg GetLatestSt
 	var balance sql.NullString
 	err := row.Scan(&balance)
 	return balance, err
+}
+
+const getPendingStatementTransactionsByUser = `-- name: GetPendingStatementTransactionsByUser :many
+SELECT st.id, st.user_id, st.account, st.nr, st.posting_date, st.transaction_date, st.description, st.original_description, st.parent_category, st.category, st.money_in, st.money_out, st.fee, st.balance, st.dedup_hash, st.created_at, st.updated_at
+FROM statement_transactions st
+WHERE st.user_id = $1
+  AND st.description ILIKE '%(pending)%'
+`
+
+// Card payments show up tagged "(Pending)" until they clear. A cleared copy
+// replaces the pending row, so ingestion looks up the user's pending rows and
+// deletes the ones that have just cleared.
+func (q *Queries) GetPendingStatementTransactionsByUser(ctx context.Context, userID uuid.UUID) ([]StatementTransaction, error) {
+	rows, err := q.db.QueryContext(ctx, getPendingStatementTransactionsByUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []StatementTransaction
+	for rows.Next() {
+		var i StatementTransaction
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Account,
+			&i.Nr,
+			&i.PostingDate,
+			&i.TransactionDate,
+			&i.Description,
+			&i.OriginalDescription,
+			&i.ParentCategory,
+			&i.Category,
+			&i.MoneyIn,
+			&i.MoneyOut,
+			&i.Fee,
+			&i.Balance,
+			&i.DedupHash,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getStatementTransactionById = `-- name: GetStatementTransactionById :one

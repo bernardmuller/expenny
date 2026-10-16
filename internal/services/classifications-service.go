@@ -159,6 +159,13 @@ func (s *ClassificationsService) ClassifyStored(
 	return s.Classify(ctx, userID, txns, rows)
 }
 
+// MarkSeen records that a human looked at a row's classification and returns
+// the timestamp. Rows that have not been classified (or belong to somebody
+// else) come back as sql.ErrNoRows.
+func (s *ClassificationsService) MarkSeen(ctx context.Context, userID, transactionID uuid.UUID) (time.Time, error) {
+	return s.store.Repos().Classifications.MarkSeen(ctx, userID, transactionID)
+}
+
 // SetCategoryInput is a human's category choice for a single stored row.
 type SetCategoryInput struct {
 	StatementTransactionID uuid.UUID

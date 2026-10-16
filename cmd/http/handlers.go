@@ -170,6 +170,9 @@ type classificationResponse struct {
 	Source       string            `json:"source"`
 	Group        *string           `json:"group"`
 	ClassifiedAt *time.Time        `json:"classified_at"`
+	// SeenAt is when a human looked at the classification. NULL means the
+	// transactions table still highlights it as new.
+	SeenAt *time.Time `json:"seen_at"`
 }
 
 type transactionResponse struct {
@@ -412,6 +415,39 @@ func (a *api) classificationStatus(w http.ResponseWriter, r *http.Request) {
 		Pending:     status.Pending,
 		NeedsReview: status.NeedsReview,
 	})
+}
+
+// markTransactionSeen marks a classification as looked at, which clears the
+// "new" highlight on the transactions table. Rows that have not been
+// classified yet cannot be marked.
+func (a *api) markTransactionSeen(w http.ResponseWriter, r *http.Request) {
+	user, ok := requestUser(w, r)
+	if !ok {
+		return
+	}
+
+	transactionID, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, errorBody("transaction id is not a uuid"))
+		return
+	}
+
+	seenAt, err := a.app.Classifications.MarkSeen(r.Context(), user.ID, transactionID)
+	if errors.Is(err, sql.ErrNoRows) {
+		writeJSON(w, http.StatusNotFound, errorBody("transaction has no classification"))
+		return
+	}
+	if err != nil {
+		log.Printf("mark transaction seen: %v", err)
+		writeJSON(w, http.StatusInternalServerError, errorBody("could not mark the transaction seen"))
+		return
+	}
+
+	writeJSON(w, http.StatusOK, markSeenResponse{SeenAt: seenAt})
+}
+
+type markSeenResponse struct {
+	SeenAt time.Time `json:"seen_at"`
 }
 
 func (a *api) listCategories(w http.ResponseWriter, r *http.Request) {
@@ -1367,6 +1403,7 @@ func toTransactionResponses(rows []postgres.GetClassifiedStatementTransactionsBy
 				Confidence:   nullableRatio(row.Confidence),
 				ExpenseProb:  nullableRatio(row.ExpenseProb),
 				ClassifiedAt: nullableTime(row.ClassifiedAt),
+				SeenAt:       nullableTime(row.ClassificationSeenAt),
 			}
 			if row.CategoryID.Valid {
 				txn.Classification.Category = &categoryResponse{

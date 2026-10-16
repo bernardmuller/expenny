@@ -87,6 +87,9 @@ function correctedTransaction(
       source: 'human',
       group: correction.groupKey,
       classified_at: new Date().toISOString(),
+      // A human edit keeps whatever the row already had; a brand-new
+      // classification starts unseen, exactly like the server writes it.
+      seen_at: transaction.classification?.seen_at ?? null,
     },
   }
 }
@@ -136,6 +139,52 @@ export function applySelectionCorrection(
 ): StatementTransaction | null | undefined {
   if (!selection || selection.id !== transactionId) return selection
   return correctedTransaction(selection, correction)
+}
+
+/** One row with its classification marked as seen. */
+function seenTransaction(
+  transaction: StatementTransaction,
+  seenAt: string,
+): StatementTransaction {
+  if (!transaction.classification) return transaction
+  return {
+    ...transaction,
+    classification: { ...transaction.classification, seen_at: seenAt },
+  }
+}
+
+/**
+ * Clears the new-row highlight on one transaction once the user ticks its
+ * checkbox.
+ */
+export function applyTransactionSeen(
+  data: InfiniteData<StatementTransactionsResponse> | undefined,
+  transactionId: string,
+  seenAt: string,
+): InfiniteData<StatementTransactionsResponse> | undefined {
+  if (!data) return data
+
+  return {
+    ...data,
+    pages: data.pages.map((page) => ({
+      ...page,
+      transactions: page.transactions.map((transaction) =>
+        transaction.id === transactionId
+          ? seenTransaction(transaction, seenAt)
+          : transaction,
+      ),
+    })),
+  }
+}
+
+/** The details-panel snapshot can hold a row the pages do not. */
+export function applySelectionSeen(
+  selection: StatementTransaction | null | undefined,
+  transactionId: string,
+  seenAt: string,
+): StatementTransaction | null | undefined {
+  if (!selection || selection.id !== transactionId) return selection
+  return seenTransaction(selection, seenAt)
 }
 
 /**

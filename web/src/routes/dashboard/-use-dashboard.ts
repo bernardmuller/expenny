@@ -15,6 +15,7 @@ import type {
 } from '@/components/v2/upload-drawer/UploadDrawer.types'
 import type { BudgetPeriodInput } from '@/components/v2/budget-period-dialog/BudgetPeriodDialog.types'
 import { useCorrectTransaction } from '@/lib/http/v2/hooks/use-correct-transaction'
+import { useMarkTransactionSeen } from '@/lib/http/v2/hooks/use-mark-transaction-seen'
 import { useUpdateTransactionCategory } from '@/lib/http/v2/hooks/use-update-transaction-category'
 import { useIngestStatement } from '@/lib/http/v2/hooks/use-ingest-statement'
 import {
@@ -187,6 +188,8 @@ export function useDashboard() {
   // One-off edits (table and details panel) touch the row only; only a review
   // confirmation records a correction for the classifier.
   const updateTransactionCategory = useUpdateTransactionCategory()
+  // The table checkbox clears the new-row highlight on one classification.
+  const markSeen = useMarkTransactionSeen()
 
   const confirmReview = (categoryId: string, groupKey: string) => {
     if (!currentReviewRaw) return
@@ -444,6 +447,7 @@ export function useDashboard() {
     categoryLabels,
     selectedId: selectedId ?? currentReviewRaw?.id ?? null,
     onSelect: selectTransaction,
+    onToggleSeen: (transactionId: string) => markSeen.mutate(transactionId),
     currentReview,
     currentReviewIndex,
     reviewTotal: reviewCount,

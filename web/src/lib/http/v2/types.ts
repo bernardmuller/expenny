@@ -28,6 +28,8 @@ export type StatementClassification = {
   source: string
   group: string | null
   classified_at: string | null
+  /** NULL means the table still highlights the row as new. */
+  seen_at?: string | null
 }
 
 export type StatementTransaction = {
@@ -53,6 +55,10 @@ export type StatementTransactionsResponse = {
   total: number
   review_count: number
   next_offset: number | null
+}
+
+export type MarkTransactionSeenResponse = {
+  seen_at: string
 }
 
 export type StatementCategoriesResponse = {

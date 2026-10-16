@@ -20,6 +20,11 @@ export type StatementTransaction = {
   balance?: string
   confidence?: number
   needsReview?: boolean
+  /**
+   * Whether the classification has been looked at. `undefined` for rows that
+   * have no classification yet, which cannot be marked seen.
+   */
+  seen?: boolean
   /** True for bank fees (fee amount or the bank-fees category). */
   isFee?: boolean
   direction?: 'in' | 'out'
@@ -53,6 +58,8 @@ export type TransactionTableProps = TransactionListProps & {
     categoryId: string,
     groupKey: string,
   ) => void
+  /** Marks a classified row as seen, clearing its highlight. */
+  onToggleSeen?: (transactionId: string) => void
   /** Whether more pages are available from the server. */
   hasMore?: boolean
   /** Whether the next page is currently being fetched. */

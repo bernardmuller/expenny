@@ -52,6 +52,7 @@ export const queryKeys = {
     selection: ['statements', 'selection'] as const,
     ingest: () => ['statements', 'ingest'] as const,
     classificationStatus: ['statements', 'classification-status'] as const,
+    markSeen: () => ['statements', 'mark-seen'] as const,
     correct: () => ['statements', 'correct'] as const,
     updateCategory: () => ['statements', 'update-category'] as const,
   },

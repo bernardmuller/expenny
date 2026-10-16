@@ -84,3 +84,13 @@ SELECT c.*
 FROM statement_transaction_classifications c
 JOIN statement_transactions st ON st.id = c.statement_transaction_id
 WHERE st.user_id = @user_id;
+
+-- name: MarkStatementTransactionSeen :one
+UPDATE statement_transaction_classifications stc
+SET seen_at = now(),
+    updated_at = now()
+FROM statement_transactions st
+WHERE st.id = stc.statement_transaction_id
+  AND stc.statement_transaction_id = @statement_transaction_id
+  AND st.user_id = @user_id
+RETURNING stc.seen_at;

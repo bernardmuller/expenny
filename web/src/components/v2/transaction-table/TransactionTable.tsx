@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react'
 import type { UIEventHandler } from 'react'
 
 import { Button } from '@/components/v2/ui/button'
+import { Checkbox } from '@/components/v2/ui/checkbox'
 import { Spinner } from '@/components/v2/ui/spinner'
 import { TableCell, TableHead } from '@/components/v2/ui/table'
 import { cn } from '@/lib/utils/cn'
@@ -32,6 +33,7 @@ export function TransactionTable({
   onFilterChange,
   onSearchChange,
   onSelect,
+  onToggleSeen,
   hasMore,
   isLoadingMore,
   onLoadMore,
@@ -83,7 +85,7 @@ export function TransactionTable({
         onScroll={handleScroll}
       >
         <TransactionTableCompound.Table
-          className="table-fixed border-separate border-spacing-0"
+          className="table-fixed border-separate border-spacing-y-0.5"
         >
           <TransactionTableCompound.TableHeader>
             <TransactionTableCompound.TableRow
@@ -106,12 +108,18 @@ export function TransactionTable({
               <TableHead className={cn(headClassName, 'w-30 px-2 text-right')}>
                 Balance
               </TableHead>
+              <TableHead className={cn(headClassName, 'w-14 px-3 text-right')}>
+                <span className="sr-only">Seen</span>
+              </TableHead>
             </TransactionTableCompound.TableRow>
           </TransactionTableCompound.TableHeader>
           <TransactionTableCompound.TableBody>
             {transactions.map((transaction) => {
               const isSelected = transaction.id === selectedId
               const isIncome = transaction.direction === 'in'
+              // A classification the user has not ticked off yet gets the
+              // light blue tint so it stands out from the reviewed rows.
+              const isUnseen = transaction.seen === false
 
               return (
                 <TransactionTableCompound.TableRow
@@ -129,6 +137,10 @@ export function TransactionTable({
                     data-[state=selected]:[&>td:first-child]:border-l
                     [&>td:last-child]:rounded-r-2xl
                     data-[state=selected]:[&>td:last-child]:border-r`,
+                    isUnseen &&
+                      `[&>td]:bg-chart-2/10 [&>td]:border-chart-2/45
+                      [&>td]:border-y [&>td:first-child]:border-l
+                      [&>td:last-child]:border-r`,
                   )}
                   onClick={() => onSelect?.(transaction.id)}
                 >
@@ -188,13 +200,45 @@ export function TransactionTable({
                   >
                     {transaction.balance ?? '—'}
                   </TableCell>
+                  <TableCell
+                    className="pl-3 text-right
+                      [&:has([role=checkbox])]:pr-2"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    {onToggleSeen && transaction.seen !== undefined && (
+                      <Checkbox
+                        checked={transaction.seen}
+                        disabled={transaction.seen}
+                        aria-label={
+                          transaction.seen
+                            ? 'Seen'
+                            : `Mark "${transaction.description}" as seen`
+                        }
+                        // Unseen rows keep an empty box so the control reads
+                        // as actionable on the blue highlight; once ticked it
+                        // becomes a bare green check.
+                        className={cn(
+                          'shadow-none',
+                          transaction.seen
+                            ? `size-5 border-0 bg-transparent text-primary
+                              dark:bg-transparent
+                              data-[state=checked]:bg-transparent
+                              data-[state=checked]:text-primary
+                              dark:data-[state=checked]:bg-transparent
+                              disabled:opacity-100 [&_svg]:size-4.5`
+                            : 'size-4.5 border-muted-foreground/40 bg-card',
+                        )}
+                        onCheckedChange={() => onToggleSeen(transaction.id)}
+                      />
+                    )}
+                  </TableCell>
                 </TransactionTableCompound.TableRow>
               )
             })}
             {isLoadingMore && (
               <TransactionTableCompound.TableRow className="hover:bg-transparent">
                 <TableCell
-                  colSpan={6}
+                  colSpan={7}
                   className="text-muted-foreground h-14 text-center text-sm"
                 >
                   <span className="inline-flex items-center gap-2">

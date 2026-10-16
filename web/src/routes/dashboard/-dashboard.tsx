@@ -148,6 +148,7 @@ function DesktopDashboard({ model }: { model: DashboardModel }) {
                     onFilterChange={model.onFilterChange}
                     onSearchChange={model.onSearchChange}
                     onSelect={model.onSelect}
+                    onToggleSeen={model.onToggleSeen}
                     hasMore={model.hasMoreTransactions}
                     isLoadingMore={model.isLoadingMoreTransactions}
                     onLoadMore={model.onLoadMoreTransactions}

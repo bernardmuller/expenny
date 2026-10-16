@@ -1,8 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react'
+import { useState } from 'react'
 import userEvent from '@testing-library/user-event'
 
 import { TransactionTable } from '../TransactionTable'
 import {
+  createTransaction,
   mockTransactionFilters,
   mockTransactions,
 } from '../../shared/__mocks__/transaction.mock'
@@ -178,5 +180,99 @@ describe('TransactionTable', () => {
     expect(
       screen.getByRole('link', { name: 'View all 48 transactions' }),
     ).toBeInTheDocument()
+  })
+
+  it('highlights unseen rows until they are ticked off', () => {
+    const onToggleSeen = vi.fn()
+    render(
+      <TransactionTable
+        transactions={[
+          createTransaction({
+            id: 'txn-unseen',
+            description: 'Unseen Merchant',
+            seen: false,
+          }),
+          createTransaction({
+            id: 'txn-seen',
+            description: 'Seen Merchant',
+            seen: true,
+          }),
+          createTransaction({
+            id: 'txn-pending',
+            description: 'Pending Merchant',
+          }),
+        ]}
+        filters={mockTransactionFilters}
+        activeFilter="all"
+        totalCount={3}
+        onSelect={onSelect}
+        onToggleSeen={onToggleSeen}
+      />,
+    )
+
+    const unseenRow = screen.getByText('Unseen Merchant').closest('tr')
+    expect(unseenRow).toHaveClass(
+      '[&>td]:bg-chart-2/10',
+      '[&>td]:border-chart-2/45',
+    )
+
+    const checkbox = screen.getByRole('checkbox', {
+      name: /mark "Unseen Merchant" as seen/i,
+    })
+    // An unseen row shows the empty box; ticking replaces it with a bare
+    // check.
+    expect(checkbox).toHaveClass('bg-card', 'border-muted-foreground/40')
+    fireEvent.click(checkbox)
+
+    expect(onToggleSeen).toHaveBeenCalledWith('txn-unseen')
+    // Ticking the box must not also open the row's details panel.
+    expect(onSelect).not.toHaveBeenCalled()
+
+    expect(screen.getByRole('checkbox', { name: 'Seen' })).toBeDisabled()
+    // Rows without a classification cannot be marked seen yet.
+    expect(
+      screen.queryByRole('checkbox', { name: /Pending Merchant/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('ticks only the clicked row', () => {
+    function Harness() {
+      const [seen, setSeen] = useState<Record<string, boolean>>({
+        'txn-a': false,
+        'txn-b': false,
+        'txn-c': false,
+      })
+
+      return (
+        <TransactionTable
+          transactions={['a', 'b', 'c'].map((suffix) =>
+            createTransaction({
+              id: `txn-${suffix}`,
+              description: `Merchant ${suffix.toUpperCase()}`,
+              seen: seen[`txn-${suffix}`],
+            }),
+          )}
+          filters={mockTransactionFilters}
+          activeFilter="all"
+          totalCount={3}
+          onToggleSeen={(id) => setSeen((old) => ({ ...old, [id]: true }))}
+        />
+      )
+    }
+
+    render(<Harness />)
+
+    const checked = () =>
+      screen
+        .getAllByRole('checkbox')
+        .map((box) => box.getAttribute('aria-checked'))
+
+    expect(checked()).toEqual(['false', 'false', 'false'])
+
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: /mark "Merchant B" as seen/i }),
+    )
+
+    expect(checked()).toEqual(['false', 'true', 'false'])
   })
 })
