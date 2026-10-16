@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"runtime/debug"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/awslabs/aws-lambda-go-api-proxy/httpadapter"
@@ -93,15 +94,18 @@ func newHandler(app *application.Application, secret string) http.Handler {
 	mux.Handle("GET /v2/budget", verifier.RequireUser(http.HandlerFunc(api.getBudget)))
 	mux.Handle("PUT /v2/budget/preferences", verifier.RequireUser(http.HandlerFunc(api.updateBudgetPreferences)))
 
-	return logRequests(withCORS(mux))
+	return logRequests(withCORS(recoverPanics(mux)))
 }
 
 func withCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Advertise the origin dependency even when this request has no Origin
+		// header, so a proxy or CDN does not serve the origin-less response to
+		// a browser later.
+		w.Header().Add("Vary", "Origin")
 		if origin := r.Header.Get("Origin"); origin != "" {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
-			w.Header().Add("Vary", "Origin")
 		}
 
 		if r.Method == http.MethodOptions {
@@ -112,6 +116,21 @@ func withCORS(next http.Handler) http.Handler {
 			return
 		}
 
+		next.ServeHTTP(w, r)
+	})
+}
+
+// recoverPanics turns a handler crash into a normal 500 response. The CORS
+// headers were already written by withCORS, so the browser can read the error
+// instead of reporting a CORS failure and hiding the real problem.
+func recoverPanics(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if recovered := recover(); recovered != nil {
+				log.Printf("panic serving %s %s: %v\n%s", r.Method, r.URL.Path, recovered, debug.Stack())
+				writeJSON(w, http.StatusInternalServerError, errorBody("internal server error"))
+			}
+		}()
 		next.ServeHTTP(w, r)
 	})
 }
