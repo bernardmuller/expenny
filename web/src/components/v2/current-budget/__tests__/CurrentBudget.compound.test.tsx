@@ -46,6 +46,20 @@ describe('CurrentBudget.DaysLeftBadge', () => {
     render(<CurrentBudget.DaysLeftBadge daysLeft={daysLeft} />)
     expect(screen.getByText(label)).toBeInTheDocument()
   })
+
+  it('turns the ended badge solid red with a lifted lip', () => {
+    render(<CurrentBudget.DaysLeftBadge daysLeft={0} />)
+
+    const badge = screen.getByText('Budget End')
+    expect(badge).toHaveClass('bg-destructive', 'hover:-translate-y-px')
+    expect(badge).not.toHaveClass('bg-destructive/15')
+  })
+
+  it('keeps a running budget on the neutral chip', () => {
+    render(<CurrentBudget.DaysLeftBadge daysLeft={11} />)
+
+    expect(screen.getByText('11 days left')).toHaveClass('bg-raised')
+  })
 })
 
 describe('CurrentBudget.Remaining', () => {

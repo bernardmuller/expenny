@@ -3,6 +3,7 @@ import * as CurrentBudgetCompound from './CurrentBudget.compound'
 
 export function CurrentBudget({
   budgetName,
+  budgetMonth,
   currentAmount,
   startingAmount,
   spentAmount,
@@ -18,9 +19,11 @@ export function CurrentBudget({
         <div className="flex flex-col gap-0.5">
           <CurrentBudgetCompound.Title>
             {LinkProvider ? (
-              <LinkProvider>Current Budget</LinkProvider>
+              <LinkProvider>
+                {budgetMonth ?? 'Current Budget'}
+              </LinkProvider>
             ) : (
-              'Current Budget'
+              budgetMonth ?? 'Current Budget'
             )}
           </CurrentBudgetCompound.Title>
           <CurrentBudgetCompound.Period onEdit={onEdit}>

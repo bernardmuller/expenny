@@ -106,6 +106,22 @@ func (r *StatementTransactionsRepository) ListUnclassifiedByIDs(ctx context.Cont
 	})
 }
 
+// ListUnclassifiedByUser returns up to limit of the user's rows that do not
+// have a classification yet, oldest first. It lets a client resume an
+// interrupted import without knowing the row ids in advance.
+func (r *StatementTransactionsRepository) ListUnclassifiedByUser(ctx context.Context, userID uuid.UUID, limit int) ([]postgres.StatementTransaction, error) {
+	return r.DB.GetUnclassifiedStatementTransactionsByUser(ctx, postgres.GetUnclassifiedStatementTransactionsByUserParams{
+		UserID:    userID,
+		PageLimit: int32(limit),
+	})
+}
+
+// CountUnclassifiedByUser returns how many of the user's rows still need a
+// classification.
+func (r *StatementTransactionsRepository) CountUnclassifiedByUser(ctx context.Context, userID uuid.UUID) (int64, error) {
+	return r.DB.CountUnclassifiedStatementTransactionsByUser(ctx, userID)
+}
+
 // LatestBalance returns the balance of the most recent statement row that has
 // one. An empty account means every account. It returns sql.ErrNoRows when no
 // row carries a balance yet.

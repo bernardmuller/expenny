@@ -51,6 +51,7 @@ export const queryKeys = {
      * hold (e.g. an expanded category), used to back the details panel. */
     selection: ['statements', 'selection'] as const,
     ingest: () => ['statements', 'ingest'] as const,
+    classificationStatus: ['statements', 'classification-status'] as const,
     correct: () => ['statements', 'correct'] as const,
     updateCategory: () => ['statements', 'update-category'] as const,
   },

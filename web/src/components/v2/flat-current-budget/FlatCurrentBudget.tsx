@@ -3,6 +3,7 @@ import type { FlatCurrentBudgetProps } from './FlatCurrentBudget.types'
 
 export function FlatCurrentBudget({
   budgetName,
+  budgetMonth,
   currentAmount,
   startingAmount,
   spentAmount,
@@ -19,13 +20,13 @@ export function FlatCurrentBudget({
           {LinkProvider ? (
             <LinkProvider>
               <span className="flex items-center gap-1 hover:underline">
-                Current Budget
+                {budgetMonth ?? 'Current Budget'}
                 <FlatCurrentBudgetCompound.Chevron />
               </span>
             </LinkProvider>
           ) : (
             <span className="flex items-center gap-1">
-              Current Budget
+              {budgetMonth ?? 'Current Budget'}
               <FlatCurrentBudgetCompound.Chevron />
             </span>
           )}

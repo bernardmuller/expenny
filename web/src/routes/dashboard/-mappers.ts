@@ -1,4 +1,11 @@
-import { format, parseISO } from 'date-fns'
+import {
+  addMonths,
+  differenceInCalendarDays,
+  endOfMonth,
+  format,
+  parseISO,
+  startOfMonth,
+} from 'date-fns'
 
 import type {
   CategoryOption,
@@ -178,6 +185,33 @@ export function formatBudgetWindow(start: string, end: string): string {
     parseISO(end),
     'd MMM yyyy',
   )}`
+}
+
+/**
+ * The month a budget period belongs to: the calendar month that holds the
+ * most days of the window. A calendar-month window reads as that month, and a
+ * salary window like 22 Sep – 24 Oct reads as October because most of its
+ * days land there.
+ */
+export function formatBudgetMonth(start: string, end: string): string {
+  const startDate = parseISO(start)
+  const endDate = parseISO(end)
+
+  let winner = startOfMonth(startDate)
+  let winnerDays = 0
+
+  for (let month = winner; month <= endDate; month = addMonths(month, 1)) {
+    const first = startDate > month ? startDate : month
+    const last = endDate < endOfMonth(month) ? endDate : endOfMonth(month)
+    const days = differenceInCalendarDays(last, first) + 1
+    // A tie leans towards the later month, where the window's midpoint falls.
+    if (days >= winnerDays) {
+      winner = month
+      winnerDays = days
+    }
+  }
+
+  return format(winner, 'MMMM yyyy')
 }
 
 export function buildTransactionFilters(

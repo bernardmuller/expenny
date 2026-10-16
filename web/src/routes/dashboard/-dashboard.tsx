@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { CheckCircle2, FileText, Upload } from 'lucide-react'
+import { CheckCircle2, FileText, LogOut, Upload } from 'lucide-react'
 
 import { BudgetPeriodDialog } from '@/components/v2/budget-period-dialog/BudgetPeriodDialog'
 import { CategoryAdmin } from '@/components/v2/category-admin/CategoryAdmin'
@@ -21,6 +21,7 @@ import { UploadDrawer } from '@/components/v2/upload-drawer/UploadDrawer'
 import { CategoryColorsProvider } from '@/components/v2/shared/CategoryColors'
 import { getCategoryTransactionsQueryOptions } from '@/lib/http/v2/queries/category-budgets'
 import type { StatementTransaction } from '@/lib/http/v2/types'
+import { useAuth } from '@/lib/auth/auth-provider'
 import { cn } from '@/lib/utils/cn'
 import { useIsMobile } from '@/hooks/use-mobile'
 
@@ -58,7 +59,7 @@ export function Dashboard() {
         steps={model.upload.steps}
         sorted={model.upload.sorted}
         summary={model.upload.summary}
-        onCancel={model.upload.close}
+        onCancel={model.upload.onCancel}
         onDone={model.upload.close}
       />
     </CategoryColorsProvider>
@@ -66,6 +67,8 @@ export function Dashboard() {
 }
 
 function DashboardHeader({ model }: { model: DashboardModel }) {
+  const { logout } = useAuth()
+
   return (
     <header className="flex flex-wrap items-start justify-between gap-4">
       <DashboardGreeting userName={model.user.name} />
@@ -77,7 +80,17 @@ function DashboardHeader({ model }: { model: DashboardModel }) {
           <Upload className="size-4.5" />
           Import statement
         </Button>
-        <ThemeToggle className="w-18 shrink-0" />
+        <ThemeToggle />
+        <Button
+          variant="outline"
+          size="icon"
+          aria-label="Sign out"
+          title="Sign out"
+          className="size-12 shrink-0 rounded-full"
+          onClick={() => void logout()}
+        >
+          <LogOut className="size-4.5" />
+        </Button>
       </div>
     </header>
   )
@@ -99,6 +112,7 @@ function DesktopDashboard({ model }: { model: DashboardModel }) {
 
         <FlatCurrentBudget
           budgetName={model.budget.budgetName}
+          budgetMonth={model.budget.budgetMonth}
           currentAmount={model.budget.currentAmount}
           startingAmount={model.budget.startingAmount}
           spentAmount={model.budget.spentAmount}
@@ -221,6 +235,7 @@ function MobileDashboard({ model }: { model: DashboardModel }) {
         <DashboardHeader model={model} />
         <CurrentBudget
           budgetName={model.budget.budgetName}
+          budgetMonth={model.budget.budgetMonth}
           currentAmount={model.budget.currentAmount}
           startingAmount={model.budget.startingAmount}
           spentAmount={model.budget.spentAmount}

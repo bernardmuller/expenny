@@ -50,4 +50,23 @@ describe('FlatCurrentBudget', () => {
     )
     expect(onClick).toHaveBeenCalled()
   })
+
+  it('uses the budget month as the heading when one is provided', () => {
+    render(
+      <FlatCurrentBudget
+        budgetName="1 Sep – 30 Sep 2026"
+        budgetMonth="September 2026"
+        currentAmount="R 4 632"
+        startingAmount="R 24 000"
+        spentAmount="R 19 368"
+        spentPercentage={80.7}
+        linkProvider={({ children }) => <a href="/">{children}</a>}
+      />,
+    )
+
+    expect(screen.getByText('September 2026')).toBeInTheDocument()
+    expect(
+      screen.getByRole('link', { name: /september 2026/i }),
+    ).toBeInTheDocument()
+  })
 })

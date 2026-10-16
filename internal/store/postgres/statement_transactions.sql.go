@@ -53,6 +53,20 @@ func (q *Queries) CountStatementTransactionsNeedingReview(ctx context.Context, a
 	return count, err
 }
 
+const countUnclassifiedStatementTransactionsByUser = `-- name: CountUnclassifiedStatementTransactionsByUser :one
+SELECT count(*)
+FROM statement_transactions st
+LEFT JOIN statement_transaction_classifications stc ON stc.statement_transaction_id = st.id
+WHERE st.user_id = $1 AND stc.id IS NULL
+`
+
+func (q *Queries) CountUnclassifiedStatementTransactionsByUser(ctx context.Context, userID uuid.UUID) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countUnclassifiedStatementTransactionsByUser, userID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const getALlStatementTransactionsByUserID = `-- name: GetALlStatementTransactionsByUserID :many
 SELECT st.id, st.user_id, st.account, st.nr, st.posting_date, st.transaction_date, st.description, st.original_description, st.parent_category, st.category, st.money_in, st.money_out, st.fee, st.balance, st.dedup_hash, st.created_at, st.updated_at
 FROM statement_transactions st
@@ -355,6 +369,61 @@ type GetUnclassifiedStatementTransactionsByIdsParams struct {
 
 func (q *Queries) GetUnclassifiedStatementTransactionsByIds(ctx context.Context, arg GetUnclassifiedStatementTransactionsByIdsParams) ([]StatementTransaction, error) {
 	rows, err := q.db.QueryContext(ctx, getUnclassifiedStatementTransactionsByIds, arg.UserID, pq.Array(arg.Ids))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []StatementTransaction
+	for rows.Next() {
+		var i StatementTransaction
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Account,
+			&i.Nr,
+			&i.PostingDate,
+			&i.TransactionDate,
+			&i.Description,
+			&i.OriginalDescription,
+			&i.ParentCategory,
+			&i.Category,
+			&i.MoneyIn,
+			&i.MoneyOut,
+			&i.Fee,
+			&i.Balance,
+			&i.DedupHash,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUnclassifiedStatementTransactionsByUser = `-- name: GetUnclassifiedStatementTransactionsByUser :many
+SELECT st.id, st.user_id, st.account, st.nr, st.posting_date, st.transaction_date, st.description, st.original_description, st.parent_category, st.category, st.money_in, st.money_out, st.fee, st.balance, st.dedup_hash, st.created_at, st.updated_at
+FROM statement_transactions st
+LEFT JOIN statement_transaction_classifications stc ON stc.statement_transaction_id = st.id
+WHERE st.user_id = $1 AND stc.id IS NULL
+ORDER BY st.transaction_date, st.nr
+LIMIT $2
+`
+
+type GetUnclassifiedStatementTransactionsByUserParams struct {
+	UserID    uuid.UUID
+	PageLimit int32
+}
+
+func (q *Queries) GetUnclassifiedStatementTransactionsByUser(ctx context.Context, arg GetUnclassifiedStatementTransactionsByUserParams) ([]StatementTransaction, error) {
+	rows, err := q.db.QueryContext(ctx, getUnclassifiedStatementTransactionsByUser, arg.UserID, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}

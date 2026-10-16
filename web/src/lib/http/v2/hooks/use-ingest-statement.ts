@@ -1,26 +1,29 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { queryKeys } from '../../query-keys'
 import { apiFetch } from '../client'
 import { invalidateStatementData } from '../cache'
 import type {
+  ClassificationStatusResponse,
   ClassifiedTransaction,
   ClassifyTransactionsResponse,
   IngestStatementResponse,
 } from '../types'
 
-/** How many transactions are classified at the same time. The classifier
- * itself fans out to its own workers, so one row per request keeps every
- * provider call busy while still ticking the counter row by row. */
-const CLASSIFY_CONCURRENCY = 6
+/** How many pending rows one classify request processes. One batch runs the
+ * classifier's own worker pool once, which keeps each request well inside the
+ * gateway timeout and moves the import along in visible steps. */
+const CLASSIFY_BATCH = 6
 
 const RECENT_ROWS = 5
 
 export type IngestInput =
   | { kind: 'file'; file: File }
   | { kind: 'csv'; csv: string }
+  /** Continue classifying rows left over from an interrupted import. */
+  | { kind: 'resume'; total: number }
 
 export type IngestedTransactionRow = {
   id: string
@@ -70,14 +73,20 @@ const EMPTY_PROGRESS: IngestProgress = {
 }
 
 /**
- * Imports a statement in two steps: the CSV is stored first, then the client
- * classifies the stored rows in small batches. Doing classification as a
- * client-driven loop means progress is visible per transaction and the API
- * stays a plain request/response service (no streaming support needed).
+ * Imports a statement in two steps: the CSV is stored first, then the stored
+ * rows are classified in batches. Classification is a plain request/response
+ * loop rather than a streaming response, so progress is visible per batch and
+ * the API stays serverless-friendly.
+ *
+ * The loop lives here, in the dashboard, not in the drawer, so closing the
+ * drawer no longer stops the import. On mount the hook checks for rows left
+ * unclassified by an interrupted import (a closed tab, for example) and picks
+ * the work back up.
  */
 export function useIngestStatement() {
   const queryClient = useQueryClient()
   const controllerRef = useRef<AbortController | null>(null)
+  const resumeCheckedRef = useRef(false)
   const [progress, setProgress] = useState<IngestProgress>(EMPTY_PROGRESS)
 
   const mutation = useMutation({
@@ -90,63 +99,99 @@ export function useIngestStatement() {
 
       setProgress(EMPTY_PROGRESS)
 
-      const stored = await storeStatement(input, controller.signal)
+      const stored =
+        input.kind === 'resume'
+          ? null
+          : await storeStatement(input, controller.signal)
 
+      // The date range is known as soon as the statement is stored, so show it
+      // while the first batch is still being classified.
+      if (stored) {
+        setProgress({
+          ...EMPTY_PROGRESS,
+          from: toMillis(stored.from),
+          to: toMillis(stored.to),
+        })
+      }
+
+      let total =
+        input.kind === 'resume' ? input.total : (stored?.processed ?? 0)
       let processed = 0
       let classified = 0
       let needsReview = 0
       let failed = 0
       let alreadyClassified = 0
-      let from: number | null = null
-      let to: number | null = null
+      let from = toMillis(stored?.from)
+      let to = toMillis(stored?.to)
       let recent: Array<IngestedTransactionRow> = []
+      let pending = total
+      let isFirstBatch = true
 
-      await classifyAll(
-        stored.transaction_ids,
-        controller.signal,
-        (response) => {
+      while (pending > 0) {
+        if (controller.signal.aborted) throw abortError()
+        const pendingBefore = pending
+
+        const response = await apiFetch<ClassifyTransactionsResponse>(
+          '/v2/statements/classify',
+          {
+            method: 'POST',
+            body: { limit: CLASSIFY_BATCH },
+            signal: controller.signal,
+          },
+        )
+
+        if (isFirstBatch) {
+          // A re-import can contain rows that were already classified; the
+          // first batch reveals the real amount of work left.
+          total = response.rows.length + response.pending
+          isFirstBatch = false
+        }
+
+        alreadyClassified += response.skipped
+        for (const row of response.rows) {
           processed += 1
-          alreadyClassified += response.skipped
 
-          const row = response.rows.at(0)
-          if (row) {
-            if (row.error) {
-              failed += 1
-              needsReview += 1
-            } else {
-              classified += 1
-              if (row.needs_review) needsReview += 1
-              recent = [toProgressRow(row), ...recent].slice(0, RECENT_ROWS)
-            }
-
-            const time = new Date(row.transaction_date).getTime()
-            if (!Number.isNaN(time)) {
-              from = from === null ? time : Math.min(from, time)
-              to = to === null ? time : Math.max(to, time)
-            }
+          if (row.error) {
+            failed += 1
+            needsReview += 1
+          } else {
+            classified += 1
+            if (row.needs_review) needsReview += 1
+            recent = [toProgressRow(row), ...recent].slice(0, RECENT_ROWS)
           }
 
-          setProgress({
-            total: stored.transaction_ids.length,
-            processed,
-            classified,
-            needsReview,
-            failed,
-            alreadyClassified,
-            from,
-            to,
-            rows: recent,
-          })
-        },
-      ).catch((error: unknown) => {
-        // Stop the workers still in flight so no work continues after the
-        // import has given up.
-        controller.abort()
-        throw error
-      })
+          const time = new Date(row.transaction_date).getTime()
+          if (!Number.isNaN(time)) {
+            from = from === null ? time : Math.min(from, time)
+            to = to === null ? time : Math.max(to, time)
+          }
+        }
+
+        pending = response.pending
+        setProgress({
+          total,
+          processed,
+          classified,
+          needsReview,
+          failed,
+          alreadyClassified,
+          from,
+          to,
+          rows: recent,
+        })
+
+        // A batch the classifier could not store leaves its rows pending, so
+        // looping again would hammer the provider forever. Stop when nothing
+        // was saved and the queue did not move; the rows stay queued for a
+        // future retry.
+        const saved = response.rows.filter((row) => !row.error).length
+        if (saved === 0 && pending >= pendingBefore) {
+          throw new Error('Could not categorise the remaining transactions')
+        }
+      }
 
       return {
-        total: stored.transaction_ids.length,
+        total,
         processed,
         classified,
         needsReview,
@@ -155,24 +200,31 @@ export function useIngestStatement() {
         from,
         to,
         rows: recent,
-        stored: stored.processed,
-        parseSkipped: stored.skipped,
-        errors: stored.errors ?? [],
+        stored: stored?.processed ?? 0,
+        parseSkipped: stored?.skipped ?? 0,
+        errors: stored?.errors ?? [],
       }
     },
-    onSuccess: (data) => {
-      const skipped = data.parseSkipped + data.failed
+    onSuccess: (data, input) => {
       const parts: Array<string> = []
       if (data.classified > 0) parts.push(`${data.classified} categorised`)
       if (data.needsReview > 0) parts.push(`${data.needsReview} need review`)
       if (data.failed > 0) parts.push(`${data.failed} failed`)
 
-      toast.success(
-        `Imported ${data.stored} transaction${data.stored === 1 ? '' : 's'}`,
-        {
+      if (input.kind === 'resume') {
+        toast.success('Finished categorising your statement', {
           description: parts.length > 0 ? parts.join(' · ') : undefined,
-        },
-      )
+        })
+      } else {
+        toast.success(
+          `Imported ${data.stored} transaction${data.stored === 1 ? '' : 's'}`,
+          {
+            description: parts.length > 0 ? parts.join(' · ') : undefined,
+          },
+        )
+      }
+
+      const skipped = data.parseSkipped + data.failed
       if (skipped > 0) {
         toast.warning(`${skipped} row(s) still need attention`)
       }
@@ -181,13 +233,46 @@ export function useIngestStatement() {
       // statement-derived cache has to refetch.
       invalidateStatementData(queryClient)
     },
-    onError: (error: Error) => {
+    onError: (error: Error, input: IngestInput) => {
       if (error.name === 'AbortError') return
+      // A failed resume is usually provider trouble the user never asked
+      // about; the next dashboard visit quietly retries it.
+      if (input.kind === 'resume') return
       toast.error(error.message || 'Failed to import statement')
     },
   })
 
   const cancel = useCallback(() => controllerRef.current?.abort(), [])
+
+  // Pick up anything an earlier visit left unclassified. The check runs once
+  // per mount and never interrupts an import the user has already started.
+  const { mutate } = mutation
+  useEffect(() => {
+    if (resumeCheckedRef.current) return
+    resumeCheckedRef.current = true
+
+    const lifecycle = new AbortController()
+    void (async () => {
+      try {
+        const status = await apiFetch<ClassificationStatusResponse>(
+          '/v2/statements/classification/status',
+        )
+        if (
+          !lifecycle.signal.aborted &&
+          status.pending > 0 &&
+          !controllerRef.current
+        ) {
+          mutate({ kind: 'resume', total: status.pending })
+        }
+      } catch {
+        // Resuming is best effort; the next visit tries again.
+      }
+    })()
+
+    return () => {
+      lifecycle.abort()
+    }
+  }, [mutate])
 
   return {
     ...mutation,
@@ -197,7 +282,7 @@ export function useIngestStatement() {
 }
 
 async function storeStatement(
-  input: IngestInput,
+  input: Exclude<IngestInput, { kind: 'resume' }>,
   signal: AbortSignal,
 ): Promise<IngestStatementResponse> {
   if (input.kind === 'file') {
@@ -217,33 +302,6 @@ async function storeStatement(
   })
 }
 
-async function classifyAll(
-  ids: Array<string>,
-  signal: AbortSignal,
-  onResult: (response: ClassifyTransactionsResponse) => void,
-): Promise<void> {
-  let cursor = 0
-
-  const worker = async () => {
-    while (cursor < ids.length) {
-      if (signal.aborted) return
-      const id = ids[cursor++]
-      const response = await apiFetch<ClassifyTransactionsResponse>(
-        '/v2/statements/classify',
-        {
-          method: 'POST',
-          body: { transaction_ids: [id] },
-          signal,
-        },
-      )
-      onResult(response)
-    }
-  }
-
-  const workers = Math.min(CLASSIFY_CONCURRENCY, ids.length)
-  await Promise.all(Array.from({ length: workers }, worker))
-}
-
 function toProgressRow(row: ClassifiedTransaction): IngestedTransactionRow {
   return {
     id: row.id,
@@ -251,4 +309,14 @@ function toProgressRow(row: ClassifiedTransaction): IngestedTransactionRow {
     emoji: row.category?.icon ?? '❔',
     category: row.category?.label ?? 'Uncategorised',
   }
+}
+
+function toMillis(value: string | null | undefined): number | null {
+  if (!value) return null
+  const time = new Date(value).getTime()
+  return Number.isNaN(time) ? null : time
+}
+
+function abortError() {
+  return new DOMException('The import was cancelled', 'AbortError')
 }

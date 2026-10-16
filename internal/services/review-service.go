@@ -95,6 +95,59 @@ func (s *ReviewService) UnclassifiedTransactions(ctx context.Context, userID uui
 	return s.store.Repos().Statements.ListUnclassifiedByIDs(ctx, userID, ids)
 }
 
+// PendingTransactions returns up to limit of the user's rows that have no
+// classification yet, oldest first. A client can use it to keep classifying
+// after a reload without remembering the row ids from the original upload.
+func (s *ReviewService) PendingTransactions(ctx context.Context, userID uuid.UUID, limit int) ([]postgres.StatementTransaction, error) {
+	if limit <= 0 {
+		limit = DefaultTransactionPageSize
+	}
+	return s.store.Repos().Statements.ListUnclassifiedByUser(ctx, userID, limit)
+}
+
+// PendingCount returns how many statement rows the user still has to
+// classify.
+func (s *ReviewService) PendingCount(ctx context.Context, userID uuid.UUID) (int, error) {
+	count, err := s.store.Repos().Statements.CountUnclassifiedByUser(ctx, userID)
+	return int(count), err
+}
+
+// ClassificationStatus summarizes how far the user's statement has been
+// classified. The dashboard uses it to detect and resume an interrupted
+// import.
+func (s *ReviewService) ClassificationStatus(ctx context.Context, userID uuid.UUID) (ClassificationStatus, error) {
+	total, err := s.store.Repos().Statements.CountByUser(ctx, userID)
+	if err != nil {
+		return ClassificationStatus{}, err
+	}
+
+	pending, err := s.store.Repos().Statements.CountUnclassifiedByUser(ctx, userID)
+	if err != nil {
+		return ClassificationStatus{}, err
+	}
+
+	reviewCount, err := s.store.Repos().Statements.CountNeedingReview(ctx, userID, NeedsReviewThreshold)
+	if err != nil {
+		return ClassificationStatus{}, err
+	}
+
+	return ClassificationStatus{
+		Total:       int(total),
+		Classified:  int(total - pending),
+		Pending:     int(pending),
+		NeedsReview: int(reviewCount),
+	}, nil
+}
+
+// ClassificationStatus is a point-in-time snapshot of the classification
+// work left for a user.
+type ClassificationStatus struct {
+	Total       int
+	Classified  int
+	Pending     int
+	NeedsReview int
+}
+
 func clampPageSize(limit int) int {
 	if limit <= 0 {
 		return DefaultTransactionPageSize

@@ -10,7 +10,8 @@ const meta = {
     layout: 'padded',
   },
   args: {
-    budgetName: 'October 2026',
+    budgetName: '1 Oct – 31 Oct 2026',
+    budgetMonth: 'October 2026',
     currentAmount: 'R 4 632',
     startingAmount: 'R 24 000',
     spentAmount: 'R 19 368',

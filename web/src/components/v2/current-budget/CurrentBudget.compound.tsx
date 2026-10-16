@@ -79,14 +79,20 @@ export function DaysLeftBadge({
   ...props
 }: DaysLeftBadgeProps) {
   const hasEnded = daysLeft <= 0
+  // An ended budget gets the v1 over-budget badge treatment: a solid red pill
+  // with a light top edge and a darker lip, so it reads as a warning rather
+  // than a muted chip.
+  const endedClasses = `bg-destructive
+    [box-shadow:inset_0_1px_0_color-mix(in_srgb,white_35%,transparent),0_3px_0_color-mix(in_srgb,var(--color-destructive)_70%,black)]
+    hover:-translate-y-px transition-transform motion-reduce:transition-none`
 
   return (
     <Badge
       variant={hasEnded ? 'destructive' : 'secondary'}
       className={cn(
         'gap-2 rounded-full text-[13px] font-semibold',
-        '[box-shadow:0_3px_0_var(--lip-sm)]',
         size === 'sm' ? 'h-8.5 px-3' : 'h-9 px-3.5',
+        hasEnded ? endedClasses : '[box-shadow:0_3px_0_var(--lip-sm)]',
         className,
       )}
       {...props}

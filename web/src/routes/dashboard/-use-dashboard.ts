@@ -42,6 +42,7 @@ import { getPrivacyDisplayValue } from '@/lib/utils/formatting/getPrivacyDisplay
 import {
   buildTransactionFilters,
   filterTransactions,
+  formatBudgetMonth,
   formatBudgetWindow,
   toCategoryOptions,
   toReviewItem,
@@ -283,16 +284,24 @@ export function useDashboard() {
   const [uploadFileName, setUploadFileName] = useState('')
   const [csvText, setCsvText] = useState('')
   const ingest = useIngestStatement()
+  const {
+    reset: resetIngest,
+    cancel: cancelIngest,
+    isPending: isIngestPending,
+    isSuccess: isIngestSuccess,
+  } = ingest
 
   const openUpload = () => {
-    ingest.reset()
-    setUploadFileName('')
+    // Progress that is still running is shown as-is, and a success screen
+    // that has not been acknowledged yet is shown again. Only an idle or
+    // failed import starts from a clean slate.
+    if (!isIngestPending && !isIngestSuccess) resetIngest()
     setCsvText('')
     setUploadOpen(true)
   }
 
   const uploadFile = (file: File) => {
-    ingest.reset()
+    resetIngest()
     setUploadFileName(file.name)
     setUploadOpen(true)
     ingest.mutate({ kind: 'file', file })
@@ -301,15 +310,21 @@ export function useDashboard() {
   const submitPaste = () => {
     const csv = csvText.trim()
     if (!csv) return
-    ingest.reset()
+    resetIngest()
     setUploadFileName('pasted.csv')
     ingest.mutate({ kind: 'csv', csv })
   }
 
-  const cancelIngest = ingest.cancel
-  const resetIngest = ingest.reset
-  const isIngestSuccess = ingest.isSuccess
+  // Closing the drawer is not a decision to stop: the classification loop
+  // lives in this hook and keeps running while the user works elsewhere.
   const closeUpload = useCallback(() => {
+    setUploadOpen(false)
+    setCsvText('')
+    if (!isIngestPending) resetIngest()
+  }, [isIngestPending, resetIngest])
+
+  // Only the explicit "Cancel import" button stops the loop.
+  const cancelImport = useCallback(() => {
     cancelIngest()
     resetIngest()
     setUploadOpen(false)
@@ -379,7 +394,8 @@ export function useDashboard() {
 
   const uploadSummary: UploadSummary | undefined = ingest.data
     ? {
-        processed: ingest.data.stored,
+        // A resumed import stored nothing; its work is the rows it classified.
+        processed: ingest.data.stored || ingest.data.processed,
         classified: ingest.data.classified,
         needsReview: ingest.data.needsReview,
         failed: ingest.data.failed,
@@ -408,6 +424,11 @@ export function useDashboard() {
   const budgetName = preference
     ? formatBudgetWindow(preference.start_date, preference.end_date)
     : 'Set up a budget period'
+  // The card heading names the period; the date range stays the editable
+  // sub-line in the card body.
+  const budgetMonth = preference
+    ? formatBudgetMonth(preference.start_date, preference.end_date)
+    : undefined
 
   return {
     user: { name: me.data.name },
@@ -462,6 +483,7 @@ export function useDashboard() {
       selectTransaction(transaction.id, transaction),
     budget: {
       budgetName,
+      budgetMonth,
       configured: Boolean(preference),
       currentAmount: getPrivacyDisplayValue(
         currentBalance === null ? '—' : formatCurrency(currentBalance, 'za'),
@@ -506,6 +528,7 @@ export function useDashboard() {
       sorted,
       summary: uploadSummary,
       close: closeUpload,
+      onCancel: cancelImport,
     },
   }
 }

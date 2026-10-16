@@ -50,7 +50,9 @@ export function UploadDrawer({
             ? 'Your statement has been imported'
             : isIdle
               ? 'Pick a CSV file or paste one to import'
-              : `Import progress for ${fileName}`}
+              : fileName
+                ? `Import progress for ${fileName}`
+                : 'Import progress'}
         </UploadDrawerCompound.Description>
         <UploadDrawerCompound.Body>
           {isIdle ? (

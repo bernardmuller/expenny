@@ -57,16 +57,19 @@ func handleMe(w http.ResponseWriter, r *http.Request) {
 }
 
 type ingestResponse struct {
-	Processed      int      `json:"processed"`
-	Skipped        int      `json:"skipped"`
-	TransactionIDs []string `json:"transaction_ids"`
-	Errors         []string `json:"errors,omitempty"`
+	Processed int        `json:"processed"`
+	Skipped   int        `json:"skipped"`
+	From      *time.Time `json:"from"`
+	To        *time.Time `json:"to"`
+	Errors    []string   `json:"errors,omitempty"`
 }
 
-// ingestStatement accepts a statement CSV, stores every row, and returns the
-// stored row ids. Classification is deliberately left out: the client asks
-// /v2/statements/classify to classify the ids in small batches, which gives it
-// per-transaction progress without relying on a streaming response.
+// ingestStatement accepts a statement CSV and stores every row. Classification
+// is deliberately left out: the client asks /v2/statements/classify to
+// classify the stored rows in small batches, which keeps one request inside
+// the gateway's timeout and gives it per-transaction progress. The response
+// carries the statement's date range so the client can show it before the
+// first batch has been classified.
 //
 // The CSV can arrive as a multipart upload with a "file" part, as a JSON body
 // of the form {"csv": "..."}, or as a raw text/csv body (a pasted statement).
@@ -126,12 +129,17 @@ func (a *api) ingestStatement(w http.ResponseWriter, r *http.Request) {
 	}
 
 	body := ingestResponse{
-		Processed:      len(result.Rows),
-		Skipped:        len(result.RowErrors),
-		TransactionIDs: make([]string, 0, len(result.Rows)),
+		Processed: len(result.Rows),
+		Skipped:   len(result.RowErrors),
 	}
 	for _, row := range result.Rows {
-		body.TransactionIDs = append(body.TransactionIDs, row.ID.String())
+		date := row.TransactionDate
+		if body.From == nil || date.Before(*body.From) {
+			body.From = &date
+		}
+		if body.To == nil || date.After(*body.To) {
+			body.To = &date
+		}
 	}
 	for _, rowErr := range result.RowErrors {
 		body.Errors = append(body.Errors, rowErr.Error())
@@ -232,6 +240,9 @@ func (a *api) listTransactions(w http.ResponseWriter, r *http.Request) {
 
 type classifyRequest struct {
 	TransactionIDs []uuid.UUID `json:"transaction_ids"`
+	// Limit caps how many pending rows a next-batch request classifies. It is
+	// ignored when transaction_ids is set.
+	Limit int `json:"limit"`
 }
 
 type classifiedTransactionResponse struct {
@@ -250,12 +261,18 @@ type classifiedTransactionResponse struct {
 type classifyResponse struct {
 	Rows    []classifiedTransactionResponse `json:"rows"`
 	Skipped int                             `json:"skipped"`
+	// Pending is how many of the user's rows still have no classification
+	// after this batch.
+	Pending int `json:"pending"`
 }
 
 // classifyTransactions classifies up to maxClassifyBatch stored rows that do
-// not have a classification yet. Ids that are already classified (or are not
-// the user's) are reported in Skipped, so re-importing a statement does not
-// rerun the classifier over rows a human already reviewed.
+// not have a classification yet. With transaction_ids the caller picks the
+// rows; without them the endpoint takes the next pending rows for the user,
+// which lets a client resume an interrupted import without remembering the
+// ids. Ids that are already classified (or are not the user's) are reported
+// in Skipped, so re-importing a statement does not rerun the classifier over
+// rows a human already reviewed.
 func (a *api) classifyTransactions(w http.ResponseWriter, r *http.Request) {
 	user, ok := requestUser(w, r)
 	if !ok {
@@ -267,16 +284,24 @@ func (a *api) classifyTransactions(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, errorBody("invalid json body"))
 		return
 	}
-	if len(req.TransactionIDs) == 0 {
-		writeJSON(w, http.StatusBadRequest, errorBody("transaction_ids is required"))
-		return
-	}
-	if len(req.TransactionIDs) > maxClassifyBatch {
-		writeJSON(w, http.StatusBadRequest, errorBody("too many transaction_ids in one request"))
-		return
-	}
 
-	rows, err := a.app.Review.UnclassifiedTransactions(r.Context(), user.ID, req.TransactionIDs)
+	var (
+		rows []postgres.StatementTransaction
+		err  error
+	)
+	if len(req.TransactionIDs) > 0 {
+		if len(req.TransactionIDs) > maxClassifyBatch {
+			writeJSON(w, http.StatusBadRequest, errorBody("too many transaction_ids in one request"))
+			return
+		}
+		rows, err = a.app.Review.UnclassifiedTransactions(r.Context(), user.ID, req.TransactionIDs)
+	} else {
+		limit := req.Limit
+		if limit <= 0 || limit > maxClassifyBatch {
+			limit = maxClassifyBatch
+		}
+		rows, err = a.app.Review.PendingTransactions(r.Context(), user.ID, limit)
+	}
 	if err != nil {
 		log.Printf("load unclassified transactions: %v", err)
 		writeJSON(w, http.StatusInternalServerError, errorBody("could not load transactions"))
@@ -347,7 +372,46 @@ func (a *api) classifyTransactions(w http.ResponseWriter, r *http.Request) {
 		body.Rows = append(body.Rows, item)
 	}
 
+	pending, err := a.app.Review.PendingCount(r.Context(), user.ID)
+	if err != nil {
+		log.Printf("count pending transactions: %v", err)
+		writeJSON(w, http.StatusInternalServerError, errorBody("could not load transactions"))
+		return
+	}
+	body.Pending = pending
+
 	writeJSON(w, http.StatusOK, body)
+}
+
+type classificationStatusResponse struct {
+	Total       int `json:"total"`
+	Classified  int `json:"classified"`
+	Pending     int `json:"pending"`
+	NeedsReview int `json:"needs_review"`
+}
+
+// classificationStatus reports how many of the user's statement rows have
+// been classified. The dashboard polls it on load to detect an import that
+// was interrupted (a closed tab, for example) and resume it.
+func (a *api) classificationStatus(w http.ResponseWriter, r *http.Request) {
+	user, ok := requestUser(w, r)
+	if !ok {
+		return
+	}
+
+	status, err := a.app.Review.ClassificationStatus(r.Context(), user.ID)
+	if err != nil {
+		log.Printf("classification status: %v", err)
+		writeJSON(w, http.StatusInternalServerError, errorBody("could not load classification status"))
+		return
+	}
+
+	writeJSON(w, http.StatusOK, classificationStatusResponse{
+		Total:       status.Total,
+		Classified:  status.Classified,
+		Pending:     status.Pending,
+		NeedsReview: status.NeedsReview,
+	})
 }
 
 func (a *api) listCategories(w http.ResponseWriter, r *http.Request) {

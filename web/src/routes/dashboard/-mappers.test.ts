@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildTransactionFilters,
   filterTransactions,
+  formatBudgetMonth,
   formatBudgetWindow,
   formatRand,
   toCategoryOptions,
@@ -370,5 +371,21 @@ describe('formatBudgetWindow', () => {
     expect(formatBudgetWindow('2026-10-01', '2026-10-31')).toBe(
       '1 Oct – 31 Oct 2026',
     )
+  })
+})
+
+describe('formatBudgetMonth', () => {
+  it('names the month that holds most of the window', () => {
+    expect(formatBudgetMonth('2026-10-01', '2026-10-31')).toBe('October 2026')
+    // 9 days in September, 24 in October.
+    expect(formatBudgetMonth('2026-09-22', '2026-10-24')).toBe('October 2026')
+    // 6 days in September, 5 in October.
+    expect(formatBudgetMonth('2026-09-25', '2026-10-05')).toBe(
+      'September 2026',
+    )
+  })
+
+  it('leans to the later month when the days are split evenly', () => {
+    expect(formatBudgetMonth('2026-09-16', '2026-10-15')).toBe('October 2026')
   })
 })

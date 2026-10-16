@@ -98,7 +98,9 @@ export type MeResponse = {
 export type IngestStatementResponse = {
   processed: number
   skipped: number
-  transaction_ids: Array<string>
+  /** Statement date range, so the drawer can show it before classification. */
+  from: string | null
+  to: string | null
   errors?: Array<string>
 }
 
@@ -119,6 +121,16 @@ export type ClassifyTransactionsResponse = {
   rows: Array<ClassifiedTransaction>
   /** Ids that were already classified or did not belong to the user. */
   skipped: number
+  /** The user's rows still waiting for a classification after this batch. */
+  pending: number
+}
+
+/** How much of the user's statement is still waiting to be classified. */
+export type ClassificationStatusResponse = {
+  total: number
+  classified: number
+  pending: number
+  needs_review: number
 }
 
 export type CorrectTransactionResponse = {

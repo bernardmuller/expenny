@@ -142,3 +142,17 @@ SELECT st.*
 FROM statement_transactions st
 LEFT JOIN statement_transaction_classifications stc ON stc.statement_transaction_id = st.id
 WHERE st.user_id = @user_id AND st.id = ANY(@ids::uuid[]) AND stc.id IS NULL;
+
+-- name: GetUnclassifiedStatementTransactionsByUser :many
+SELECT st.*
+FROM statement_transactions st
+LEFT JOIN statement_transaction_classifications stc ON stc.statement_transaction_id = st.id
+WHERE st.user_id = @user_id AND stc.id IS NULL
+ORDER BY st.transaction_date, st.nr
+LIMIT @page_limit;
+
+-- name: CountUnclassifiedStatementTransactionsByUser :one
+SELECT count(*)
+FROM statement_transactions st
+LEFT JOIN statement_transaction_classifications stc ON stc.statement_transaction_id = st.id
+WHERE st.user_id = @user_id AND stc.id IS NULL;
