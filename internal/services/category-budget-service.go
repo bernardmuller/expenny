@@ -25,8 +25,20 @@ var (
 const maxAllocatedAmount = 99_999_999.99
 
 // A category can sit in several groups, but the breakdown shows it once. This
-// is the priority used to pick its section.
-var categoryGroupRank = map[string]int{
+// is the priority used to pick its section. Recurring outranks expenses so a
+// category that also occurs as a fixed monthly cost is budgeted there; income
+// always comes last because every spending category is mirrored into it for
+// split-bill repayments.
+var categorySectionPriority = map[string]int{
+	"recurring": 1,
+	"expenses":  2,
+	"transfers": 3,
+	"income":    4,
+}
+
+// The order the sections are rendered in, independent of the priority used to
+// place a multi-group category.
+var categoryGroupOrder = map[string]int{
 	"expenses":  1,
 	"recurring": 2,
 	"transfers": 3,
@@ -266,7 +278,7 @@ func groupCategoriesForBudget(
 		if !row.GroupID.Valid {
 			continue
 		}
-		if account.groupKey == "" || groupRank(row.GroupKey.String) < groupRank(account.groupKey) {
+		if account.groupKey == "" || sectionPriority(row.GroupKey.String) < sectionPriority(account.groupKey) {
 			account.groupKey = row.GroupKey.String
 			account.groupLabel = row.GroupLabel.String
 		}
@@ -323,8 +335,8 @@ func groupCategoriesForBudget(
 		groups = append(groups, *group)
 	}
 	sort.SliceStable(groups, func(i, j int) bool {
-		if groupRank(groups[i].Key) != groupRank(groups[j].Key) {
-			return groupRank(groups[i].Key) < groupRank(groups[j].Key)
+		if groupOrderRank(groups[i].Key) != groupOrderRank(groups[j].Key) {
+			return groupOrderRank(groups[i].Key) < groupOrderRank(groups[j].Key)
 		}
 		return groups[i].Label < groups[j].Label
 	})
@@ -332,9 +344,16 @@ func groupCategoriesForBudget(
 	return groups
 }
 
-func groupRank(key string) int {
-	if rank, ok := categoryGroupRank[key]; ok {
-		return rank
+func sectionPriority(key string) int {
+	if priority, ok := categorySectionPriority[key]; ok {
+		return priority
+	}
+	return 5
+}
+
+func groupOrderRank(key string) int {
+	if order, ok := categoryGroupOrder[key]; ok {
+		return order
 	}
 	return 5
 }

@@ -9,6 +9,61 @@ import (
 	"expenny.co.za/internal/store/postgres"
 )
 
+func TestGroupCategoriesForBudgetPrefersRecurringOverExpenses(t *testing.T) {
+	recurring := uuid.New()
+	expenses := uuid.New()
+	utilities := uuid.New()
+	groceries := uuid.New()
+
+	text := func(value string) sql.NullString {
+		return sql.NullString{String: value, Valid: true}
+	}
+	groupRef := func(id uuid.UUID) uuid.NullUUID {
+		return uuid.NullUUID{UUID: id, Valid: true}
+	}
+
+	// Utilities is both a recurring cost and a general expense. Listing the
+	// expenses membership first must not stop the category from being filed
+	// under Recurring.
+	rows := []postgres.GetCategoriesWithGroupsRow{
+		{
+			ID: groceries, Key: "groceries", Label: "Groceries", Icon: "🛒",
+			GroupID: groupRef(expenses), GroupKey: text("expenses"), GroupLabel: text("Expenses"),
+		},
+		{
+			ID: utilities, Key: "utilities", Label: "Utilities", Icon: "💡",
+			GroupID: groupRef(expenses), GroupKey: text("expenses"), GroupLabel: text("Expenses"),
+		},
+		{
+			ID: utilities, Key: "utilities", Label: "Utilities", Icon: "💡",
+			GroupID: groupRef(recurring), GroupKey: text("recurring"), GroupLabel: text("Recurring"),
+		},
+	}
+
+	spends := map[uuid.UUID]string{
+		groceries: "4200.00",
+		utilities: "1299.00",
+	}
+	groups := groupCategoriesForBudget(rows, nil, spends)
+	if len(groups) != 2 {
+		t.Fatalf("got %d groups, want 2", len(groups))
+	}
+	// The rendering order stays Expenses then Recurring even though Recurring
+	// wins when a category belongs to both.
+	if groups[0].Key != "expenses" || groups[1].Key != "recurring" {
+		t.Fatalf("groups = %q, %q; want expenses then recurring", groups[0].Key, groups[1].Key)
+	}
+	if len(groups[0].Categories) != 1 || groups[0].Categories[0].ID != groceries {
+		t.Fatalf("expenses categories = %+v, want only groceries", groups[0].Categories)
+	}
+	if len(groups[1].Categories) != 1 || groups[1].Categories[0].ID != utilities {
+		t.Fatalf("recurring categories = %+v, want utilities", groups[1].Categories)
+	}
+	if groups[1].Categories[0].Spent != "1299.00" {
+		t.Errorf("recurring spend = %q, want 1299.00", groups[1].Categories[0].Spent)
+	}
+}
+
 func TestFormatAllocated(t *testing.T) {
 	tests := []struct {
 		name    string
