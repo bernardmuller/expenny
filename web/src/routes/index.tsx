@@ -1,9 +1,10 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
+
+import { requireAuth } from '@/lib/auth/route-guard'
 
 export const Route = createFileRoute('/')({
-  component: RouteComponent,
+  beforeLoad: () => {
+    requireAuth()
+    throw redirect({ to: '/dashboard' })
+  },
 })
-
-function RouteComponent() {
-  return <div>Hello "/"!</div>
-}

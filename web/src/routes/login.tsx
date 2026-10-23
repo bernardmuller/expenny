@@ -47,7 +47,7 @@ export const Route = createFileRoute('/login')({
     const isMidOAuth =
       hasAuthorizeParams(params) || params.get('resume') === '1'
     if (hasSession() && !isMidOAuth) {
-      throw redirect({ to: '/' })
+      throw redirect({ to: '/dashboard' })
     }
   },
   component: LoginPage,
@@ -95,7 +95,7 @@ function LoginPage() {
         }
 
         auth.login()
-        navigate({ to: '/' })
+        navigate({ to: '/dashboard' })
       })
       return
     }
