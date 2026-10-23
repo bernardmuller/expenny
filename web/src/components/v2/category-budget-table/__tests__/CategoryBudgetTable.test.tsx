@@ -14,6 +14,7 @@ const groups: Array<CategoryBudgetGroup> = [
         key: 'groceries',
         label: 'Groceries',
         icon: '🛒',
+        group_key: 'expenses',
         category_budget_id: 'budget-1',
         allocated: '5000.00',
         spent: '4200.00',
@@ -23,6 +24,7 @@ const groups: Array<CategoryBudgetGroup> = [
         key: 'fuel',
         label: 'Fuel',
         icon: '⛽',
+        group_key: 'expenses',
         category_budget_id: null,
         allocated: null,
         spent: '0.00',
@@ -42,7 +44,11 @@ describe('CategoryBudgetTable', () => {
         groups={groups}
         onSetBudget={onSetBudget}
         onDeleteBudget={onDeleteBudget}
-        renderExpanded={(categoryId) => <div>Expanded {categoryId}</div>}
+        renderExpanded={(categoryId, groupKey) => (
+          <div>
+            Expanded {categoryId} in {groupKey}
+          </div>
+        )}
       />,
     )
   })
@@ -57,7 +63,9 @@ describe('CategoryBudgetTable', () => {
   it('expands a category row to show its renderer', () => {
     fireEvent.click(screen.getByText('Groceries').closest('tr')!)
 
-    expect(screen.getByText('Expanded groceries')).toBeInTheDocument()
+    expect(
+      screen.getByText('Expanded groceries in expenses'),
+    ).toBeInTheDocument()
   })
 
   it('saves an inline budget edit', () => {

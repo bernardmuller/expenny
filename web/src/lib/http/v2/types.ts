@@ -74,6 +74,8 @@ export type CategoryBudgetCategory = {
   key: string
   label: string
   icon: string
+  /** Transaction group this row's spend belongs to; empty for legacy rows. */
+  group_key: string
   category_budget_id: string | null
   allocated: string | null
   spent: string

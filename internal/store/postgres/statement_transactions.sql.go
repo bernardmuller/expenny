@@ -163,15 +163,17 @@ LEFT JOIN statement_transaction_classifications stc ON stc.statement_transaction
 LEFT JOIN categories c ON stc.category_id = c.id
 WHERE st.user_id = $1
   AND ($2::uuid IS NULL OR stc.category_id = $2::uuid)
-  AND ($3::timestamp IS NULL OR st.transaction_date >= $3::timestamp)
-  AND ($4::timestamp IS NULL OR st.transaction_date <= $4::timestamp)
+  AND ($3::text IS NULL OR COALESCE(stc.group_key, '') = $3::text)
+  AND ($4::timestamp IS NULL OR st.transaction_date >= $4::timestamp)
+  AND ($5::timestamp IS NULL OR st.transaction_date <= $5::timestamp)
 ORDER BY st.transaction_date DESC, st.nr DESC
-LIMIT $6 OFFSET $5
+LIMIT $7 OFFSET $6
 `
 
 type GetClassifiedStatementTransactionsByUserIdPageParams struct {
 	UserID      uuid.UUID
 	CategoryID  uuid.NullUUID
+	GroupKey    sql.NullString
 	WindowStart sql.NullTime
 	WindowEnd   sql.NullTime
 	PageOffset  int32
@@ -211,6 +213,7 @@ func (q *Queries) GetClassifiedStatementTransactionsByUserIdPage(ctx context.Con
 	rows, err := q.db.QueryContext(ctx, getClassifiedStatementTransactionsByUserIdPage,
 		arg.UserID,
 		arg.CategoryID,
+		arg.GroupKey,
 		arg.WindowStart,
 		arg.WindowEnd,
 		arg.PageOffset,

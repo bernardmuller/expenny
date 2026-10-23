@@ -24,8 +24,9 @@ var (
 
 const maxAllocatedAmount = 99_999_999.99
 
-// A category can sit in several groups, but the breakdown shows it once. This
-// is the priority used to pick its section. Recurring outranks expenses so a
+// Categories with spend follow the transaction groups on their rows. This
+// priority only decides where a category without any spend in the window is
+// shown, so its allocation remains visible. Recurring outranks expenses so a
 // category that also occurs as a fixed monthly cost is budgeted there; income
 // always comes last because every spending category is mirrored into it for
 // split-bill repayments.
@@ -46,10 +47,13 @@ var categoryGroupOrder = map[string]int{
 }
 
 type CategoryBudgetCategory struct {
-	ID               uuid.UUID
-	Key              string
-	Label            string
-	Icon             string
+	ID    uuid.UUID
+	Key   string
+	Label string
+	Icon  string
+	// GroupKey is the transaction group this row's spend belongs to. It is
+	// empty for spend rows that predate group decisions.
+	GroupKey         string
 	CategoryBudgetID *uuid.UUID
 	Allocated        *string
 	Spent            string
@@ -103,9 +107,9 @@ func (s *CategoryBudgetService) Overview(ctx context.Context, userID uuid.UUID) 
 		return CategoryBudgetOverview{}, fmt.Errorf("category budgets: %w", err)
 	}
 
-	spends := map[uuid.UUID]string{}
+	var spends []postgres.GetCategorySpendByGroupByUserRow
 	if start != nil && end != nil {
-		spends, err = s.store.Repos().CategoryBudgets.SpendByUser(ctx, userID, *start, *end)
+		spends, err = s.store.Repos().CategoryBudgets.SpendByGroupByUser(ctx, userID, *start, *end)
 		if err != nil {
 			return CategoryBudgetOverview{}, fmt.Errorf("category spend: %w", err)
 		}
@@ -243,22 +247,35 @@ func (s *CategoryBudgetService) window(ctx context.Context, userID uuid.UUID, bu
 	return &preference.StartDate, &preference.EndDate, nil
 }
 
-type budgetCategoryAccumulator struct {
-	id         uuid.UUID
-	key        string
-	label      string
-	icon       string
-	groupKey   string
-	groupLabel string
+type budgetCategoryMembership struct {
+	key   string
+	label string
 }
 
-// groupCategoriesForBudget turns the category/group pair rows into one entry
-// per category under its highest-priority group, with allocation and spend
-// attached.
+type budgetCategoryAccumulator struct {
+	id          uuid.UUID
+	key         string
+	label       string
+	icon        string
+	memberships []budgetCategoryMembership
+}
+
+type budgetCategorySpend struct {
+	groupKey            string
+	groupLabel          string
+	transactionGroupKey string
+	spent               string
+}
+
+// groupCategoriesForBudget turns the category/group pair rows into budget
+// rows. A category with spend is shown once per transaction group it was
+// actually tagged with, so moving a single row from Recurring to Expenses
+// moves that spend with it. Categories without any spend fall back to their
+// highest-priority membership so their allocation is still visible.
 func groupCategoriesForBudget(
 	rows []postgres.GetCategoriesWithGroupsRow,
 	allocations map[uuid.UUID]postgres.GetCategoryBudgetsByBudgetRow,
-	spends map[uuid.UUID]string,
+	spends []postgres.GetCategorySpendByGroupByUserRow,
 ) []CategoryBudgetGroup {
 	order := make([]uuid.UUID, 0)
 	byID := make(map[uuid.UUID]*budgetCategoryAccumulator, len(rows))
@@ -278,52 +295,53 @@ func groupCategoriesForBudget(
 		if !row.GroupID.Valid {
 			continue
 		}
-		if account.groupKey == "" || sectionPriority(row.GroupKey.String) < sectionPriority(account.groupKey) {
-			account.groupKey = row.GroupKey.String
-			account.groupLabel = row.GroupLabel.String
-		}
+		account.memberships = append(account.memberships, budgetCategoryMembership{
+			key:   row.GroupKey.String,
+			label: row.GroupLabel.String,
+		})
+	}
+
+	spendsByCategory := make(map[uuid.UUID][]postgres.GetCategorySpendByGroupByUserRow, len(spends))
+	for _, spend := range spends {
+		spendsByCategory[spend.CategoryID] = append(spendsByCategory[spend.CategoryID], spend)
 	}
 
 	groupsByKey := make(map[string]*CategoryBudgetGroup)
 	groupOrder := make([]string, 0)
 	for _, id := range order {
 		account := byID[id]
-		groupKey := account.groupKey
-		groupLabel := account.groupLabel
-		if groupKey == "" {
-			groupKey = "other"
-			groupLabel = "Other"
-		}
-
-		group, ok := groupsByKey[groupKey]
-		if !ok {
-			group = &CategoryBudgetGroup{
-				Key:        groupKey,
-				Label:      groupLabel,
-				Categories: []CategoryBudgetCategory{},
+		for _, spend := range budgetSpendsFor(account, spendsByCategory[id]) {
+			group, ok := groupsByKey[spend.groupKey]
+			if !ok {
+				group = &CategoryBudgetGroup{
+					Key:        spend.groupKey,
+					Label:      spend.groupLabel,
+					Categories: []CategoryBudgetCategory{},
+				}
+				groupsByKey[spend.groupKey] = group
+				groupOrder = append(groupOrder, spend.groupKey)
 			}
-			groupsByKey[groupKey] = group
-			groupOrder = append(groupOrder, groupKey)
-		}
+			if group.Label == "" {
+				group.Label = spend.groupLabel
+			}
 
-		category := CategoryBudgetCategory{
-			ID:    account.id,
-			Key:   account.key,
-			Label: account.label,
-			Icon:  account.icon,
-			Spent: "0.00",
-		}
-		if spent, ok := spends[account.id]; ok {
-			category.Spent = spent
-		}
-		if allocation, ok := allocations[account.id]; ok {
-			id := allocation.ID
-			allocated := allocation.AllocatedAmount
-			category.CategoryBudgetID = &id
-			category.Allocated = &allocated
-		}
+			category := CategoryBudgetCategory{
+				ID:       account.id,
+				Key:      account.key,
+				Label:    account.label,
+				Icon:     account.icon,
+				GroupKey: spend.transactionGroupKey,
+				Spent:    spend.spent,
+			}
+			if allocation, ok := allocations[account.id]; ok {
+				allocationID := allocation.ID
+				allocated := allocation.AllocatedAmount
+				category.CategoryBudgetID = &allocationID
+				category.Allocated = &allocated
+			}
 
-		group.Categories = append(group.Categories, category)
+			group.Categories = append(group.Categories, category)
+		}
 	}
 
 	groups := make([]CategoryBudgetGroup, 0, len(groupOrder))
@@ -342,6 +360,88 @@ func groupCategoriesForBudget(
 	})
 
 	return groups
+}
+
+// budgetSpendsFor returns one row per group the category's transactions were
+// tagged with. Rows that predate group decisions land under Other. Rows that
+// collapse onto the same section are summed.
+func budgetSpendsFor(account *budgetCategoryAccumulator, spends []postgres.GetCategorySpendByGroupByUserRow) []budgetCategorySpend {
+	if len(spends) == 0 {
+		groupKey, groupLabel := fallbackGroup(account)
+		return []budgetCategorySpend{{
+			groupKey:            groupKey,
+			groupLabel:          groupLabel,
+			transactionGroupKey: groupKey,
+			spent:               "0.00",
+		}}
+	}
+
+	byKey := make(map[string]int, len(spends))
+	rows := make([]budgetCategorySpend, 0, len(spends))
+
+	for _, spend := range spends {
+		groupKey := spend.GroupKey
+		groupLabel := spend.GroupLabel
+		if groupKey == "" {
+			groupKey = "other"
+			groupLabel = "Other"
+		} else if groupLabel == "" {
+			groupLabel = groupLabelFor(account, groupKey)
+		}
+
+		if index, ok := byKey[groupKey]; ok {
+			rows[index].spent = addAmounts(rows[index].spent, spend.Spent)
+			if rows[index].groupLabel == "" {
+				rows[index].groupLabel = groupLabel
+			}
+			continue
+		}
+
+		byKey[groupKey] = len(rows)
+		rows = append(rows, budgetCategorySpend{
+			groupKey:            groupKey,
+			groupLabel:          groupLabel,
+			transactionGroupKey: spend.GroupKey,
+			spent:               spend.Spent,
+		})
+	}
+
+	return rows
+}
+
+func fallbackGroup(account *budgetCategoryAccumulator) (string, string) {
+	if len(account.memberships) == 0 {
+		return "other", "Other"
+	}
+
+	best := account.memberships[0]
+	for _, membership := range account.memberships[1:] {
+		if sectionPriority(membership.key) < sectionPriority(best.key) {
+			best = membership
+		}
+	}
+	if best.key == "" {
+		return "other", "Other"
+	}
+	return best.key, best.label
+}
+
+func groupLabelFor(account *budgetCategoryAccumulator, groupKey string) string {
+	for _, membership := range account.memberships {
+		if membership.key == groupKey {
+			return membership.label
+		}
+	}
+	if groupKey == "" || groupKey == "other" {
+		return "Other"
+	}
+	return groupKey
+}
+
+func addAmounts(left, right string) string {
+	leftValue, _ := strconv.ParseFloat(left, 64)
+	rightValue, _ := strconv.ParseFloat(right, 64)
+	return strconv.FormatFloat(leftValue+rightValue, 'f', 2, 64)
 }
 
 func sectionPriority(key string) int {

@@ -77,11 +77,12 @@ func (s *ReviewService) ListTransactions(ctx context.Context, userID uuid.UUID, 
 }
 
 // CategoryTransactions returns the user's classified rows for one category
-// inside a window, newest first, capped at limit.
-func (s *ReviewService) CategoryTransactions(ctx context.Context, userID, categoryID uuid.UUID, start, end *time.Time, limit int) ([]postgres.GetClassifiedStatementTransactionsByUserIdPageRow, error) {
+// and transaction group inside a window, newest first, capped at limit.
+func (s *ReviewService) CategoryTransactions(ctx context.Context, userID, categoryID uuid.UUID, groupKey *string, start, end *time.Time, limit int) ([]postgres.GetClassifiedStatementTransactionsByUserIdPageRow, error) {
 	return s.store.Repos().Statements.ListClassifiedByUser(ctx, userID, statementtransactions.ClassifiedListFilter{
 		Limit:       limit,
 		CategoryID:  &categoryID,
+		GroupKey:    groupKey,
 		WindowStart: start,
 		WindowEnd:   end,
 	})

@@ -161,9 +161,10 @@ function DesktopDashboard({ model }: { model: DashboardModel }) {
                       isSavingBudget={model.categoryBudgets.isSaving}
                       onSetBudget={model.categoryBudgets.onSetBudget}
                       onDeleteBudget={model.categoryBudgets.onDeleteBudget}
-                      renderExpanded={(categoryId) => (
+                      renderExpanded={(categoryId, groupKey) => (
                         <CategoryTransactions
                           categoryId={categoryId}
+                          groupKey={groupKey}
                           selectedId={model.selectedId ?? undefined}
                           onSelect={model.onSelectTransactionFromCategory}
                         />
@@ -331,14 +332,18 @@ function DashboardViewTabs({
 
 function CategoryTransactions({
   categoryId,
+  groupKey,
   selectedId,
   onSelect,
 }: {
   categoryId: string
+  groupKey: string
   selectedId?: string
   onSelect: (transaction: StatementTransaction) => void
 }) {
-  const query = useQuery(getCategoryTransactionsQueryOptions(categoryId))
+  const query = useQuery(
+    getCategoryTransactionsQueryOptions(categoryId, groupKey),
+  )
 
   if (query.isLoading) {
     return (

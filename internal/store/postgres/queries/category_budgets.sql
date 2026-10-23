@@ -66,9 +66,11 @@ UPDATE category_budgets
 SET deleted_at = now(), updated_at = now()
 WHERE id = @id;
 
--- name: GetCategorySpendByUser :many
+-- name: GetCategorySpendByGroupByUser :many
 SELECT
   c.id AS category_id,
+  COALESCE(stc.group_key, '')::text AS group_key,
+  COALESCE(cg.label, '')::text AS group_label,
   COALESCE(
     SUM(ABS(st.money_out::numeric) + ABS(st.fee::numeric))
       - SUM(ABS(st.money_in::numeric)),
@@ -77,7 +79,8 @@ SELECT
 FROM statement_transactions st
 JOIN statement_transaction_classifications stc ON stc.statement_transaction_id = st.id
 JOIN categories c ON c.id = stc.category_id
+LEFT JOIN category_groups cg ON cg.key = stc.group_key
 WHERE st.user_id = @user_id
   AND st.transaction_date >= @start_date
   AND st.transaction_date <= @end_date
-GROUP BY c.id;
+GROUP BY c.id, stc.group_key, cg.label;

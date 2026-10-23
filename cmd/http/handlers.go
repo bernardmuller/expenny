@@ -663,6 +663,7 @@ type categoryBudgetCategoryResponse struct {
 	Key              string  `json:"key"`
 	Label            string  `json:"label"`
 	Icon             string  `json:"icon"`
+	GroupKey         string  `json:"group_key"`
 	CategoryBudgetID *string `json:"category_budget_id"`
 	Allocated        *string `json:"allocated"`
 	Spent            string  `json:"spent"`
@@ -715,11 +716,12 @@ func toCategoryBudgetOverviewResponse(overview services.CategoryBudgetOverview) 
 		}
 		for _, category := range group.Categories {
 			item := categoryBudgetCategoryResponse{
-				ID:    category.ID.String(),
-				Key:   category.Key,
-				Label: category.Label,
-				Icon:  category.Icon,
-				Spent: category.Spent,
+				ID:       category.ID.String(),
+				Key:      category.Key,
+				Label:    category.Label,
+				Icon:     category.Icon,
+				GroupKey: category.GroupKey,
+				Spent:    category.Spent,
 			}
 			if category.CategoryBudgetID != nil {
 				id := category.CategoryBudgetID.String()
@@ -872,7 +874,18 @@ func (a *api) listCategoryTransactions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := a.app.Review.CategoryTransactions(r.Context(), user.ID, categoryID, start, end, maxCategoryTransactions)
+	// group_key is optional; when present an empty value selects rows that
+	// have no transaction group stored.
+	var groupKey *string
+	if values, ok := r.URL.Query()["group_key"]; ok {
+		value := ""
+		if len(values) > 0 {
+			value = strings.TrimSpace(values[0])
+		}
+		groupKey = &value
+	}
+
+	rows, err := a.app.Review.CategoryTransactions(r.Context(), user.ID, categoryID, groupKey, start, end, maxCategoryTransactions)
 	if err != nil {
 		log.Printf("list category transactions: %v", err)
 		writeJSON(w, http.StatusInternalServerError, errorBody("could not load the transactions"))

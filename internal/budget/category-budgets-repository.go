@@ -61,21 +61,13 @@ func (r *CategoryBudgetRepository) SoftDelete(ctx context.Context, id uuid.UUID)
 	return r.queries.SoftDeleteCategoryBudget(ctx, id)
 }
 
-// SpendByUser sums money_out and fees minus money_in per category over the
-// window, so a repayment against a spending category reduces its net spend.
-func (r *CategoryBudgetRepository) SpendByUser(ctx context.Context, userID uuid.UUID, start, end time.Time) (map[uuid.UUID]string, error) {
-	rows, err := r.queries.GetCategorySpendByUser(ctx, postgres.GetCategorySpendByUserParams{
+// SpendByGroupByUser sums money_out and fees minus money_in per category and
+// group over the window, so a repayment against a spending category reduces
+// its net spend and each stored transaction-group decision keeps its own row.
+func (r *CategoryBudgetRepository) SpendByGroupByUser(ctx context.Context, userID uuid.UUID, start, end time.Time) ([]postgres.GetCategorySpendByGroupByUserRow, error) {
+	return r.queries.GetCategorySpendByGroupByUser(ctx, postgres.GetCategorySpendByGroupByUserParams{
 		UserID:    userID,
 		StartDate: start,
 		EndDate:   end,
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	spends := make(map[uuid.UUID]string, len(rows))
-	for _, row := range rows {
-		spends[row.CategoryID] = row.Spent
-	}
-	return spends, nil
 }

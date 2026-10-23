@@ -27,13 +27,25 @@ export function getCategoryBudgetsQueryOptions() {
   }
 }
 
-/** Transactions for one category inside the active budget window. */
-export function getCategoryTransactionsQueryOptions(categoryId: string) {
+/**
+ * Transactions for one category and transaction group inside the active
+ * budget window. An empty group key selects rows without a stored group.
+ */
+export function getCategoryTransactionsQueryOptions(
+  categoryId: string,
+  groupKey: string,
+) {
+  const query = new URLSearchParams({ group_key: groupKey })
   return {
-    queryKey: [...queryKeys.categoryBudgets, 'transactions', categoryId],
+    queryKey: [
+      ...queryKeys.categoryBudgets,
+      'transactions',
+      categoryId,
+      groupKey,
+    ],
     queryFn: () =>
       apiFetch<StatementTransactionsResponse>(
-        `/v2/category-budgets/${categoryId}/transactions`,
+        `/v2/category-budgets/${categoryId}/transactions?${query.toString()}`,
       ),
     staleTime: 5 * 60 * 1000,
   }

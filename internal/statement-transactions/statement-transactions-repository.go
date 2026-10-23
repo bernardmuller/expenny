@@ -17,9 +17,12 @@ import (
 )
 
 type ClassifiedListFilter struct {
-	Limit       int
-	Offset      int
-	CategoryID  *uuid.UUID
+	Limit      int
+	Offset     int
+	CategoryID *uuid.UUID
+	// GroupKey narrows the page to rows classified with that transaction
+	// group. An empty-but-present key matches rows without a group.
+	GroupKey    *string
 	WindowStart *time.Time
 	WindowEnd   *time.Time
 }
@@ -75,6 +78,7 @@ func (r *StatementTransactionsRepository) ListClassifiedByUser(ctx context.Conte
 	return r.DB.GetClassifiedStatementTransactionsByUserIdPage(ctx, postgres.GetClassifiedStatementTransactionsByUserIdPageParams{
 		UserID:      userID,
 		CategoryID:  utils.NullUUID(filter.CategoryID),
+		GroupKey:    utils.NullString(filter.GroupKey),
 		WindowStart: utils.NullTime(filter.WindowStart),
 		WindowEnd:   utils.NullTime(filter.WindowEnd),
 		PageLimit:   int32(filter.Limit),

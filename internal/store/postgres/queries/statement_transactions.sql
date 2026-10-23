@@ -82,6 +82,7 @@ LEFT JOIN statement_transaction_classifications stc ON stc.statement_transaction
 LEFT JOIN categories c ON stc.category_id = c.id
 WHERE st.user_id = @user_id
   AND (sqlc.narg('category_id')::uuid IS NULL OR stc.category_id = sqlc.narg('category_id')::uuid)
+  AND (sqlc.narg('group_key')::text IS NULL OR COALESCE(stc.group_key, '') = sqlc.narg('group_key')::text)
   AND (sqlc.narg('window_start')::timestamp IS NULL OR st.transaction_date >= sqlc.narg('window_start')::timestamp)
   AND (sqlc.narg('window_end')::timestamp IS NULL OR st.transaction_date <= sqlc.narg('window_end')::timestamp)
 ORDER BY st.transaction_date DESC, st.nr DESC

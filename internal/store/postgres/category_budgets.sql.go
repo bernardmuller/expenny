@@ -202,9 +202,11 @@ func (q *Queries) GetCategoryBudgetsByBudget(ctx context.Context, budgetID uuid.
 	return items, nil
 }
 
-const getCategorySpendByUser = `-- name: GetCategorySpendByUser :many
+const getCategorySpendByGroupByUser = `-- name: GetCategorySpendByGroupByUser :many
 SELECT
   c.id AS category_id,
+  COALESCE(stc.group_key, '')::text AS group_key,
+  COALESCE(cg.label, '')::text AS group_label,
   COALESCE(
     SUM(ABS(st.money_out::numeric) + ABS(st.fee::numeric))
       - SUM(ABS(st.money_in::numeric)),
@@ -213,33 +215,41 @@ SELECT
 FROM statement_transactions st
 JOIN statement_transaction_classifications stc ON stc.statement_transaction_id = st.id
 JOIN categories c ON c.id = stc.category_id
+LEFT JOIN category_groups cg ON cg.key = stc.group_key
 WHERE st.user_id = $1
   AND st.transaction_date >= $2
   AND st.transaction_date <= $3
-GROUP BY c.id
+GROUP BY c.id, stc.group_key, cg.label
 `
 
-type GetCategorySpendByUserParams struct {
+type GetCategorySpendByGroupByUserParams struct {
 	UserID    uuid.UUID
 	StartDate time.Time
 	EndDate   time.Time
 }
 
-type GetCategorySpendByUserRow struct {
+type GetCategorySpendByGroupByUserRow struct {
 	CategoryID uuid.UUID
+	GroupKey   string
+	GroupLabel string
 	Spent      string
 }
 
-func (q *Queries) GetCategorySpendByUser(ctx context.Context, arg GetCategorySpendByUserParams) ([]GetCategorySpendByUserRow, error) {
-	rows, err := q.db.QueryContext(ctx, getCategorySpendByUser, arg.UserID, arg.StartDate, arg.EndDate)
+func (q *Queries) GetCategorySpendByGroupByUser(ctx context.Context, arg GetCategorySpendByGroupByUserParams) ([]GetCategorySpendByGroupByUserRow, error) {
+	rows, err := q.db.QueryContext(ctx, getCategorySpendByGroupByUser, arg.UserID, arg.StartDate, arg.EndDate)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetCategorySpendByUserRow
+	var items []GetCategorySpendByGroupByUserRow
 	for rows.Next() {
-		var i GetCategorySpendByUserRow
-		if err := rows.Scan(&i.CategoryID, &i.Spent); err != nil {
+		var i GetCategorySpendByGroupByUserRow
+		if err := rows.Scan(
+			&i.CategoryID,
+			&i.GroupKey,
+			&i.GroupLabel,
+			&i.Spent,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

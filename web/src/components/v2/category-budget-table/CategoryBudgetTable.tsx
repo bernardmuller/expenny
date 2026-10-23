@@ -39,7 +39,7 @@ export type CategoryBudgetTableProps = {
   onSetBudget: (category: CategoryBudgetCategory, amount: number) => void
   onDeleteBudget: (category: CategoryBudgetCategory) => void
   /** Rendered under a category row when it is expanded. */
-  renderExpanded?: (categoryId: string) => ReactNode
+  renderExpanded?: (categoryId: string, groupKey: string) => ReactNode
   className?: string
 }
 
@@ -104,7 +104,11 @@ export function CategoryBudgetTable({
                     category.label,
                     colors.get(category.label),
                   )
-                  const expanded = expandedId === category.id
+                  // The same category can appear under more than one group
+                  // when its transactions were split between them, so the
+                  // expansion state includes the section.
+                  const rowKey = `${group.key}:${category.id}`
+                  const expanded = expandedId === rowKey
                   const allocated =
                     category.allocated !== null
                       ? Number.parseFloat(category.allocated)
@@ -121,9 +125,7 @@ export function CategoryBudgetTable({
                       <TableRow
                         data-state={expanded ? 'open' : undefined}
                         className="h-16 cursor-pointer"
-                        onClick={() =>
-                          setExpandedId(expanded ? null : category.id)
-                        }
+                        onClick={() => setExpandedId(expanded ? null : rowKey)}
                       >
                         <TableCell className="pr-0 pl-3">
                           {expanded ? (
@@ -204,7 +206,7 @@ export function CategoryBudgetTable({
                             className="bg-muted/30 p-0 align-top"
                           >
                             {renderExpanded
-                              ? renderExpanded(category.id)
+                              ? renderExpanded(category.id, category.group_key)
                               : null}
                           </TableCell>
                         </TableRow>

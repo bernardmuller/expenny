@@ -9,11 +9,12 @@ import (
 	"expenny.co.za/internal/store/postgres"
 )
 
-func TestGroupCategoriesForBudgetPrefersRecurringOverExpenses(t *testing.T) {
+func TestGroupCategoriesForBudgetSplitsCategoryByTransactionGroup(t *testing.T) {
 	recurring := uuid.New()
 	expenses := uuid.New()
 	utilities := uuid.New()
 	groceries := uuid.New()
+	allocationID := uuid.New()
 
 	text := func(value string) sql.NullString {
 		return sql.NullString{String: value, Valid: true}
@@ -22,9 +23,8 @@ func TestGroupCategoriesForBudgetPrefersRecurringOverExpenses(t *testing.T) {
 		return uuid.NullUUID{UUID: id, Valid: true}
 	}
 
-	// Utilities is both a recurring cost and a general expense. Listing the
-	// expenses membership first must not stop the category from being filed
-	// under Recurring.
+	// Utilities is both a recurring cost and a general expense. The spend is
+	// split by the group each transaction was actually tagged with.
 	rows := []postgres.GetCategoriesWithGroupsRow{
 		{
 			ID: groceries, Key: "groceries", Label: "Groceries", Icon: "🛒",
@@ -40,27 +40,105 @@ func TestGroupCategoriesForBudgetPrefersRecurringOverExpenses(t *testing.T) {
 		},
 	}
 
-	spends := map[uuid.UUID]string{
-		groceries: "4200.00",
-		utilities: "1299.00",
+	spends := []postgres.GetCategorySpendByGroupByUserRow{
+		{CategoryID: groceries, GroupKey: "expenses", GroupLabel: "Expenses", Spent: "4200.00"},
+		{CategoryID: utilities, GroupKey: "expenses", GroupLabel: "Expenses", Spent: "100.00"},
+		{CategoryID: utilities, GroupKey: "recurring", GroupLabel: "Recurring", Spent: "1299.00"},
 	}
-	groups := groupCategoriesForBudget(rows, nil, spends)
+	allocations := map[uuid.UUID]postgres.GetCategoryBudgetsByBudgetRow{
+		utilities: {ID: allocationID, CategoryID: utilities, AllocatedAmount: "1500.00"},
+	}
+	groups := groupCategoriesForBudget(rows, allocations, spends)
 	if len(groups) != 2 {
 		t.Fatalf("got %d groups, want 2", len(groups))
 	}
-	// The rendering order stays Expenses then Recurring even though Recurring
-	// wins when a category belongs to both.
 	if groups[0].Key != "expenses" || groups[1].Key != "recurring" {
 		t.Fatalf("groups = %q, %q; want expenses then recurring", groups[0].Key, groups[1].Key)
 	}
-	if len(groups[0].Categories) != 1 || groups[0].Categories[0].ID != groceries {
-		t.Fatalf("expenses categories = %+v, want only groceries", groups[0].Categories)
+
+	if len(groups[0].Categories) != 2 {
+		t.Fatalf("expenses categories = %+v, want groceries and utilities", groups[0].Categories)
 	}
-	if len(groups[1].Categories) != 1 || groups[1].Categories[0].ID != utilities {
+	utilitiesExpenses := groups[0].Categories[1]
+	if utilitiesExpenses.ID != utilities || utilitiesExpenses.GroupKey != "expenses" || utilitiesExpenses.Spent != "100.00" {
+		t.Errorf("expenses utilities = %+v, want utilities/expenses/100.00", utilitiesExpenses)
+	}
+	if utilitiesExpenses.Allocated == nil || *utilitiesExpenses.Allocated != "1500.00" {
+		t.Errorf("expenses utilities allocated = %v, want 1500.00", utilitiesExpenses.Allocated)
+	}
+
+	if len(groups[1].Categories) != 1 {
 		t.Fatalf("recurring categories = %+v, want utilities", groups[1].Categories)
 	}
-	if groups[1].Categories[0].Spent != "1299.00" {
-		t.Errorf("recurring spend = %q, want 1299.00", groups[1].Categories[0].Spent)
+	utilitiesRecurring := groups[1].Categories[0]
+	if utilitiesRecurring.ID != utilities || utilitiesRecurring.GroupKey != "recurring" || utilitiesRecurring.Spent != "1299.00" {
+		t.Errorf("recurring utilities = %+v, want utilities/recurring/1299.00", utilitiesRecurring)
+	}
+	if utilitiesRecurring.CategoryBudgetID == nil || *utilitiesRecurring.CategoryBudgetID != allocationID {
+		t.Errorf("recurring utilities budget id = %v, want %s", utilitiesRecurring.CategoryBudgetID, allocationID)
+	}
+}
+
+func TestGroupCategoriesForBudgetFallsBackToMembershipWithoutSpend(t *testing.T) {
+	recurring := uuid.New()
+	expenses := uuid.New()
+	utilities := uuid.New()
+
+	text := func(value string) sql.NullString {
+		return sql.NullString{String: value, Valid: true}
+	}
+	groupRef := func(id uuid.UUID) uuid.NullUUID {
+		return uuid.NullUUID{UUID: id, Valid: true}
+	}
+
+	rows := []postgres.GetCategoriesWithGroupsRow{
+		{
+			ID: utilities, Key: "utilities", Label: "Utilities", Icon: "💡",
+			GroupID: groupRef(expenses), GroupKey: text("expenses"), GroupLabel: text("Expenses"),
+		},
+		{
+			ID: utilities, Key: "utilities", Label: "Utilities", Icon: "💡",
+			GroupID: groupRef(recurring), GroupKey: text("recurring"), GroupLabel: text("Recurring"),
+		},
+	}
+
+	groups := groupCategoriesForBudget(rows, nil, nil)
+	if len(groups) != 1 || groups[0].Key != "recurring" {
+		t.Fatalf("groups = %+v, want one recurring group", groups)
+	}
+	if groups[0].Categories[0].Spent != "0.00" {
+		t.Errorf("spend = %q, want 0.00", groups[0].Categories[0].Spent)
+	}
+}
+
+func TestGroupCategoriesForBudgetShowsLegacySpendUnderOther(t *testing.T) {
+	expenses := uuid.New()
+	groceries := uuid.New()
+
+	text := func(value string) sql.NullString {
+		return sql.NullString{String: value, Valid: true}
+	}
+	groupRef := func(id uuid.UUID) uuid.NullUUID {
+		return uuid.NullUUID{UUID: id, Valid: true}
+	}
+
+	rows := []postgres.GetCategoriesWithGroupsRow{
+		{
+			ID: groceries, Key: "groceries", Label: "Groceries", Icon: "🛒",
+			GroupID: groupRef(expenses), GroupKey: text("expenses"), GroupLabel: text("Expenses"),
+		},
+	}
+	spends := []postgres.GetCategorySpendByGroupByUserRow{
+		{CategoryID: groceries, GroupKey: "", GroupLabel: "", Spent: "50.00"},
+	}
+
+	groups := groupCategoriesForBudget(rows, nil, spends)
+	if len(groups) != 1 || groups[0].Key != "other" || groups[0].Label != "Other" {
+		t.Fatalf("groups = %+v, want one Other group", groups)
+	}
+	category := groups[0].Categories[0]
+	if category.GroupKey != "" || category.Spent != "50.00" {
+		t.Errorf("category = %+v, want empty group key and 50.00 spend", category)
 	}
 }
 
@@ -110,8 +188,8 @@ func TestGroupCategoriesForBudget(t *testing.T) {
 		return uuid.NullUUID{UUID: id, Valid: true}
 	}
 
-	// Groceries is mirrored into income, like every spending category. The
-	// breakdown should still file it under Expenses.
+	// Groceries is mirrored into income, like every spending category, but
+	// its transactions are tagged as expenses. The spend stays in Expenses.
 	rows := []postgres.GetCategoriesWithGroupsRow{
 		{
 			ID: groceries, Key: "groceries", Label: "Groceries", Icon: "🛒",
@@ -133,7 +211,9 @@ func TestGroupCategoriesForBudget(t *testing.T) {
 			CategoryKey: "groceries", CategoryLabel: "Groceries", CategoryIcon: "🛒",
 		},
 	}
-	spends := map[uuid.UUID]string{groceries: "4200.00"}
+	spends := []postgres.GetCategorySpendByGroupByUserRow{
+		{CategoryID: groceries, GroupKey: "expenses", GroupLabel: "Expenses", Spent: "4200.00"},
+	}
 
 	groups := groupCategoriesForBudget(rows, allocations, spends)
 	if len(groups) != 2 {
