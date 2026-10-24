@@ -82,5 +82,5 @@ JOIN categories c ON c.id = stc.category_id
 LEFT JOIN category_groups cg ON cg.key = stc.group_key
 WHERE st.user_id = @user_id
   AND st.transaction_date >= @start_date
-  AND st.transaction_date <= @end_date
+  AND st.transaction_date < @end_exclusive
 GROUP BY c.id, stc.group_key, cg.label;

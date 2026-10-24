@@ -165,7 +165,7 @@ WHERE st.user_id = $1
   AND ($2::uuid IS NULL OR stc.category_id = $2::uuid)
   AND ($3::text IS NULL OR COALESCE(stc.group_key, '') = $3::text)
   AND ($4::timestamp IS NULL OR st.transaction_date >= $4::timestamp)
-  AND ($5::timestamp IS NULL OR st.transaction_date <= $5::timestamp)
+  AND ($5::timestamp IS NULL OR st.transaction_date < $5::timestamp)
 ORDER BY st.transaction_date DESC, st.nr DESC
 LIMIT $7 OFFSET $6
 `

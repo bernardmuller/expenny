@@ -22,7 +22,9 @@ type ClassifiedListFilter struct {
 	CategoryID *uuid.UUID
 	// GroupKey narrows the page to rows classified with that transaction
 	// group. An empty-but-present key matches rows without a group.
-	GroupKey    *string
+	GroupKey *string
+	// WindowStart is inclusive; WindowEnd is exclusive so a transaction on
+	// the window's final day is included at any time of day.
 	WindowStart *time.Time
 	WindowEnd   *time.Time
 }

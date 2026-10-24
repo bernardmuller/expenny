@@ -64,10 +64,11 @@ func (r *CategoryBudgetRepository) SoftDelete(ctx context.Context, id uuid.UUID)
 // SpendByGroupByUser sums money_out and fees minus money_in per category and
 // group over the window, so a repayment against a spending category reduces
 // its net spend and each stored transaction-group decision keeps its own row.
-func (r *CategoryBudgetRepository) SpendByGroupByUser(ctx context.Context, userID uuid.UUID, start, end time.Time) ([]postgres.GetCategorySpendByGroupByUserRow, error) {
+// endExclusive is the day after the window's last day.
+func (r *CategoryBudgetRepository) SpendByGroupByUser(ctx context.Context, userID uuid.UUID, start, endExclusive time.Time) ([]postgres.GetCategorySpendByGroupByUserRow, error) {
 	return r.queries.GetCategorySpendByGroupByUser(ctx, postgres.GetCategorySpendByGroupByUserParams{
-		UserID:    userID,
-		StartDate: start,
-		EndDate:   end,
+		UserID:       userID,
+		StartDate:    start,
+		EndExclusive: endExclusive,
 	})
 }

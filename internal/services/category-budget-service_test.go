@@ -3,11 +3,94 @@ package services
 import (
 	"database/sql"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 
 	"expenny.co.za/internal/store/postgres"
 )
+
+func TestBudgetWindowPrefersTheV2Preference(t *testing.T) {
+	preferenceStart := time.Date(2026, time.September, 25, 0, 0, 0, 0, time.UTC)
+	preferenceEnd := time.Date(2026, time.October, 24, 0, 0, 0, 0, time.UTC)
+	budgetStart := time.Date(2026, time.October, 1, 0, 0, 0, 0, time.UTC)
+	budgetEnd := time.Date(2026, time.October, 31, 0, 0, 0, 0, time.UTC)
+
+	// The salary is paid on 25 September. An active budget created before the
+	// period was changed still starts on 1 October, which used to make the
+	// category table report zero salary while the budget card found it.
+	start, end := budgetWindow(
+		&postgres.BudgetPreference{StartDate: preferenceStart, EndDate: preferenceEnd},
+		postgres.Budget{
+			StartDate: sql.NullTime{Time: budgetStart, Valid: true},
+			EndDate:   sql.NullTime{Time: budgetEnd, Valid: true},
+		},
+	)
+
+	if start == nil || !start.Equal(preferenceStart) {
+		t.Fatalf("start = %v, want %v", start, preferenceStart)
+	}
+	// The end is exclusive, so the final day is included in full.
+	wantEnd := preferenceEnd.AddDate(0, 0, 1)
+	if end == nil || !end.Equal(wantEnd) {
+		t.Errorf("end = %v, want %v", end, wantEnd)
+	}
+}
+
+func TestBudgetWindowFallsBackToTheActiveBudget(t *testing.T) {
+	budgetStart := time.Date(2026, time.September, 1, 0, 0, 0, 0, time.UTC)
+	budgetEnd := time.Date(2026, time.September, 30, 0, 0, 0, 0, time.UTC)
+
+	start, end := budgetWindow(nil, postgres.Budget{
+		StartDate: sql.NullTime{Time: budgetStart, Valid: true},
+		EndDate:   sql.NullTime{Time: budgetEnd, Valid: true},
+	})
+
+	if start == nil || !start.Equal(budgetStart) {
+		t.Fatalf("start = %v, want %v", start, budgetStart)
+	}
+	wantEnd := budgetEnd.AddDate(0, 0, 1)
+	if end == nil || !end.Equal(wantEnd) {
+		t.Errorf("end = %v, want %v", end, wantEnd)
+	}
+}
+
+func TestBudgetWindowWithoutDates(t *testing.T) {
+	start, end := budgetWindow(nil, postgres.Budget{})
+	if start != nil || end != nil {
+		t.Fatalf("window = %v, %v; want nil, nil", start, end)
+	}
+}
+
+func TestGroupCategoriesForBudgetShowsSalarySpendUnderIncome(t *testing.T) {
+	income := uuid.New()
+	salary := uuid.New()
+
+	text := func(value string) sql.NullString {
+		return sql.NullString{String: value, Valid: true}
+	}
+	groupRef := func(id uuid.UUID) uuid.NullUUID {
+		return uuid.NullUUID{UUID: id, Valid: true}
+	}
+
+	rows := []postgres.GetCategoriesWithGroupsRow{
+		{
+			ID: salary, Key: "salary", Label: "Salary", Icon: "💼",
+			GroupID: groupRef(income), GroupKey: text("income"), GroupLabel: text("Income"),
+		},
+	}
+	spends := []postgres.GetCategorySpendByGroupByUserRow{
+		{CategoryID: salary, GroupKey: "income", GroupLabel: "Income", Spent: "-24000.00"},
+	}
+
+	groups := groupCategoriesForBudget(rows, nil, spends)
+	if len(groups) != 1 || groups[0].Key != "income" {
+		t.Fatalf("groups = %+v, want one income group", groups)
+	}
+	if got := groups[0].Categories[0].Spent; got != "-24000.00" {
+		t.Errorf("salary spend = %q, want -24000.00", got)
+	}
+}
 
 func TestGroupCategoriesForBudgetSplitsCategoryByTransactionGroup(t *testing.T) {
 	recurring := uuid.New()

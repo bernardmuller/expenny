@@ -216,8 +216,8 @@ func (s *CategoryBudgetService) DeleteBudget(ctx context.Context, userID, catego
 	return s.Overview(ctx, userID)
 }
 
-// ActiveWindow returns the period the active budget covers, or nil when the
-// user has no active budget.
+// ActiveWindow returns the period the budget is measured over as an inclusive
+// start and an exclusive end, or nil when the user has no active budget.
 func (s *CategoryBudgetService) ActiveWindow(ctx context.Context, userID uuid.UUID) (*time.Time, *time.Time, error) {
 	budget, err := s.store.Repos().CategoryBudgets.ActiveBudget(ctx, userID)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -229,22 +229,40 @@ func (s *CategoryBudgetService) ActiveWindow(ctx context.Context, userID uuid.UU
 	return s.window(ctx, userID, budget)
 }
 
-// window is the active budget's own period. Some legacy budgets have no dates,
-// in which case the v2 preference window stands in.
+// window resolves the period the dashboard budget is measured over. The v2
+// preference is authoritative because the period dialog writes it, while an
+// active budget can still carry the dates it was created with. Using the
+// budget's dates first made the category table disagree with the budget card
+// whenever the period was changed, which hid spend (a salary paid before the
+// old window's start, for example) from the category table. Legacy users
+// without a preference fall back to the active budget's own dates.
 func (s *CategoryBudgetService) window(ctx context.Context, userID uuid.UUID, budget postgres.Budget) (*time.Time, *time.Time, error) {
-	if budget.StartDate.Valid && budget.EndDate.Valid {
-		start, end := budget.StartDate.Time, budget.EndDate.Time
-		return &start, &end, nil
-	}
-
 	preference, err := s.store.Repos().Budget.GetByUser(ctx, userID)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil, nil
+	if err == nil {
+		start, end := budgetWindow(&preference, budget)
+		return start, end, nil
 	}
-	if err != nil {
+	if !errors.Is(err, sql.ErrNoRows) {
 		return nil, nil, fmt.Errorf("budget preference: %w", err)
 	}
-	return &preference.StartDate, &preference.EndDate, nil
+	start, end := budgetWindow(nil, budget)
+	return start, end, nil
+}
+
+// budgetWindow returns the inclusive start and exclusive end of the window.
+// The end is exclusive so a transaction on the final day is counted regardless
+// of the time of day the bank recorded it. Dates are stored as days, so the
+// preference's end date is advanced one day.
+func budgetWindow(preference *postgres.BudgetPreference, budget postgres.Budget) (*time.Time, *time.Time) {
+	if preference != nil {
+		start, end := preference.StartDate, preference.EndDate.AddDate(0, 0, 1)
+		return &start, &end
+	}
+	if budget.StartDate.Valid && budget.EndDate.Valid {
+		start, end := budget.StartDate.Time, budget.EndDate.Time.AddDate(0, 0, 1)
+		return &start, &end
+	}
+	return nil, nil
 }
 
 type budgetCategoryMembership struct {

@@ -218,14 +218,14 @@ JOIN categories c ON c.id = stc.category_id
 LEFT JOIN category_groups cg ON cg.key = stc.group_key
 WHERE st.user_id = $1
   AND st.transaction_date >= $2
-  AND st.transaction_date <= $3
+  AND st.transaction_date < $3
 GROUP BY c.id, stc.group_key, cg.label
 `
 
 type GetCategorySpendByGroupByUserParams struct {
-	UserID    uuid.UUID
-	StartDate time.Time
-	EndDate   time.Time
+	UserID       uuid.UUID
+	StartDate    time.Time
+	EndExclusive time.Time
 }
 
 type GetCategorySpendByGroupByUserRow struct {
@@ -236,7 +236,7 @@ type GetCategorySpendByGroupByUserRow struct {
 }
 
 func (q *Queries) GetCategorySpendByGroupByUser(ctx context.Context, arg GetCategorySpendByGroupByUserParams) ([]GetCategorySpendByGroupByUserRow, error) {
-	rows, err := q.db.QueryContext(ctx, getCategorySpendByGroupByUser, arg.UserID, arg.StartDate, arg.EndDate)
+	rows, err := q.db.QueryContext(ctx, getCategorySpendByGroupByUser, arg.UserID, arg.StartDate, arg.EndExclusive)
 	if err != nil {
 		return nil, err
 	}
